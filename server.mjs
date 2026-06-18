@@ -3,9 +3,10 @@ import { createServer } from 'node:http';
 import { extname, join, normalize } from 'node:path';
 import { randomBytes } from 'node:crypto';
 
-const root = process.cwd();
+const projectRoot = process.cwd();
+const root = join(projectRoot, 'public');
 const port = Number(process.env.PORT || process.argv[2] || 8000);
-const dataDir = join(root, 'data');
+const dataDir = join(projectRoot, 'data');
 const storeFile = join(dataDir, 'store.json');
 const adminPassword = process.env.ADMIN_PASSWORD || 'digiepro123';
 const adminToken = randomBytes(24).toString('hex');
@@ -23,6 +24,7 @@ const server = createServer(async (request, response) => {
   const url = new URL(request.url, 'http://localhost');
   const pathname = decodeURIComponent(url.pathname);
 
+  if (pathname === '/seed-store.json') { response.writeHead(404).end('Not found'); return; }
   if (pathname === '/bolehnihadmin') { response.writeHead(302, { Location: '/bolehdong' }); response.end(); return; }
   if (pathname === '/api/store' && request.method === 'GET') { const store = readStore(); sendJson(response, 200, { products: store.products }); return; }
   const chatMatch = pathname.match(/^\/api\/chat\/([a-zA-Z0-9-]{6,80})$/);

@@ -5,7 +5,12 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "check": "node --check server.mjs && node --check script.js && node --check admin.js && node --check qris.js"
+    "dev:cloudflare": "node node_modules/wrangler/bin/wrangler.js dev",
+    "deploy:cloudflare": "node node_modules/wrangler/bin/wrangler.js deploy",
+    "check": "node --check server.mjs && node --check src/worker.mjs && node --check public/script.js && node --check public/admin.js && node --check public/qris.js"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
   },
   "engines": {
     "node": ">=20"

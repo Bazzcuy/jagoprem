@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "digiepro",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-06-18",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*",
+      "/bolehnihadmin",
+      "/bolehdong",
+      "/seed-store.json"
+    ]
+  }
+}
