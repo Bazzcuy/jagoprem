@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="theme-color" content="#eafafa" />
+    <title>DigiePro - Akun Digital Premium</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" /><link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#home"><span class="brand-symbol"><i></i><b></b></span><span class="brand-word">digie<span>pro</span></span></a>
+      <p class="nav-label">Navigasi</p>
+      <nav class="side-nav">
+        <a class="nav-item active" href="#home"><i data-lucide="house"></i><span>Home</span></a>
+        <a class="nav-item" href="#products"><i data-lucide="shopping-bag"></i><span>Product</span></a>
+        <button class="nav-item" id="historyButton" type="button"><i data-lucide="arrow-right-left"></i><span>Riwayat</span></button>
+        <button class="nav-item" id="sideAccount" type="button"><i data-lucide="user"></i><span>Akun</span></button>
+        <button class="nav-item" id="infoButton" type="button"><i data-lucide="info"></i><span>Informasi</span></button>
+        <button class="nav-item" id="openChatSide" type="button"><i data-lucide="message-circle"></i><span>Contact</span></button>
+      </nav>
+    </aside>
+
+    <div class="app-shell">
+      <header class="topbar"><button class="menu-button" id="menuButton" type="button" aria-label="Buka menu"><i data-lucide="menu"></i></button><h1>Home</h1><div class="top-actions"><button type="button" aria-label="Notifikasi"><i data-lucide="bell"></i><b></b></button><button id="accountButton" type="button" aria-label="Akun"><i data-lucide="user-round"></i><span>Masuk</span></button><button class="header-cart" id="cartButton" type="button" aria-label="Buka keranjang"><i data-lucide="shopping-bag"></i><b id="cartCount">0</b></button></div></header>
+
+      <main class="main-content">
+        <section class="promo-banner" id="home"><img src="assets/digiepro-promo-v2.png" alt="Promo akun digital DigiePro"><div><span>AKUN DIGITAL PREMIUM</span><h2><b>DIGIEPRO</b><br>Premium jadi lebih praktis.</h2><p>Harga transparan, stok real-time, pembayaran QRIS, dan pengiriman langsung ke WhatsApp.</p><a href="#products">Belanja sekarang</a></div></section>
+
+        <section class="category-section"><h2>Kategori</h2><div class="category-row"><button type="button" data-quick="all"><img src="https://s3.xoftware.id/f/23843_ChatGpt_997_1780629550891.png" alt=""><span>Semua</span></button><button type="button" data-search="AI"><img src="https://s3.xoftware.id/f/46473_claude1b_997_1780858031695.png" alt=""><span>AI Tools</span></button><button type="button" data-search="PREMIUM"><img src="https://s3.xoftware.id/f/23935_SPOTIFY_997_1780539764912.png" alt=""><span>Premium</span></button><button type="button" data-search="PRO"><img src="https://s3.xoftware.id/f/23725_capcut_997_1780479509203.png" alt=""><span>Editing</span></button><button type="button" data-quick="ready"><img src="https://s3.xoftware.id/f/23930_YOUTUBE_997_1780650520058.png" alt=""><span>Ready</span></button><button type="button" data-quick="best"><img src="https://s3.xoftware.id/f/25754_grok_997_1780655477114.png" alt=""><span>Terlaris</span></button><button type="button" data-quick="wholesale"><img src="https://s3.xoftware.id/f/31181_canva_997_1780480154301.png" alt=""><span>Grosir</span></button><button type="button" id="categoryHelp"><img src="https://s3.xoftware.id/f/35843_vpn_997_1780652340100.png" alt=""><span>Bantuan</span></button></div></section>
+
+        <section class="catalog-section" id="products">
+          <div class="section-title"><div><h2>Produk Sekilas</h2><span id="resultCount">0 produk</span></div></div>
+          <div class="product-toolbar"><label class="search-field"><input id="searchInput" type="search" placeholder="Cari produk..." /><i data-lucide="search"></i></label><select id="sortSelect" aria-label="Urutkan produk"><option value="default">Urutkan</option><option value="sold">Paling laris</option><option value="low">Harga terendah</option><option value="high">Harga tertinggi</option></select><button class="filter-toggle" id="filterToggle" type="button"><i data-lucide="sliders-horizontal"></i><span>Filter</span></button></div>
+          <div class="filter-strip" id="filterStrip"><div><span>Stok</span><label><input type="radio" name="stock" value="all" checked> Semua</label><label><input type="radio" name="stock" value="ready"> Ready</label><label><input type="radio" name="stock" value="empty"> Habis</label></div><label><input id="bestFilter" type="checkbox"> Terlaris</label><label><input id="wholesaleFilter" type="checkbox"> Grosir</label><button id="resetFilter" type="button">Reset</button></div>
+          <div class="active-filters" id="activeFilters"></div><div class="product-grid" id="productGrid"></div>
+        </section>
+      </main>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <aside class="cart-drawer" id="cartDrawer" aria-hidden="true"><div class="drawer-head"><div><small>KERANJANG</small><h2>Pesanan kamu</h2></div><button class="icon-button" data-close-cart type="button" aria-label="Tutup keranjang"><i data-lucide="x"></i></button></div><div class="cart-items" id="cartItems"></div><div class="cart-footer"><div><span>Total</span><strong id="cartTotal">Rp0</strong></div><button class="checkout-button" id="checkoutButton" type="button">Lanjut checkout <i data-lucide="arrow-right"></i></button></div></aside><div class="overlay" id="overlay"></div>
+
+    <section class="chat-panel" id="chatPanel" aria-hidden="true"><div class="chat-head"><div class="bot-avatar"><i data-lucide="message-circle"></i></div><div><strong id="chatTitle">Asisten DigiePro</strong><span><i></i> Online</span></div><button id="closeChat" type="button" aria-label="Tutup chat"><i data-lucide="x"></i></button></div><div class="chat-modes"><button class="active" data-chat-mode="bot" type="button">Asisten</button><button data-chat-mode="admin" type="button">Chat Admin</button></div><div class="chat-messages" id="chatMessages"><div class="message bot">Hai! Mau cari produk, tanya cara bayar, atau terhubung ke admin?</div><div class="quick-chat"><button data-question="Produk apa yang ready?" type="button">Cek stok</button><button data-question="Bagaimana cara bayar?" type="button">Cara bayar</button><button data-admin type="button">Chat admin</button></div></div><form class="chat-form" id="chatForm"><input id="chatInput" placeholder="Tulis pertanyaan..." autocomplete="off"><button type="submit" aria-label="Kirim pesan"><i data-lucide="send"></i></button></form></section>
+    <button class="chat-bubble" id="chatBubble" type="button" aria-label="Buka asisten chat"><i data-lucide="message-circle"></i><span>Tanya kami</span></button>
+    <div class="modal-layer" id="modalLayer" aria-hidden="true"><section class="modal" id="modalContent" role="dialog" aria-modal="true"></section></div><div class="toast" id="toast" role="status"></div>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="catalog.js"></script><script src="qris.js"></script><script src="script.js"></script>
+  </body>
+</html>
