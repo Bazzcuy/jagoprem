@@ -38,15 +38,21 @@ const server = createServer(async (request, response) => {
       const body = await readBody(request); const store = readStore();
       if (!Array.isArray(body.items) || !body.items.length) return sendJson(response, 400, { error: 'Keranjang kosong.' });
       let subtotal = 0;
+      const normalizedItems = [];
+      const requestedStock = new Map();
       for (const line of body.items) {
         const product = store.products.find((item) => item.id === Number(line.id)); const quantity = Number(line.quantity);
         if (!product || !product.enabled) return sendJson(response, 400, { error: 'Produk tidak tersedia.' });
-        if (!Number.isInteger(quantity) || quantity < 1 || quantity > product.stock) return sendJson(response, 409, { error: `Stok ${product.title} tidak mencukupi.` });
-        subtotal += product.price * quantity;
+        const requested = (requestedStock.get(product.id) || 0) + quantity;
+        if (!Number.isInteger(quantity) || quantity < 1 || requested > product.stock) return sendJson(response, 409, { error: `Stok ${product.title} tidak mencukupi.` });
+        requestedStock.set(product.id, requested);
+        const ownGmail = product.title.includes('CHATGPT PLUS') && Boolean(line.ownGmail);
+        subtotal += (product.price + (ownGmail ? 5000 : 0)) * quantity;
+        normalizedItems.push({ id: product.id, quantity, ownGmail });
       }
-      for (const line of body.items) store.products.find((item) => item.id === Number(line.id)).stock -= Number(line.quantity);
+      for (const line of normalizedItems) store.products.find((item) => item.id === line.id).stock -= line.quantity;
       const adminFee = 99; const total = subtotal + adminFee;
-      const order = { id: `DGP-${Date.now().toString().slice(-8)}`, customer: body.customer, chatId: body.chatId || '', items: body.items, subtotal, adminFee, total, status: 'pending', createdAt: new Date().toISOString() };
+      const order = { id: `DGP-${Date.now().toString().slice(-8)}`, customer: body.customer, chatId: body.chatId || '', items: normalizedItems, subtotal, adminFee, total, status: 'pending', createdAt: new Date().toISOString() };
       if (body.chatId) { let chat = store.chats.find((item) => item.id === body.chatId); if (!chat) { chat = { id: body.chatId, customer: body.customer, messages: [], updatedAt: new Date().toISOString() }; store.chats.unshift(chat); } chat.customer = { ...chat.customer, ...body.customer }; chat.orderId = order.id; }
       store.orders.unshift(order); writeStore(store); sendJson(response, 201, order);
     } catch { sendJson(response, 400, { error: 'Data pesanan tidak valid.' }); }

@@ -3,10 +3,12 @@ const STORE_CONFIG = {
   staticQris: '00020101021126570011ID.DANA.WWW011893600915303270621302090327062130303UMI51440014ID.CO.QRIS.WWW0215ID10265345984810303UMI5204481453033605802ID5914Webtokoku plus6014Kota Palembang61053026663040D38'
 };
 
+const CHATGPT_PLUS_DESCRIPTION = 'Akun ChatGPT Plus privat, bukan sharing, dengan dukungan Codex. Aktivasi menggunakan payment credit card pada akun privat agar akses lebih aman dan tidak bercampur dengan pengguna lain. Tersedia opsi aktivasi memakai Gmail sendiri dengan tambahan Rp5.000.';
+
 const fallbackCatalog = (window.VIOLA_PRODUCTS || []).flatMap((item) => item.id === 23843 ? [
   { ...item, title: 'CHATGPT GO 3 BULAN', price: 25000, stock: 6, available_stock: 6, has_wholesale: false, featuredRank: 1, duration: '3 bulan', warranty: 'Garansi penuh', access: 'ChatGPT Go', description: 'Akses ChatGPT Go selama 3 bulan untuk chat AI, menulis, belajar, merangkum, dan membantu pekerjaan harian. Produk mendapat garansi penuh selama masa aktif dengan mengikuti ketentuan penggunaan.' },
-  { ...item, id: 90001, title: 'CHATGPT PLUS 1 BULAN - GARANSI 2 HARI', price: 30000, stock: 5, available_stock: 5, sold: 86, has_wholesale: false, featuredRank: 2, duration: '1 bulan', warranty: '2 hari', access: 'ChatGPT Plus', description: 'Akses ChatGPT Plus selama 1 bulan dengan garansi akses 2 hari. Cocok untuk kebutuhan singkat dengan harga lebih hemat.' },
-  { ...item, id: 90002, title: 'CHATGPT PLUS 1 BULAN - GARANSI 20 HARI', price: 56000, stock: 7, available_stock: 7, sold: 151, has_wholesale: false, featuredRank: 3, duration: '1 bulan', warranty: '20 hari', access: 'ChatGPT Plus', description: 'Akses ChatGPT Plus selama 1 bulan dengan perlindungan garansi akses hingga 20 hari untuk pemakaian yang lebih tenang.' }
+  { ...item, id: 90001, title: 'CHATGPT PLUS 1 BULAN - GARANSI 2 HARI', price: 30000, stock: 5, available_stock: 5, sold: 86, has_wholesale: false, featuredRank: 2, duration: '1 bulan', warranty: '2 hari', access: 'Akun privat + Codex', description: CHATGPT_PLUS_DESCRIPTION },
+  { ...item, id: 90002, title: 'CHATGPT PLUS 1 BULAN - GARANSI 20 HARI', price: 56000, stock: 7, available_stock: 7, sold: 151, has_wholesale: false, featuredRank: 3, duration: '1 bulan', warranty: '20 hari', access: 'Akun privat + Codex', description: CHATGPT_PLUS_DESCRIPTION }
 ] : [{ ...item, stock: Math.min(item.available_stock || 0, 49), enabled: true, featuredRank: item.id === 46473 ? 4 : 99 }]);
 let products = fallbackCatalog.map((item) => ({ enabled: true, ...item }));
 let validIds = new Set(products.map((item) => item.id));
@@ -35,7 +37,10 @@ function rupiah(value) { return new Intl.NumberFormat('id-ID', { style: 'currenc
 function icons() { if (window.lucide) window.lucide.createIcons(); }
 function notify(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(notify.timer); notify.timer = setTimeout(() => toast.classList.remove('show'), 2400); }
 function getProduct(id) { return products.find((item) => item.id === Number(id)); }
-function cartTotal() { return state.cart.reduce((total, line) => total + (getProduct(line.id)?.price || 0) * line.quantity, 0); }
+function supportsOwnGmail(item) { return item?.title.includes('CHATGPT PLUS'); }
+function lineUnitPrice(line) { const item = getProduct(line.id); return (item?.price || 0) + (supportsOwnGmail(item) && line.ownGmail ? 5000 : 0); }
+function cartTotal() { return state.cart.reduce((total, line) => total + lineUnitPrice(line) * line.quantity, 0); }
+function cartQuantityFor(id) { return state.cart.filter((line) => line.id === id).reduce((total, line) => total + line.quantity, 0); }
 function persistCart() { localStorage.setItem('digiepro_cart', JSON.stringify(state.cart)); updateCart(); }
 
 function filteredProducts() {
@@ -70,10 +75,14 @@ function renderActiveFilters() {
 }
 
 function updateCart() {
-  state.cart = state.cart.filter((line) => validIds.has(line.id) && line.quantity > 0).map((line) => ({ ...line, quantity: Math.min(line.quantity, getProduct(line.id).stock) })).filter((line) => line.quantity > 0);
+  const usedStock = new Map();
+  state.cart = state.cart.filter((line) => validIds.has(line.id) && line.quantity > 0).map((line) => {
+    const used = usedStock.get(line.id) || 0; const quantity = Math.min(line.quantity, Math.max(0, getProduct(line.id).stock - used));
+    usedStock.set(line.id, used + quantity); return { ...line, quantity };
+  }).filter((line) => line.quantity > 0);
   document.querySelector('#cartCount').textContent = state.cart.reduce((total, line) => total + line.quantity, 0);
-  const items = state.cart.map((line, index) => ({ ...getProduct(line.id), quantity: line.quantity, index }));
-  document.querySelector('#cartItems').innerHTML = items.length ? items.map((item) => `<div class="cart-item"><img src="${item.thumbnail}" alt=""><div><h3>${item.title}</h3><p>${rupiah(item.price * item.quantity)}</p><div class="cart-quantity"><button type="button" data-cart-minus="${item.index}">−</button><span>${item.quantity}</span><button type="button" data-cart-plus="${item.index}" ${item.quantity >= item.stock ? 'disabled' : ''}>+</button></div></div><button class="remove-item" type="button" data-remove="${item.index}" aria-label="Hapus ${item.title}"><i data-lucide="trash-2"></i></button></div>`).join('') : '<div class="cart-empty"><i data-lucide="shopping-bag"></i><p>Keranjang masih kosong.</p></div>';
+  const items = state.cart.map((line, index) => ({ ...getProduct(line.id), ...line, index }));
+  document.querySelector('#cartItems').innerHTML = items.length ? items.map((item) => `<div class="cart-item"><img src="${item.thumbnail}" alt=""><div><h3>${item.title}</h3>${item.ownGmail ? '<small class="cart-variant">Pakai Gmail sendiri (+Rp5.000)</small>' : ''}<p>${rupiah(lineUnitPrice(item) * item.quantity)}</p><div class="cart-quantity"><button type="button" data-cart-minus="${item.index}">−</button><span>${item.quantity}</span><button type="button" data-cart-plus="${item.index}" ${cartQuantityFor(item.id) >= item.stock ? 'disabled' : ''}>+</button></div></div><button class="remove-item" type="button" data-remove="${item.index}" aria-label="Hapus ${item.title}"><i data-lucide="trash-2"></i></button></div>`).join('') : '<div class="cart-empty"><i data-lucide="shopping-bag"></i><p>Keranjang masih kosong.</p></div>';
   document.querySelector('#cartTotal').textContent = rupiah(cartTotal());
   document.querySelector('#checkoutButton').disabled = !items.length;
   localStorage.setItem('digiepro_cart', JSON.stringify(state.cart)); icons();
@@ -138,7 +147,7 @@ function productProfile(item) {
 function detailModal(id) {
   const item = getProduct(id); if (!item) return;
   const profile = productProfile(item);
-  openModal(`${modalHead('Detail produk')}<div class="modal-body product-detail-body"><div class="detail-layout"><div class="detail-media"><img class="detail-image" src="${item.thumbnail}" alt="${item.title}"><div class="detail-facts"><div><i data-lucide="clock-3"></i><span>Masa aktif<b>${profile.duration}</b></span></div><div><i data-lucide="shield-check"></i><span>Garansi<b>${profile.warranty}</b></span></div><div><i data-lucide="key-round"></i><span>Akses produk<b>${profile.access}</b></span></div></div></div><div class="detail-content"><h2>${item.title}</h2><strong class="detail-price">${rupiah(item.price)}</strong><div class="detail-tags">${item.featuredRank < 5 ? '<span>Rekomendasi</span>' : item.is_best_seller ? '<span>Terlaris</span>' : ''}${item.has_wholesale ? '<span>Tersedia grosir</span>' : ''}<span>${item.stock && item.enabled ? 'Ready stock' : 'Stok habis'}</span></div><div class="detail-info"><div><span>Kategori</span><b>${profile.category}</b></div><div><span>Pengiriman</span><b>${profile.delivery}</b></div><div><span>Stok tersedia</span><b>${item.enabled ? item.stock : 0}</b></div><div><span>Terjual</span><b>${item.sold}</b></div></div><div class="detail-tabs"><button class="active" type="button" data-detail-tab="description">Deskripsi</button><button type="button" data-detail-tab="terms">S & K</button></div><div class="detail-tab-panel" data-detail-panel="description"><p>${profile.description}</p></div><div class="detail-tab-panel" data-detail-panel="terms" hidden><ol>${profile.terms.map((term) => `<li>${term}</li>`).join('')}</ol></div><label class="detail-quantity"><span>Jumlah pembelian</span><input id="detailQuantity" type="number" min="1" max="${item.stock}" value="1" ${item.stock && item.enabled ? '' : 'disabled'}></label><div class="detail-actions"><button class="detail-buy secondary" type="button" data-add-detail="${item.id}" ${item.stock && item.enabled ? '' : 'disabled'}>Masukkan keranjang</button><button class="detail-buy" type="button" data-buy-now="${item.id}" ${item.stock && item.enabled ? '' : 'disabled'}>Beli sekarang</button></div></div></div></div>`);
+  openModal(`${modalHead('Detail produk')}<div class="modal-body product-detail-body"><div class="detail-layout"><div class="detail-media"><img class="detail-image" src="${item.thumbnail}" alt="${item.title}"><div class="detail-facts"><div><i data-lucide="clock-3"></i><span>Masa aktif<b>${profile.duration}</b></span></div><div><i data-lucide="shield-check"></i><span>Garansi<b>${profile.warranty}</b></span></div><div><i data-lucide="key-round"></i><span>Akses produk<b>${profile.access}</b></span></div></div></div><div class="detail-content"><h2>${item.title}</h2><strong class="detail-price" id="detailPrice">${rupiah(item.price)}</strong><div class="detail-tags">${item.featuredRank < 5 ? '<span>Rekomendasi</span>' : item.is_best_seller ? '<span>Terlaris</span>' : ''}${item.has_wholesale ? '<span>Tersedia grosir</span>' : ''}<span>${item.stock && item.enabled ? 'Ready stock' : 'Stok habis'}</span></div><div class="detail-info"><div><span>Kategori</span><b>${profile.category}</b></div><div><span>Pengiriman</span><b>${profile.delivery}</b></div><div><span>Stok tersedia</span><b>${item.enabled ? item.stock : 0}</b></div><div><span>Terjual</span><b>${item.sold}</b></div></div><div class="detail-tabs"><button class="active" type="button" data-detail-tab="description">Deskripsi</button><button type="button" data-detail-tab="terms">S & K</button></div><div class="detail-tab-panel" data-detail-panel="description"><p>${profile.description}</p></div><div class="detail-tab-panel" data-detail-panel="terms" hidden><ol>${profile.terms.map((term) => `<li>${term}</li>`).join('')}</ol></div>${supportsOwnGmail(item) ? '<label class="detail-variant"><input id="detailOwnGmail" type="checkbox"><span><b>Pakai Gmail sendiri</b><small>Tambahan Rp5.000 per akun</small></span></label>' : ''}<label class="detail-quantity"><span>Jumlah pembelian</span><input id="detailQuantity" type="number" min="1" max="${item.stock}" value="1" ${item.stock && item.enabled ? '' : 'disabled'}></label><div class="detail-actions"><button class="detail-buy secondary" type="button" data-add-detail="${item.id}" ${item.stock && item.enabled ? '' : 'disabled'}>Masukkan keranjang</button><button class="detail-buy" type="button" data-buy-now="${item.id}" ${item.stock && item.enabled ? '' : 'disabled'}>Beli sekarang</button></div></div></div></div>`);
 }
 
 function authModal(mode = 'login') {
@@ -153,7 +162,7 @@ function accountModal() {
 
 function checkoutModal() {
   closeCart();
-  openModal(`${modalHead('Checkout')}<div class="modal-body"><div class="order-summary">${state.cart.map((line) => { const item = getProduct(line.id); return `<div><span>${item.title} × ${line.quantity}</span><b>${rupiah(item.price * line.quantity)}</b></div>`; }).join('')}<div><span>Biaya admin</span><b>${rupiah(99)}</b></div><div class="total"><span>Total pembayaran</span><b>${rupiah(cartTotal() + 99)}</b></div></div><form id="checkoutForm"><div class="form-group"><label>NAMA PENERIMA</label><input name="name" required value="${state.user?.name || ''}" placeholder="Nama kamu"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" inputmode="tel" required pattern="[0-9+ ]{9,16}" placeholder="Contoh: 081234567890"><p class="field-help">Nomor ini dipakai admin untuk menghubungi dan mengirim detail produk.</p></div><div class="form-group"><label>CATATAN (OPSIONAL)</label><textarea name="note" placeholder="Permintaan atau informasi tambahan"></textarea></div><button class="submit-button" type="submit">Lanjut ke pembayaran</button></form></div>`);
+  openModal(`${modalHead('Checkout')}<div class="modal-body"><div class="order-summary">${state.cart.map((line) => { const item = getProduct(line.id); return `<div><span>${item.title}${line.ownGmail ? '<small>Pakai Gmail sendiri</small>' : ''} × ${line.quantity}</span><b>${rupiah(lineUnitPrice(line) * line.quantity)}</b></div>`; }).join('')}<div><span>Biaya admin</span><b>${rupiah(99)}</b></div><div class="total"><span>Total pembayaran</span><b>${rupiah(cartTotal() + 99)}</b></div></div><form id="checkoutForm"><div class="form-group"><label>NAMA PENERIMA</label><input name="name" required value="${state.user?.name || ''}" placeholder="Nama kamu"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" inputmode="tel" required pattern="[0-9+ ]{9,16}" placeholder="Contoh: 081234567890"><p class="field-help">Nomor ini dipakai admin untuk menghubungi dan mengirim detail produk.</p></div><div class="form-group"><label>CATATAN (OPSIONAL)</label><textarea name="note" placeholder="Permintaan atau informasi tambahan"></textarea></div><button class="submit-button" type="submit">Lanjut ke pembayaran</button></form></div>`);
 }
 
 function paymentModal(customer, order) {
@@ -177,7 +186,8 @@ function localBotAnswer(question) {
   const text = question.toLowerCase();
   if (text.includes('stok') || text.includes('ready')) { const ready = products.filter((item) => item.stock > 0 && item.enabled).sort((a, b) => a.featuredRank - b.featuredRank || b.sold - a.sold).slice(0, 5); return `Produk ready yang populer:\n${ready.map((item) => `• ${item.title} - ${rupiah(item.price)} (sisa ${item.stock})`).join('\n')}`; }
   if (text.includes('bayar') || text.includes('qris')) return 'Setelah checkout, sistem membuat QRIS dengan nominal persis sesuai total belanja. Scan QR tersebut, lalu konfirmasi ke admin.';
-  if (text.includes('admin') || text.includes('manusia')) return 'Tekan tombol "Hubungi admin" untuk melanjutkan lewat WhatsApp.';
+  if (text.includes('pesan') || text.includes('telegram') || text.includes('whatsapp')) return 'Cari produk yang kamu mau, buka detailnya, pilih varian dan jumlah, lalu masukkan ke keranjang. Telegram, WhatsApp, dan web memakai stok serta checkout DigiePro yang sama.';
+  if (text.includes('admin') || text.includes('manusia')) return 'Pilih mode "Chat Admin". Pesanmu akan masuk ke dashboard admin DigiePro.';
   const match = products.find((item) => text.includes(item.title.toLowerCase().split(' ')[0]));
   if (match) return `${match.title}: ${rupiah(match.price)}, stok ${match.stock}, terjual ${match.sold}. ${match.stock && match.enabled ? 'Saat ini tersedia.' : 'Saat ini stok habis.'}`;
   return 'Aku bisa membantu cek stok, harga produk, cara pembayaran QRIS, atau menghubungkan kamu ke admin.';
@@ -216,13 +226,14 @@ if (carousel) {
   carousel.addEventListener('pointerdown', (event) => { pointerStart = event.clientX; clearInterval(carouselTimer); });
   carousel.addEventListener('pointerup', (event) => { const distance = event.clientX - pointerStart; if (Math.abs(distance) > 45) showSlide(carouselIndex + (distance < 0 ? 1 : -1)); startCarousel(); });
   carousel.addEventListener('mouseenter', () => clearInterval(carouselTimer)); carousel.addEventListener('mouseleave', startCarousel);
-  carousel.querySelector('[data-search-product]').addEventListener('click', () => { document.querySelector('#searchInput').value = 'CHATGPT'; renderProducts(); document.querySelector('#products').scrollIntoView(); });
+  carousel.querySelectorAll('[data-search-product]').forEach((button) => button.addEventListener('click', () => { document.querySelector('#searchInput').value = button.dataset.searchProduct; renderProducts(); document.querySelector('#products').scrollIntoView(); }));
+  carousel.querySelector('[data-bot-order]').addEventListener('click', () => { openChat(); switchChatMode('bot'); chatMessages.innerHTML = '<div class="message bot">DigiePro Bot siap membantu kamu mencari produk dan memulai pesanan dari Telegram, WhatsApp, atau web.</div><div class="quick-chat"><button data-question="Pesan lewat Telegram" type="button">Telegram</button><button data-question="Pesan lewat WhatsApp" type="button">WhatsApp</button><button data-question="Cari paket ChatGPT" type="button">Cari ChatGPT</button><button data-admin type="button">Chat admin</button></div>'; });
   showSlide(0); startCarousel();
 }
 document.querySelector('#resetFilter').addEventListener('click', () => { state.stock = 'all'; state.best = false; state.wholesale = false; document.querySelector('input[name="stock"][value="all"]').checked = true; document.querySelector('#bestFilter').checked = false; document.querySelector('#wholesaleFilter').checked = false; document.querySelector('#searchInput').value = ''; renderProducts(); });
 productGrid.addEventListener('click', (event) => { const add = event.target.closest('[data-add]'); if (add) { event.stopPropagation(); addToCart(Number(add.dataset.add), 1); return; } const card = event.target.closest('[data-detail]'); if (card) detailModal(card.dataset.detail); });
 productGrid.addEventListener('keydown', (event) => { const card = event.target.closest('[data-detail]'); if (card && (event.key === 'Enter' || event.key === ' ')) detailModal(card.dataset.detail); });
-document.querySelector('#cartItems').addEventListener('click', (event) => { const remove = event.target.closest('[data-remove]'); const plus = event.target.closest('[data-cart-plus]'); const minus = event.target.closest('[data-cart-minus]'); if (remove) state.cart.splice(Number(remove.dataset.remove), 1); if (plus) state.cart[Number(plus.dataset.cartPlus)].quantity += 1; if (minus) state.cart[Number(minus.dataset.cartMinus)].quantity -= 1; if (remove || plus || minus) persistCart(); });
+document.querySelector('#cartItems').addEventListener('click', (event) => { const remove = event.target.closest('[data-remove]'); const plus = event.target.closest('[data-cart-plus]'); const minus = event.target.closest('[data-cart-minus]'); if (remove) state.cart.splice(Number(remove.dataset.remove), 1); if (plus) { const line = state.cart[Number(plus.dataset.cartPlus)]; if (cartQuantityFor(line.id) < getProduct(line.id).stock) line.quantity += 1; } if (minus) state.cart[Number(minus.dataset.cartMinus)].quantity -= 1; if (remove || plus || minus) persistCart(); });
 document.querySelector('#cartButton').addEventListener('click', openCart); document.querySelectorAll('[data-close-cart]').forEach((button) => button.addEventListener('click', closeCart)); overlay.addEventListener('click', closeCart); document.querySelector('#checkoutButton').addEventListener('click', checkoutModal); document.querySelector('#accountButton').addEventListener('click', accountModal);
 document.querySelector('#sideAccount').addEventListener('click', accountModal);
 document.querySelector('#menuButton').addEventListener('click', () => { document.querySelector('#sidebar').classList.toggle('open'); document.querySelector('#sidebarOverlay').classList.toggle('show'); });
@@ -237,10 +248,17 @@ modalLayer.addEventListener('click', (event) => {
   if (event.target === modalLayer || event.target.closest('[data-close-modal]')) closeModal();
   const detailTab = event.target.closest('[data-detail-tab]'); if (detailTab) { document.querySelectorAll('[data-detail-tab]').forEach((button) => button.classList.toggle('active', button === detailTab)); document.querySelectorAll('[data-detail-panel]').forEach((panel) => { panel.hidden = panel.dataset.detailPanel !== detailTab.dataset.detailTab; }); }
   const authTab = event.target.closest('[data-auth-tab]'); if (authTab) authModal(authTab.dataset.authTab);
-  const addDetail = event.target.closest('[data-add-detail]'); if (addDetail) { const quantity = Number(document.querySelector('#detailQuantity').value); addToCart(Number(addDetail.dataset.addDetail), quantity); closeModal(); openCart(); }
-  const buyNow = event.target.closest('[data-buy-now]'); if (buyNow) { const id = Number(buyNow.dataset.buyNow); const product = getProduct(id); const quantity = Math.max(1, Math.min(Number(document.querySelector('#detailQuantity').value) || 1, product.stock)); state.cart = [{ id, quantity }]; persistCart(); closeModal(); checkoutModal(); }
+  const addDetail = event.target.closest('[data-add-detail]'); if (addDetail) { const quantity = Number(document.querySelector('#detailQuantity').value); addToCart(Number(addDetail.dataset.addDetail), quantity, Boolean(document.querySelector('#detailOwnGmail')?.checked)); closeModal(); openCart(); }
+  const buyNow = event.target.closest('[data-buy-now]'); if (buyNow) { const id = Number(buyNow.dataset.buyNow); const product = getProduct(id); const quantity = Math.max(1, Math.min(Number(document.querySelector('#detailQuantity').value) || 1, product.stock)); state.cart = [{ id, quantity, ownGmail: Boolean(document.querySelector('#detailOwnGmail')?.checked) }]; persistCart(); closeModal(); checkoutModal(); }
   if (event.target.closest('#logoutButton')) { state.user = null; localStorage.removeItem('digiepro_user'); document.querySelector('#accountButton span').textContent = 'Masuk'; closeModal(); notify('Kamu sudah keluar'); }
   if (event.target.closest('#confirmPayment')) { const order = JSON.parse(localStorage.getItem('digiepro_last_order')); closeModal(); openChat(); switchChatMode('admin'); sendAdminMessage(`Saya sudah menyelesaikan pembayaran untuk pesanan ${order.id}.`).catch(() => {}); notify('Admin akan menghubungi kamu melalui WhatsApp.'); }
+});
+
+modalLayer.addEventListener('change', (event) => {
+  if (event.target.id === 'detailOwnGmail') {
+    const item = getProduct(document.querySelector('[data-add-detail]')?.dataset.addDetail);
+    document.querySelector('#detailPrice').textContent = rupiah(item.price + (event.target.checked ? 5000 : 0));
+  }
 });
 
 modalLayer.addEventListener('submit', async (event) => {
@@ -252,15 +270,19 @@ modalLayer.addEventListener('submit', async (event) => {
   }
 });
 
-function addToCart(id, quantity) {
+function addToCart(id, quantity, ownGmail = false) {
   const product = getProduct(id); const amount = Math.max(1, Math.min(Number(quantity) || 1, product.stock));
-  const existing = state.cart.find((line) => line.id === id);
-  if (existing) existing.quantity = Math.min(existing.quantity + amount, product.stock); else state.cart.push({ id, quantity: amount });
+  const selectedOwnGmail = supportsOwnGmail(product) && Boolean(ownGmail);
+  const existing = state.cart.find((line) => line.id === id && Boolean(line.ownGmail) === selectedOwnGmail);
+  const otherQuantity = state.cart.filter((line) => line.id === id && line !== existing).reduce((total, line) => total + line.quantity, 0);
+  const available = Math.max(0, product.stock - otherQuantity);
+  if (!available) return notify('Stok produk sudah habis di keranjang');
+  if (existing) existing.quantity = Math.min(existing.quantity + amount, available); else state.cart.push({ id, quantity: Math.min(amount, available), ownGmail: selectedOwnGmail });
   persistCart(); notify('Produk masuk ke keranjang');
 }
 
 async function loadStore() {
-  try { const response = await fetch('/api/store', { cache: 'no-store' }); if (!response.ok) throw new Error(); const data = await response.json(); products = data.products; validIds = new Set(products.map((item) => item.id)); }
+  try { const response = await fetch('/api/store', { cache: 'no-store' }); if (!response.ok) throw new Error(); const data = await response.json(); products = data.products.map((item) => supportsOwnGmail(item) ? { ...item, access: 'Akun privat + Codex', description: CHATGPT_PLUS_DESCRIPTION } : item); validIds = new Set(products.map((item) => item.id)); }
   catch { notify('Menggunakan data katalog lokal.'); }
   renderProducts(); updateCart();
 }

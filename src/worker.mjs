@@ -102,16 +102,22 @@ async function api(request, env, pathname) {
     const store = await ensureStore(env);
     if (!Array.isArray(body.items) || !body.items.length) return json({ error: 'Keranjang kosong.' }, 400);
     let subtotal = 0;
+    const normalizedItems = [];
+    const requestedStock = new Map();
     for (const line of body.items) {
       const product = store.products.find((item) => item.id === Number(line.id));
       const quantity = Number(line.quantity);
       if (!product || !product.enabled) return json({ error: 'Produk tidak tersedia.' }, 400);
-      if (!Number.isInteger(quantity) || quantity < 1 || quantity > product.stock) return json({ error: `Stok ${product.title} tidak mencukupi.` }, 409);
-      subtotal += product.price * quantity;
+      const requested = (requestedStock.get(product.id) || 0) + quantity;
+      if (!Number.isInteger(quantity) || quantity < 1 || requested > product.stock) return json({ error: `Stok ${product.title} tidak mencukupi.` }, 409);
+      requestedStock.set(product.id, requested);
+      const ownGmail = product.title.includes('CHATGPT PLUS') && Boolean(line.ownGmail);
+      subtotal += (product.price + (ownGmail ? 5000 : 0)) * quantity;
+      normalizedItems.push({ id: product.id, quantity, ownGmail });
     }
-    for (const line of body.items) store.products.find((item) => item.id === Number(line.id)).stock -= Number(line.quantity);
+    for (const line of normalizedItems) store.products.find((item) => item.id === line.id).stock -= line.quantity;
     const adminFee = 99;
-    const order = { id: `DGP-${Date.now().toString().slice(-8)}`, customer: body.customer, chatId: body.chatId || '', items: body.items, subtotal, adminFee, total: subtotal + adminFee, status: 'pending', createdAt: new Date().toISOString() };
+    const order = { id: `DGP-${Date.now().toString().slice(-8)}`, customer: body.customer, chatId: body.chatId || '', items: normalizedItems, subtotal, adminFee, total: subtotal + adminFee, status: 'pending', createdAt: new Date().toISOString() };
     if (body.chatId) {
       let chat = store.chats.find((item) => item.id === body.chatId);
       if (!chat) {
