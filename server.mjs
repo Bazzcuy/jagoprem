@@ -11,10 +11,12 @@ const storeFile = join(dataDir, 'store.json');
 const adminPassword = process.env.ADMIN_PASSWORD || 'digiepro123';
 const adminToken = randomBytes(24).toString('hex');
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
+const STORE_SCHEMA_VERSION = 3;
+const OFFICIAL_PRIVATE_DESCRIPTION = 'Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan DigiePro.';
 
 mkdirSync(dataDir, { recursive: true });
 
-function readStore() { const data = JSON.parse(readFileSync(storeFile, 'utf8')); data.orders ||= []; data.chats ||= []; return data; }
+function readStore() { const data = JSON.parse(readFileSync(storeFile, 'utf8')); data.orders ||= []; data.chats ||= []; if ((data.schemaVersion || 0) < STORE_SCHEMA_VERSION) { const overrides = { 46473: { stock: 13, available_stock: 13 }, 23915: { stock: 3, available_stock: 3 } }; for (const product of data.products || []) { if (overrides[product.id]) { Object.assign(product, overrides[product.id], { warranty: '30 hari', access: 'Akun resmi privat', description: OFFICIAL_PRIVATE_DESCRIPTION }); product.total_stock = Number(product.sold || 0) + product.stock; } } data.schemaVersion = STORE_SCHEMA_VERSION; writeStore(data); } return data; }
 function writeStore(data) { writeFileSync(storeFile, JSON.stringify(data, null, 2)); }
 function sendJson(response, status, data, headers = {}) { response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', ...headers }); response.end(JSON.stringify(data)); }
 function readBody(request) { return new Promise((resolve, reject) => { let body = ''; request.on('data', (chunk) => { body += chunk; if (body.length > 1e6) request.destroy(); }); request.on('end', () => { try { resolve(body ? JSON.parse(body) : {}); } catch (error) { reject(error); } }); request.on('error', reject); }); }

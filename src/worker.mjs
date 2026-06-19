@@ -1,4 +1,20 @@
 const jsonHeaders = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
+const STORE_SCHEMA_VERSION = 3;
+const OFFICIAL_PRIVATE_DESCRIPTION = 'Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan DigiePro.';
+
+function migrateStore(store) {
+  if ((store.schemaVersion || 0) >= STORE_SCHEMA_VERSION) return false;
+  const overrides = { 46473: { stock: 13, available_stock: 13 }, 23915: { stock: 3, available_stock: 3 } };
+  for (const product of store.products || []) {
+    const override = overrides[product.id];
+    if (override) {
+      Object.assign(product, override, { warranty: '30 hari', access: 'Akun resmi privat', description: OFFICIAL_PRIVATE_DESCRIPTION });
+      product.total_stock = Number(product.sold || 0) + product.stock;
+    }
+  }
+  store.schemaVersion = STORE_SCHEMA_VERSION;
+  return true;
+}
 
 function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), { status, headers: { ...jsonHeaders, ...headers } });
@@ -18,6 +34,7 @@ async function ensureStore(env) {
     const store = JSON.parse(row.data);
     store.orders ||= [];
     store.chats ||= [];
+    if (migrateStore(store)) await saveStore(env, store);
     return store;
   }
 
@@ -26,6 +43,7 @@ async function ensureStore(env) {
   const seed = await seedResponse.json();
   seed.orders = [];
   seed.chats = [];
+  migrateStore(seed);
   await env.DB.prepare('INSERT INTO app_state (id, data, updated_at) VALUES (1, ?, ?)').bind(JSON.stringify(seed), new Date().toISOString()).run();
   return seed;
 }

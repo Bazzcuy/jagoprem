@@ -1,4 +1,5 @@
 {
+  "schemaVersion": 3,
   "products": [
     {
       "id": 46473,
@@ -8,13 +9,16 @@
       "cashback_type": "amount",
       "thumbnail": "https://s3.xoftware.id/f/46473_claude1b_997_1780858031695.png",
       "price": 65000,
-      "available_stock": 1,
+      "available_stock": 13,
       "sold": 198,
-      "total_stock": 199,
+      "total_stock": 211,
       "has_wholesale": false,
-      "stock": 8,
+      "stock": 13,
       "enabled": true,
-      "featuredRank": 4
+      "featuredRank": 4,
+      "warranty": "30 hari",
+      "access": "Akun resmi privat",
+      "description": "Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan DigiePro."
     },
     {
       "id": 43262,
@@ -456,13 +460,16 @@
       "cashback_type": "amount",
       "thumbnail": "https://s3.xoftware.id/f/23915_gemini_997_1780628910845.png",
       "price": 85000,
-      "available_stock": 1,
+      "available_stock": 3,
       "sold": 91,
-      "total_stock": 92,
+      "total_stock": 94,
       "has_wholesale": true,
-      "stock": 8,
+      "stock": 3,
       "enabled": true,
-      "featuredRank": 99
+      "featuredRank": 99,
+      "warranty": "30 hari",
+      "access": "Akun resmi privat",
+      "description": "Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan DigiePro."
     },
     {
       "id": 23843,
