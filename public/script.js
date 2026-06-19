@@ -21,7 +21,7 @@ let validIds = new Set(products.map((item) => item.id));
 const savedCart = JSON.parse(localStorage.getItem('digiepro_cart') || '[]');
 const state = {
   cart: savedCart.map((line) => typeof line === 'number' ? { id: line, quantity: 1 } : line).filter((line) => validIds.has(line.id)),
-  user: JSON.parse(localStorage.getItem('digiepro_user') || 'null'),
+  user: null,
   stock: 'all',
   best: false,
   wholesale: false,
@@ -42,6 +42,7 @@ const chatMessages = document.querySelector('#chatMessages');
 function rupiah(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
 function icons() { if (window.lucide) window.lucide.createIcons(); }
 function notify(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(notify.timer); notify.timer = setTimeout(() => toast.classList.remove('show'), 2400); }
+function escapeHtml(value) { return String(value ?? '').replace(/[&<>"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[character])); }
 function getProduct(id) { return products.find((item) => item.id === Number(id)); }
 function supportsOwnGmail(item) { return item?.title.includes('CHATGPT PLUS'); }
 function lineUnitPrice(line) { const item = getProduct(line.id); return (item?.price || 0) + (supportsOwnGmail(item) && line.ownGmail ? 5000 : 0); }
@@ -158,17 +159,17 @@ function detailModal(id) {
 
 function authModal(mode = 'login') {
   const register = mode === 'register';
-  openModal(`${modalHead('Akun DigiePro')}<div class="modal-body"><div class="auth-tabs"><button class="${register ? '' : 'active'}" data-auth-tab="login" type="button">Masuk</button><button class="${register ? 'active' : ''}" data-auth-tab="register" type="button">Daftar</button></div><form id="authForm" data-mode="${mode}">${register ? '<div class="form-group"><label>NAMA</label><input name="name" required placeholder="Nama kamu"></div>' : ''}<div class="form-group"><label>EMAIL</label><input name="email" type="email" required placeholder="nama@email.com"></div><div class="form-group"><label>PASSWORD</label><input name="password" type="password" minlength="4" required placeholder="Minimal 4 karakter"></div><button class="submit-button" type="submit">${register ? 'Buat akun' : 'Masuk sekarang'}</button></form></div>`);
+  openModal(`${modalHead('Akun DigiePro')}<div class="modal-body"><div class="auth-tabs"><button class="${register ? '' : 'active'}" data-auth-tab="login" type="button">Masuk</button><button class="${register ? 'active' : ''}" data-auth-tab="register" type="button">Daftar</button></div><form id="authForm" data-mode="${mode}">${register ? '<div class="form-group"><label>NAMA</label><input name="name" required minlength="2" maxlength="80" autocomplete="name" placeholder="Nama kamu"></div>' : ''}<div class="form-group"><label>EMAIL</label><input name="email" type="email" required autocomplete="email" placeholder="nama@email.com"></div><div class="form-group"><label>PASSWORD</label><input name="password" type="password" minlength="8" required autocomplete="current-password" placeholder="Minimal 8 karakter"></div><p class="field-help">Akun tersimpan aman dan dapat dipakai kembali di perangkat lain.</p><button class="submit-button" type="submit">${register ? 'Buat akun' : 'Masuk sekarang'}</button></form></div>`);
 }
 
 function accountModal() {
   if (!state.user) return authModal();
-  openModal(`${modalHead('Akun saya')}<div class="modal-body"><div class="account-card"><strong>${state.user.name}</strong><span>${state.user.email}</span></div><button class="logout-button" id="logoutButton" type="button">Keluar dari akun</button></div>`);
+  openModal(`${modalHead('Akun saya')}<div class="modal-body"><div class="account-card"><strong>${escapeHtml(state.user.name)}</strong><span>${escapeHtml(state.user.email)}</span></div><button class="logout-button" id="logoutButton" type="button">Keluar dari akun</button></div>`);
 }
 
 function checkoutModal() {
   closeCart();
-  openModal(`${modalHead('Checkout')}<div class="modal-body"><div class="order-summary">${state.cart.map((line) => { const item = getProduct(line.id); return `<div><span>${item.title}${line.ownGmail ? '<small>Pakai Gmail sendiri</small>' : ''} × ${line.quantity}</span><b>${rupiah(lineUnitPrice(line) * line.quantity)}</b></div>`; }).join('')}<div><span>Biaya admin</span><b>${rupiah(99)}</b></div><div class="total"><span>Total pembayaran</span><b>${rupiah(cartTotal() + 99)}</b></div></div><form id="checkoutForm"><div class="form-group"><label>NAMA PENERIMA</label><input name="name" required value="${state.user?.name || ''}" placeholder="Nama kamu"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" inputmode="tel" required pattern="[0-9+ ]{9,16}" placeholder="Contoh: 081234567890"><p class="field-help">Nomor ini dipakai admin untuk menghubungi dan mengirim detail produk.</p></div><div class="form-group"><label>CATATAN (OPSIONAL)</label><textarea name="note" placeholder="Permintaan atau informasi tambahan"></textarea></div><button class="submit-button" type="submit">Lanjut ke pembayaran</button></form></div>`);
+  openModal(`${modalHead('Checkout')}<div class="modal-body"><div class="order-summary">${state.cart.map((line) => { const item = getProduct(line.id); return `<div><span>${item.title}${line.ownGmail ? '<small>Pakai Gmail sendiri</small>' : ''} × ${line.quantity}</span><b>${rupiah(lineUnitPrice(line) * line.quantity)}</b></div>`; }).join('')}<div><span>Biaya admin</span><b>${rupiah(99)}</b></div><div class="total"><span>Total pembayaran</span><b>${rupiah(cartTotal() + 99)}</b></div></div><form id="checkoutForm"><div class="form-group"><label>NAMA PENERIMA</label><input name="name" required value="${escapeHtml(state.user?.name || '')}" placeholder="Nama kamu"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" inputmode="tel" required pattern="[0-9+ ]{9,16}" placeholder="Contoh: 081234567890"><p class="field-help">Nomor ini dipakai admin untuk menghubungi dan mengirim detail produk.</p></div><div class="form-group"><label>CATATAN (OPSIONAL)</label><textarea name="note" placeholder="Permintaan atau informasi tambahan"></textarea></div><button class="submit-button" type="submit">Lanjut ke pembayaran</button></form></div>`);
 }
 
 function paymentModal(customer, order) {
@@ -186,7 +187,7 @@ function closeChat() { chatPanel.classList.remove('open'); chatPanel.setAttribut
 function addMessage(text, role) { const node = document.createElement('div'); node.className = `message ${role}`; node.textContent = text; chatMessages.appendChild(node); chatMessages.scrollTop = chatMessages.scrollHeight; }
 function contactAdmin() { switchChatMode('admin'); }
 function customerIdentity() { const last = JSON.parse(localStorage.getItem('digiepro_last_order') || 'null'); return last?.customer || state.user || {}; }
-async function loadAdminChat() { try { const response = await fetch(`/api/chat/${state.chatId}`, { cache: 'no-store' }); const chat = await response.json(); if (state.chatMode !== 'admin') return; chatMessages.innerHTML = chat.messages?.length ? chat.messages.map((item) => `<div class="message ${item.sender === 'admin' ? 'bot' : 'user'}">${item.text.replace(/[<>]/g, '')}</div>`).join('') : '<div class="message bot">Kamu sudah masuk ke chat admin. Tulis pesan dan admin akan membalas dari dashboard.</div>'; chatMessages.scrollTop = chatMessages.scrollHeight; } catch {} }
+async function loadAdminChat() { try { const response = await fetch(`/api/chat/${state.chatId}`, { cache: 'no-store' }); const chat = await response.json(); if (state.chatMode !== 'admin') return; chatMessages.innerHTML = chat.messages?.length ? chat.messages.map((item) => `<div class="message ${item.sender === 'admin' ? 'bot' : 'user'}">${escapeHtml(item.text)}</div>`).join('') : '<div class="message bot">Kamu sudah masuk ke chat admin. Tulis pesan dan admin akan membalas dari dashboard.</div>'; chatMessages.scrollTop = chatMessages.scrollHeight; } catch {} }
 function switchChatMode(mode) { state.chatMode = mode; document.querySelectorAll('[data-chat-mode]').forEach((button) => button.classList.toggle('active', button.dataset.chatMode === mode)); document.querySelector('#chatTitle').textContent = mode === 'admin' ? 'Admin DigiePro' : 'Asisten DigiePro'; if (mode === 'admin') loadAdminChat(); else chatMessages.innerHTML = chatWelcome(); }
 async function sendAdminMessage(message) { const response = await fetch(`/api/chat/${state.chatId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, customer: customerIdentity() }) }); if (!response.ok) throw new Error('Pesan gagal dikirim.'); await loadAdminChat(); }
 function localBotAnswer(question) {
@@ -266,7 +267,7 @@ function setDetailQuantity(value) {
   if (minus) minus.disabled = quantity <= min; if (plus) plus.disabled = quantity >= max;
 }
 
-modalLayer.addEventListener('click', (event) => {
+modalLayer.addEventListener('click', async (event) => {
   if (event.target === modalLayer || event.target.closest('[data-close-modal]')) closeModal();
   if (event.target.closest('[data-detail-minus]')) setDetailQuantity(Number(document.querySelector('#detailQuantity').value) - 1);
   if (event.target.closest('[data-detail-plus]')) setDetailQuantity(Number(document.querySelector('#detailQuantity').value) + 1);
@@ -274,7 +275,7 @@ modalLayer.addEventListener('click', (event) => {
   const authTab = event.target.closest('[data-auth-tab]'); if (authTab) authModal(authTab.dataset.authTab);
   const addDetail = event.target.closest('[data-add-detail]'); if (addDetail) { const quantity = Number(document.querySelector('#detailQuantity').value); addToCart(Number(addDetail.dataset.addDetail), quantity, Boolean(document.querySelector('#detailOwnGmail')?.checked)); closeModal(); openCart(); }
   const buyNow = event.target.closest('[data-buy-now]'); if (buyNow) { const id = Number(buyNow.dataset.buyNow); const product = getProduct(id); const quantity = Math.max(1, Math.min(Number(document.querySelector('#detailQuantity').value) || 1, product.stock)); state.cart = [{ id, quantity, ownGmail: Boolean(document.querySelector('#detailOwnGmail')?.checked) }]; persistCart(); closeModal(); checkoutModal(); }
-  if (event.target.closest('#logoutButton')) { state.user = null; localStorage.removeItem('digiepro_user'); document.querySelector('#accountButton span').textContent = 'Masuk'; closeModal(); notify('Kamu sudah keluar'); }
+  if (event.target.closest('#logoutButton')) { await fetch('/api/auth/logout', { method: 'POST' }); state.user = null; document.querySelector('#accountButton span').textContent = 'Masuk'; closeModal(); notify('Kamu sudah keluar'); }
   if (event.target.closest('#confirmPayment')) { const order = JSON.parse(localStorage.getItem('digiepro_last_order')); closeModal(); openChat(); switchChatMode('admin'); sendAdminMessage(`Saya sudah menyelesaikan pembayaran untuk pesanan ${order.id}.`).catch(() => {}); notify('Admin akan menghubungi kamu melalui WhatsApp.'); }
 });
 
@@ -288,7 +289,11 @@ modalLayer.addEventListener('input', (event) => { if (event.target.id === 'detai
 
 modalLayer.addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (event.target.id === 'authForm') { const data = Object.fromEntries(new FormData(event.target)); if (event.target.dataset.mode === 'register') localStorage.setItem(`digiepro_account_${data.email}`, JSON.stringify(data)); const saved = JSON.parse(localStorage.getItem(`digiepro_account_${data.email}`) || 'null'); if (!saved && event.target.dataset.mode === 'login') return notify('Akun belum ditemukan. Silakan daftar.'); if (saved && saved.password !== data.password) return notify('Password belum sesuai.'); state.user = saved || data; localStorage.setItem('digiepro_user', JSON.stringify(state.user)); document.querySelector('#accountButton span').textContent = state.user.name.split(' ')[0]; closeModal(); notify('Berhasil masuk'); }
+  if (event.target.id === 'authForm') {
+    const button = event.target.querySelector('button[type="submit"]'); const mode = event.target.dataset.mode; button.disabled = true; button.textContent = mode === 'register' ? 'Membuat akun...' : 'Memeriksa akun...';
+    try { const response = await fetch(`/api/auth/${mode}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.fromEntries(new FormData(event.target))) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Autentikasi gagal.'); state.user = result.user; document.querySelector('#accountButton span').textContent = state.user.name.split(' ')[0]; closeModal(); notify(mode === 'register' ? 'Akun berhasil dibuat' : 'Berhasil masuk'); }
+    catch (error) { notify(error.message); button.disabled = false; button.textContent = mode === 'register' ? 'Buat akun' : 'Masuk sekarang'; }
+  }
   if (event.target.id === 'checkoutForm') {
     const button = event.target.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Memvalidasi stok...';
     try { const response = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customer: Object.fromEntries(new FormData(event.target)), items: state.cart, chatId: state.chatId }) }); const order = await response.json(); if (!response.ok) throw new Error(order.error || 'Pesanan gagal dibuat.'); await loadStore(); state.cart = []; persistCart(); paymentModal(order.customer, order); } catch (error) { notify(error.message); button.disabled = false; button.textContent = 'Lanjut ke pembayaran'; }
@@ -312,10 +317,16 @@ async function loadStore() {
   renderProducts(); updateCart();
 }
 
+async function loadUserSession() {
+  localStorage.removeItem('digiepro_user');
+  Object.keys(localStorage).filter((key) => key.startsWith('digiepro_account_')).forEach((key) => localStorage.removeItem(key));
+  try { const response = await fetch('/api/auth/me', { cache: 'no-store' }); if (!response.ok) return; const result = await response.json(); state.user = result.user; document.querySelector('#accountButton span').textContent = state.user.name.split(' ')[0]; } catch {}
+}
+
 document.querySelector('#historyButton').addEventListener('click', () => { const order = JSON.parse(localStorage.getItem('digiepro_last_order') || 'null'); openModal(`${modalHead('Riwayat pesanan')}<div class="modal-body">${order ? `<div class="order-summary"><div><span>ID pesanan</span><b>${order.id}</b></div><div><span>Status</span><b>${order.status || 'pending'}</b></div><div><span>Total</span><b>${rupiah(order.total)}</b></div><div><span>Dibuat</span><b>${new Date(order.createdAt).toLocaleString('id-ID')}</b></div></div><button class="submit-button" type="button" data-open-admin-chat>Chat admin tentang pesanan</button>` : '<div class="cart-empty"><p>Belum ada pesanan.</p></div>'}</div>`); });
 document.querySelector('#infoButton').addEventListener('click', () => { document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('show'); openModal(`${modalHead('Informasi DigiePro')}<div class="modal-body"><div class="about-profile"><div class="about-photo"><img src="assets/afran-ronaldi.jpg" alt="Afran Ronaldi"></div><div><small>PENGELOLA DIGIEPRO</small><h3>Afran Ronaldi</h3><p>DigiePro dibangun untuk mempermudah pembelian akun digital premium dengan katalog yang jelas, stok konsisten, dan proses transaksi yang sederhana.</p></div></div><div class="about-points"><div><i data-lucide="package-check"></i><span><b>Stok terpantau</b><small>Jumlah pembelian mengikuti stok yang tersedia.</small></span></div><div><i data-lucide="qr-code"></i><span><b>QRIS sesuai tagihan</b><small>Nominal pembayaran dibuat sesuai total checkout.</small></span></div><div><i data-lucide="message-circle"></i><span><b>Bantuan langsung</b><small>Produk dikirim dan kendala dibantu melalui WhatsApp.</small></span></div></div><button class="submit-button" type="button" data-open-admin-chat>Hubungi admin</button></div>`); });
 modalLayer.addEventListener('click', (event) => { if (event.target.closest('[data-open-admin-chat]')) { closeModal(); openChat(); switchChatMode('admin'); } });
 setInterval(() => { if (state.chatMode === 'admin' && chatPanel.classList.contains('open')) loadAdminChat(); }, 5000);
 
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') { closeCart(); closeModal(); closeChat(); } });
-loadStore(); if (state.user) document.querySelector('#accountButton span').textContent = state.user.name.split(' ')[0]; icons();
+loadStore(); loadUserSession(); icons();

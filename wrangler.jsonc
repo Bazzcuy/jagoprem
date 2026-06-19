@@ -12,5 +12,12 @@
       "/bolehdong",
       "/seed-store.json"
     ]
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "digiepro-db",
+      "database_id": "0c239bf3-1c8e-444e-b082-0979798e232d"
+    }
+  ]
 }
