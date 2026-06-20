@@ -60,6 +60,10 @@ async function ensureAuthTables(env) {
     env.DB.prepare('CREATE TABLE IF NOT EXISTS user_sessions (token_hash TEXT PRIMARY KEY, user_id TEXT NOT NULL, expires_at TEXT NOT NULL, created_at TEXT NOT NULL, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE)'),
     env.DB.prepare('CREATE TABLE IF NOT EXISTS login_attempts (key TEXT PRIMARY KEY, attempts INTEGER NOT NULL, window_start INTEGER NOT NULL)')
   ]);
+  const columns = await env.DB.prepare('PRAGMA table_info(users)').all();
+  const names = new Set((columns.results || []).map((column) => column.name));
+  if (!names.has('device_id')) await env.DB.prepare("ALTER TABLE users ADD COLUMN device_id TEXT NOT NULL DEFAULT ''").run();
+  if (!names.has('blocked')) await env.DB.prepare('ALTER TABLE users ADD COLUMN blocked INTEGER NOT NULL DEFAULT 0').run();
   authTablesReady = true;
 }
 
@@ -77,6 +81,8 @@ function safeEqual(left, right) {
 }
 function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
 function publicUser(user) { return { id: user.id, name: user.name, email: user.email }; }
+function resellerMinimum(price) { return Number(price) > 20000 ? 3 : 5; }
+function resellerPrice(price) { return Math.round(Number(price) * 0.92); }
 
 async function rateLimited(env, key) {
   const now = Date.now();
@@ -101,8 +107,8 @@ async function createUserSession(env, userId) {
 async function currentUser(request, env) {
   const token = getCookie(request, 'digiepro_user'); if (!token) return null;
   await ensureAuthTables(env);
-  const user = await env.DB.prepare('SELECT users.id, users.name, users.email FROM user_sessions JOIN users ON users.id = user_sessions.user_id WHERE user_sessions.token_hash = ? AND user_sessions.expires_at > ?').bind(await sha256(token), new Date().toISOString()).first();
-  return user ? publicUser(user) : null;
+  const user = await env.DB.prepare('SELECT users.id, users.name, users.email, users.blocked FROM user_sessions JOIN users ON users.id = user_sessions.user_id WHERE user_sessions.token_hash = ? AND user_sessions.expires_at > ?').bind(await sha256(token), new Date().toISOString()).first();
+  return user && !Number(user.blocked) ? publicUser(user) : null;
 }
 
 async function readBody(request) {
@@ -143,12 +149,15 @@ async function isAdmin(request, env) {
 async function api(request, env, pathname) {
   if (pathname.startsWith('/api/auth/')) await ensureAuthTables(env);
   if (pathname === '/api/auth/register' && request.method === 'POST') {
-    const body = await readBody(request); const name = String(body.name || '').trim().slice(0, 80); const email = normalizeEmail(body.email); const password = String(body.password || '');
+    const body = await readBody(request); const name = String(body.name || '').trim().slice(0, 80); const email = normalizeEmail(body.email); const password = String(body.password || ''); const deviceId = String(body.deviceId || '').trim();
     if (name.length < 2 || !/^\S+@\S+\.\S+$/.test(email) || password.length < 8) return json({ error: 'Nama, email, atau password belum valid. Password minimal 8 karakter.' }, 400);
+    if (!/^[a-zA-Z0-9-]{8,100}$/.test(deviceId)) return json({ error: 'Identitas perangkat tidak valid. Muat ulang halaman lalu coba lagi.' }, 400);
     const existing = await env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
     if (existing) return json({ error: 'Email sudah terdaftar. Silakan masuk.' }, 409);
+    const deviceCount = await env.DB.prepare('SELECT COUNT(*) AS total FROM users WHERE device_id = ?').bind(deviceId).first();
+    if (Number(deviceCount?.total || 0) >= 2) return json({ error: 'Perangkat ini sudah mencapai batas maksimal 2 akun.' }, 403);
     const id = `usr-${randomId(12)}`; const salt = randomId(16); const createdAt = new Date().toISOString();
-    await env.DB.prepare('INSERT INTO users (id, name, email, password_hash, salt, created_at) VALUES (?, ?, ?, ?, ?, ?)').bind(id, name, email, await hashPassword(password, salt), salt, createdAt).run();
+    await env.DB.prepare('INSERT INTO users (id, name, email, password_hash, salt, created_at, device_id, blocked) VALUES (?, ?, ?, ?, ?, ?, ?, 0)').bind(id, name, email, await hashPassword(password, salt), salt, createdAt, deviceId).run();
     const user = { id, name, email }; return json({ user }, 201, { 'Set-Cookie': await createUserSession(env, id) });
   }
   if (pathname === '/api/auth/login' && request.method === 'POST') {
@@ -156,6 +165,7 @@ async function api(request, env, pathname) {
     if (await rateLimited(env, key)) return json({ error: 'Terlalu banyak percobaan. Coba lagi dalam 15 menit.' }, 429);
     const user = await env.DB.prepare('SELECT * FROM users WHERE email = ?').bind(email).first();
     if (!user || !safeEqual(await hashPassword(password, user.salt), user.password_hash)) { await recordFailure(env, key); return json({ error: 'Email atau password salah.' }, 401); }
+    if (Number(user.blocked)) return json({ error: 'Akun ini diblokir. Hubungi admin melalui chat bantuan.' }, 403);
     await clearFailures(env, key); return json({ user: publicUser(user) }, 200, { 'Set-Cookie': await createUserSession(env, user.id) });
   }
   if (pathname === '/api/auth/me' && request.method === 'GET') {
@@ -169,6 +179,13 @@ async function api(request, env, pathname) {
   if (pathname === '/api/store' && request.method === 'GET') {
     const store = await ensureStore(env);
     return json({ products: store.products });
+  }
+
+  if (pathname === '/api/orders/me' && request.method === 'GET') {
+    const user = await currentUser(request, env);
+    if (!user) return json({ error: 'Silakan masuk untuk melihat pesanan.' }, 401);
+    const store = await ensureStore(env);
+    return json({ orders: store.orders.filter((order) => order.userId === user.id).sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt))) });
   }
 
   const chatMatch = pathname.match(/^\/api\/chat\/([a-zA-Z0-9-]{6,80})$/);
@@ -194,6 +211,8 @@ async function api(request, env, pathname) {
   }
 
   if (pathname === '/api/orders' && request.method === 'POST') {
+    const user = await currentUser(request, env);
+    if (!user) return json({ error: 'Silakan masuk sebelum membuat pesanan.' }, 401);
     const body = await readBody(request);
     const store = await ensureStore(env);
     if (!Array.isArray(body.items) || !body.items.length) return json({ error: 'Keranjang kosong.' }, 400);
@@ -208,19 +227,27 @@ async function api(request, env, pathname) {
       if (!Number.isInteger(quantity) || quantity < 1 || requested > product.stock) return json({ error: `Stok ${product.title} tidak mencukupi.` }, 409);
       requestedStock.set(product.id, requested);
       const ownGmail = product.title.includes('CHATGPT PLUS') && Boolean(line.ownGmail);
-      subtotal += (product.price + (ownGmail ? 5000 : 0)) * quantity;
-      normalizedItems.push({ id: product.id, quantity, ownGmail });
+      const reseller = Boolean(line.reseller);
+      const minimum = resellerMinimum(product.price);
+      if (reseller && quantity < minimum) return json({ error: `Harga reseller ${product.title} minimal ${minimum} item.` }, 400);
+      const regularUnitPrice = product.price + (ownGmail ? 5000 : 0);
+      const unitPrice = reseller ? resellerPrice(regularUnitPrice) : regularUnitPrice;
+      const lineTotal = unitPrice * quantity;
+      subtotal += lineTotal;
+      normalizedItems.push({ id: product.id, title: product.title, quantity, ownGmail, reseller, unitPrice, regularUnitPrice, lineTotal });
     }
     for (const line of normalizedItems) store.products.find((item) => item.id === line.id).stock -= line.quantity;
     const adminFee = 99;
-    const order = { id: `DGP-${Date.now().toString().slice(-8)}`, customer: body.customer, chatId: body.chatId || '', items: normalizedItems, subtotal, adminFee, total: subtotal + adminFee, status: 'pending', createdAt: new Date().toISOString() };
+    const customer = { name: user.name, email: user.email, whatsapp: String(body.customer?.whatsapp || '').trim().slice(0, 30), note: String(body.customer?.note || '').trim().slice(0, 500) };
+    if (!/^\+?[0-9\s-]{8,20}$/.test(customer.whatsapp)) return json({ error: 'Nomor WhatsApp belum valid.' }, 400);
+    const order = { id: `DGP-${Date.now().toString().slice(-8)}`, userId: user.id, customer, chatId: body.chatId || '', items: normalizedItems, subtotal, adminFee, total: subtotal + adminFee, status: 'pending', createdAt: new Date().toISOString() };
     if (body.chatId) {
       let chat = store.chats.find((item) => item.id === body.chatId);
       if (!chat) {
-        chat = { id: body.chatId, customer: body.customer, messages: [], updatedAt: new Date().toISOString() };
+        chat = { id: body.chatId, customer, messages: [], updatedAt: new Date().toISOString() };
         store.chats.unshift(chat);
       }
-      chat.customer = { ...chat.customer, ...body.customer };
+      chat.customer = { ...chat.customer, ...customer };
       chat.orderId = order.id;
     }
     store.orders.unshift(order);
@@ -244,7 +271,26 @@ async function api(request, env, pathname) {
 
   if (pathname === '/api/admin/state' && request.method === 'GET') {
     if (!(await isAdmin(request, env))) return json({ error: 'Unauthorized' }, 401);
-    return json(await ensureStore(env));
+    await ensureAuthTables(env);
+    const store = await ensureStore(env);
+    const rows = await env.DB.prepare('SELECT id, name, email, created_at, blocked, device_id FROM users ORDER BY created_at DESC').all();
+    const users = (rows.results || []).map((user) => {
+      const orders = store.orders.filter((order) => order.userId === user.id);
+      return { id: user.id, name: user.name, email: user.email, createdAt: user.created_at, blocked: Boolean(user.blocked), deviceId: user.device_id, orderCount: orders.length, totalSpent: orders.filter((order) => order.status !== 'cancelled').reduce((sum, order) => sum + Number(order.total || 0), 0), orders };
+    });
+    return json({ ...store, users });
+  }
+
+  const adminUserBlockMatch = pathname.match(/^\/api\/admin\/users\/([^/]+)\/block$/);
+  if (adminUserBlockMatch && request.method === 'PUT') {
+    if (!(await isAdmin(request, env))) return json({ error: 'Unauthorized' }, 401);
+    await ensureAuthTables(env);
+    const body = await readBody(request);
+    const blocked = Boolean(body.blocked);
+    const result = await env.DB.prepare('UPDATE users SET blocked = ? WHERE id = ?').bind(blocked ? 1 : 0, adminUserBlockMatch[1]).run();
+    if (!result.meta?.changes) return json({ error: 'Akun tidak ditemukan.' }, 404);
+    if (blocked) await env.DB.prepare('DELETE FROM user_sessions WHERE user_id = ?').bind(adminUserBlockMatch[1]).run();
+    return json({ ok: true, blocked });
   }
 
   const adminChatMatch = pathname.match(/^\/api\/admin\/chats\/([a-zA-Z0-9-]{6,80})\/reply$/);

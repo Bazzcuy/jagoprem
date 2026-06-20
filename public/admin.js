@@ -1,6 +1,7 @@
-let adminState = { products: [], orders: [], chats: [] };
+let adminState = { products: [], orders: [], chats: [], users: [] };
 let activeTab = 'overview';
 let activeChatId = '';
+let activeAccountId = '';
 const loginView = document.querySelector('#loginView');
 const adminApp = document.querySelector('#adminApp');
 const content = document.querySelector('#adminContent');
@@ -36,6 +37,15 @@ function orderTable() {
   return `<div class="panel"><div class="panel-head"><h2>Pesanan</h2><span class="panel-meta">${adminState.orders.length} transaksi</span></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>PELANGGAN</th><th>ITEM</th><th>TOTAL</th><th>STATUS</th></tr></thead><tbody>${adminState.orders.map((order) => `<tr><td><b>${escapeHtml(order.id)}</b><br><small>${new Date(order.createdAt).toLocaleString('id-ID')}</small></td><td><b>${escapeHtml(order.customer?.name || '-')}</b><br>${escapeHtml(order.customer?.whatsapp || '-')}</td><td>${order.items.map((line) => `${escapeHtml(adminState.products.find((product) => product.id === line.id)?.title || line.id)}${line.ownGmail ? ' · Gmail sendiri' : ''} ×${line.quantity}`).join('<br>')}</td><td>${money(order.total)}</td><td><select class="order-select status ${escapeHtml(order.status)}" data-order-status="${escapeHtml(order.id)}" data-previous-status="${escapeHtml(order.status)}">${['pending', 'paid', 'completed', 'cancelled'].map((status) => `<option value="${status}" ${order.status === status ? 'selected' : ''}>${status}</option>`).join('')}</select></td></tr>`).join('')}</tbody></table></div></div>`;
 }
 
+function accountTable() {
+  const users = adminState.users || []; if (!activeAccountId && users.length) activeAccountId = users[0].id; const selected = users.find((user) => user.id === activeAccountId);
+  return `<div class="account-workspace"><div class="panel account-list"><div class="panel-head"><div><h2>Akun pembeli</h2><span class="panel-meta">${users.length} akun terdaftar</span></div><input id="accountSearch" type="search" placeholder="Cari nama atau email..."></div><div class="table-wrap"><table><thead><tr><th>PEMBELI</th><th>BERGABUNG</th><th>PESANAN</th><th>TOTAL</th><th>STATUS</th><th></th></tr></thead><tbody>${users.map((user) => `<tr data-account-row="${user.id}"><td><b>${escapeHtml(user.name)}</b><br><small>${escapeHtml(user.email)}</small></td><td>${new Date(user.createdAt).toLocaleDateString('id-ID')}</td><td>${user.orderCount}</td><td>${money(user.totalSpent)}</td><td><span class="account-status ${user.blocked ? 'blocked' : 'active'}">${user.blocked ? 'Diblokir' : 'Aktif'}</span></td><td><button class="account-detail-button" data-account-detail="${user.id}">Detail</button></td></tr>`).join('')}</tbody></table></div></div>${selected ? accountDetail(selected) : ''}</div>`;
+}
+
+function accountDetail(user) {
+  return `<aside class="panel account-detail"><div class="account-detail-head"><div><small>DETAIL AKUN</small><h2>${escapeHtml(user.name)}</h2><span>${escapeHtml(user.email)}</span></div><span class="account-status ${user.blocked ? 'blocked' : 'active'}">${user.blocked ? 'Diblokir' : 'Aktif'}</span></div><dl><div><dt>Terdaftar</dt><dd>${new Date(user.createdAt).toLocaleString('id-ID')}</dd></div><div><dt>ID akun</dt><dd>${escapeHtml(user.id)}</dd></div><div><dt>ID perangkat</dt><dd>${escapeHtml(user.deviceId || '-')}</dd></div><div><dt>Total belanja</dt><dd>${money(user.totalSpent)}</dd></div></dl><button class="block-account ${user.blocked ? 'unblock' : ''}" data-block-account="${user.id}" data-blocked="${user.blocked}"><i data-lucide="${user.blocked ? 'shield-check' : 'ban'}"></i>${user.blocked ? 'Buka blokir akun' : 'Blokir akun'}</button><div class="account-orders"><h3>Riwayat pembelian</h3>${user.orders?.length ? user.orders.map((order) => `<article><div><b>${escapeHtml(order.id)}</b><span>${new Date(order.createdAt).toLocaleString('id-ID')}</span></div><em class="status ${order.status}">${order.status}</em><p>${order.items.map((line) => `${escapeHtml(line.title || adminState.products.find((item) => item.id === line.id)?.title || line.id)} ×${line.quantity}${line.reseller ? ' · reseller' : ''}`).join('<br>')}</p><strong>${money(order.total)}</strong></article>`).join('') : '<p class="empty-account-orders">Belum pernah membeli.</p>'}</div></aside>`;
+}
+
 function chatWorkspace() {
   const chats = [...(adminState.chats || [])].sort((left, right) => String(right.updatedAt).localeCompare(String(left.updatedAt)));
   if (!activeChatId && chats.length) activeChatId = chats[0].id;
@@ -44,10 +54,12 @@ function chatWorkspace() {
   return `<div class="chat-workspace"><aside class="chat-list"><h2>Chat pembeli <span>${chats.length}</span></h2>${chats.length ? chats.map((item) => `<button class="${item.id === activeChatId ? 'active' : ''}" data-open-chat="${escapeHtml(item.id)}"><b>${escapeHtml(item.customer?.name || 'Pengunjung')}</b><span>${escapeHtml(item.messages?.at(-1)?.text || 'Percakapan baru')}</span></button>`).join('') : '<p>Belum ada chat.</p>'}</aside><section class="admin-conversation">${chat ? `<div class="conversation-head"><div><b>${escapeHtml(chat.customer?.name || 'Pengunjung')}</b><span>${escapeHtml(chat.customer?.whatsapp || 'Nomor WhatsApp belum tersedia')}${chat.orderId ? ` | ${escapeHtml(chat.orderId)}` : ''}</span></div>${whatsapp ? `<a href="https://wa.me/${whatsapp}" target="_blank" rel="noopener">Chat WhatsApp <i data-lucide="external-link"></i></a>` : ''}</div><div class="conversation-messages">${chat.messages.map((message) => `<div class="admin-message ${message.sender === 'admin' ? 'admin' : 'customer'}">${escapeHtml(message.text)}</div>`).join('')}</div><form id="adminReply"><input name="message" required maxlength="1000" autocomplete="off" placeholder="Balas pembeli..."><button type="submit">Kirim</button></form>` : '<div class="empty-admin">Pilih percakapan.</div>'}</section></div>`;
 }
 
-function render() {
-  document.querySelector('#adminTitle').textContent = activeTab === 'overview' ? 'Ringkasan' : activeTab === 'products' ? 'Produk' : activeTab === 'orders' ? 'Pesanan' : 'Chat Pembeli';
-  content.innerHTML = activeTab === 'overview' ? stats() + orderTable() : activeTab === 'products' ? productTable() : activeTab === 'orders' ? orderTable() : chatWorkspace();
+function render(options = {}) {
+  const listScroll = options.preserveScroll ? content.querySelector('.chat-list')?.scrollTop : 0; const messageScroll = options.preserveScroll ? content.querySelector('.conversation-messages')?.scrollTop : 0;
+  const titles = { overview: 'Ringkasan', products: 'Produk', orders: 'Pesanan', accounts: 'Akun Pembeli', chats: 'Chat Pembeli' }; document.querySelector('#adminTitle').textContent = titles[activeTab];
+  content.innerHTML = activeTab === 'overview' ? stats() + orderTable() : activeTab === 'products' ? productTable() : activeTab === 'orders' ? orderTable() : activeTab === 'accounts' ? accountTable() : chatWorkspace();
   icons();
+  if (activeTab === 'chats') { const list = content.querySelector('.chat-list'); const messages = content.querySelector('.conversation-messages'); if (list) list.scrollTop = listScroll; if (messages) messages.scrollTop = options.scrollToEnd ? messages.scrollHeight : messageScroll; }
 }
 
 document.querySelector('#adminLogin').addEventListener('submit', async (event) => {
@@ -67,7 +79,9 @@ content.addEventListener('click', async (event) => {
     catch (error) { toast(error.message); }
     finally { save.disabled = false; save.textContent = 'Simpan'; }
   }
-  const chat = event.target.closest('[data-open-chat]'); if (chat) { activeChatId = chat.dataset.openChat; render(); }
+  const chat = event.target.closest('[data-open-chat]'); if (chat) { const listScroll = content.querySelector('.chat-list')?.scrollTop || 0; activeChatId = chat.dataset.openChat; render({ preserveScroll: true, scrollToEnd: true }); const list = content.querySelector('.chat-list'); if (list) list.scrollTop = listScroll; }
+  const account = event.target.closest('[data-account-detail]'); if (account) { activeAccountId = account.dataset.accountDetail; render(); }
+  const block = event.target.closest('[data-block-account]'); if (block) { block.disabled = true; try { const blocked = block.dataset.blocked !== 'true'; await api(`/api/admin/users/${block.dataset.blockAccount}/block`, { method: 'PUT', body: JSON.stringify({ blocked }) }); const user = adminState.users.find((item) => item.id === block.dataset.blockAccount); user.blocked = blocked; render(); toast(blocked ? 'Akun diblokir dan sesi login dihentikan' : 'Blokir akun dibuka'); } catch (error) { block.disabled = false; toast(error.message); } }
 });
 
 content.addEventListener('change', async (event) => {
@@ -76,12 +90,12 @@ content.addEventListener('change', async (event) => {
   try { const updated = await api(`/api/admin/orders/${select.dataset.orderStatus}`, { method: 'PUT', body: JSON.stringify({ status: select.value }) }); Object.assign(adminState.orders.find((order) => order.id === updated.id), updated); select.dataset.previousStatus = updated.status; toast(updated.status === 'cancelled' ? 'Pesanan dibatalkan dan stok dikembalikan' : 'Status pesanan diperbarui'); render(); }
   catch (error) { select.value = select.dataset.previousStatus; select.disabled = false; toast(error.message); }
 });
-content.addEventListener('input', (event) => { if (event.target.id !== 'adminSearch') return; const query = event.target.value.toLowerCase(); document.querySelectorAll('[data-product-row]').forEach((row) => { row.hidden = !row.textContent.toLowerCase().includes(query); }); });
+content.addEventListener('input', (event) => { if (!['adminSearch', 'accountSearch'].includes(event.target.id)) return; const query = event.target.value.toLowerCase(); const selector = event.target.id === 'adminSearch' ? '[data-product-row]' : '[data-account-row]'; document.querySelectorAll(selector).forEach((row) => { row.hidden = !row.textContent.toLowerCase().includes(query); }); });
 content.addEventListener('submit', async (event) => {
   if (event.target.id !== 'adminReply') return; event.preventDefault(); const button = event.target.querySelector('button'); button.disabled = true;
-  try { const updated = await api(`/api/admin/chats/${activeChatId}/reply`, { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(event.target))) }); Object.assign(adminState.chats.find((chat) => chat.id === updated.id), updated); render(); }
+  try { const updated = await api(`/api/admin/chats/${activeChatId}/reply`, { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(event.target))) }); Object.assign(adminState.chats.find((chat) => chat.id === updated.id), updated); render({ preserveScroll: true, scrollToEnd: true }); }
   catch (error) { button.disabled = false; toast(error.message); }
 });
 
-setInterval(async () => { const draft = document.querySelector('#adminReply input'); if (activeTab !== 'chats' || adminApp.hidden || draft?.value) return; try { adminState = await api('/api/admin/state'); render(); } catch {} }, 5000);
+setInterval(async () => { const draft = document.querySelector('#adminReply input'); if (activeTab !== 'chats' || adminApp.hidden || draft?.value) return; try { adminState = await api('/api/admin/state'); render({ preserveScroll: true }); } catch {} }, 5000);
 load(); icons();
