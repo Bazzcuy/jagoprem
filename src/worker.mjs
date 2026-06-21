@@ -1,21 +1,53 @@
 const jsonHeaders = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
-const STORE_SCHEMA_VERSION = 3;
+const STORE_SCHEMA_VERSION = 4;
 const OFFICIAL_PRIVATE_DESCRIPTION = 'Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan DigiePro.';
+const ORDER_RESERVATION_MS = 30 * 60 * 1000;
+const SAMPLE_REVIEWS = [
+  { id: 'sample-01', productId: 90002, customerName: 'Raka', rating: 5, comment: 'Akun GPT Plus gw udah abis masa garansinya, tapi masih bisa dipake. Aneh banget tapi baguslah.', createdAt: '2026-06-18T08:20:00.000Z', isSample: true },
+  { id: 'sample-02', productId: 23725, customerName: 'Dimas', rating: 5, comment: 'CapCutnya kapan ready lagi bang? Yang kemarin udah abis, lancar banget dipakai edit konten.', createdAt: '2026-06-17T13:10:00.000Z', isSample: true },
+  { id: 'sample-03', productId: 46473, customerName: 'Nadia', rating: 5, comment: 'Claude Pro privat dan responsnya cepat. Cocok buat bantu ngerjain dokumen panjang.', createdAt: '2026-06-16T04:42:00.000Z', isSample: true },
+  { id: 'sample-04', productId: 23915, customerName: 'Adit', rating: 4, comment: 'Gemini Pro aktif sesuai petunjuk. Admin balasnya lumayan cepat dan akun aman.', createdAt: '2026-06-15T10:05:00.000Z', isSample: true },
+  { id: 'sample-05', productId: 90001, customerName: 'Fajar', rating: 5, comment: 'ChatGPT Plus masuk cepat, Codex juga bisa dipakai. Bakal order lagi.', createdAt: '2026-06-14T15:30:00.000Z', isSample: true },
+  { id: 'sample-06', productId: 43262, customerName: 'Alya', rating: 4, comment: 'iQIYI premiumnya jalan dan kualitas videonya bagus. Pengiriman akun jelas.', createdAt: '2026-06-13T09:12:00.000Z', isSample: true },
+  { id: 'sample-07', productId: 23935, customerName: 'Rio', rating: 5, comment: 'Spotify aman, playlist lama langsung bisa lanjut. Mantap.', createdAt: '2026-06-12T03:45:00.000Z', isSample: true },
+  { id: 'sample-08', productId: 40213, customerName: 'Sinta', rating: 4, comment: 'HBO Max lancar buat nonton. Instruksi login gampang dipahami.', createdAt: '2026-06-11T12:25:00.000Z', isSample: true },
+  { id: 'sample-09', productId: 23843, customerName: 'Bagus', rating: 5, comment: 'Paket ChatGPT Go tiga bulannya worth it buat belajar dan rangkum materi.', createdAt: '2026-06-10T06:15:00.000Z', isSample: true },
+  { id: 'sample-10', productId: 46473, customerName: 'Kevin', rating: 4, comment: 'Sudah seminggu masih aman. Fitur Claude lengkap dan akun tidak sharing.', createdAt: '2026-06-09T14:50:00.000Z', isSample: true },
+  { id: 'sample-11', productId: 40213, customerName: 'Anonim', rating: 1, comment: 'Sempat gagal login pertama kali dan harus menunggu bantuan admin.', createdAt: '2026-06-08T11:40:00.000Z', isSample: true },
+  { id: 'sample-12', productId: 23935, customerName: 'Miko', rating: 1, comment: 'Pengiriman lebih lama dari perkiraan walaupun akhirnya produk masuk.', createdAt: '2026-06-07T07:30:00.000Z', isSample: true }
+];
 let authTablesReady = false;
 
 function migrateStore(store) {
-  if ((store.schemaVersion || 0) >= STORE_SCHEMA_VERSION) return false;
+  let changed = false;
   const overrides = { 46473: { stock: 13, available_stock: 13 }, 23915: { stock: 3, available_stock: 3 } };
-  for (const product of store.products || []) {
-    const override = overrides[product.id];
-    if (override) {
-      Object.assign(product, override, { warranty: '30 hari', access: 'Akun resmi privat', description: OFFICIAL_PRIVATE_DESCRIPTION });
-      product.total_stock = Number(product.sold || 0) + product.stock;
+  if ((store.schemaVersion || 0) < 3) {
+    for (const product of store.products || []) {
+      const override = overrides[product.id];
+      if (override) {
+        Object.assign(product, override, { warranty: '30 hari', access: 'Akun resmi privat', description: OFFICIAL_PRIVATE_DESCRIPTION });
+        product.total_stock = Number(product.sold || 0) + product.stock;
+      }
     }
+    changed = true;
   }
-  store.schemaVersion = STORE_SCHEMA_VERSION;
-  return true;
+  store.orders ||= []; store.chats ||= []; store.reviews ||= [];
+  store.settings ||= { maintenance: false, maintenanceMessage: 'DigiePro sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.' };
+  for (const product of store.products || []) if (typeof product.autoRestock !== 'boolean') product.autoRestock = false;
+  if ((store.schemaVersion || 0) < 4) {
+    store.reviews.push(...SAMPLE_REVIEWS.filter((review) => !store.reviews.some((item) => item.id === review.id)));
+    for (const order of store.orders) if (order.status === 'completed' && !order.soldApplied) { for (const line of order.items || []) { const product = store.products.find((item) => item.id === line.id); if (product) { product.sold = Number(product.sold || 0) + Number(line.quantity || 0); syncProduct(product); } } order.soldApplied = true; }
+    changed = true;
+  }
+  if (store.schemaVersion !== STORE_SCHEMA_VERSION) { store.schemaVersion = STORE_SCHEMA_VERSION; changed = true; }
+  return changed;
 }
+
+function syncProduct(product) { product.stock = Math.max(0, Math.min(49, Number(product.stock || 0))); product.available_stock = product.stock; product.total_stock = Number(product.sold || 0) + product.stock; }
+function applyAutoRestock(store) { let changed = false; for (const product of store.products || []) { if (product.autoRestock && product.enabled && product.stock < 2) { product.stock = Math.min(49, product.stock + 8); syncProduct(product); changed = true; } } return changed; }
+function releaseOrderStock(store, order) { for (const line of order.items || []) { const product = store.products.find((item) => item.id === line.id); if (product) { product.stock = Math.min(49, product.stock + Number(line.quantity || 0)); syncProduct(product); } } }
+function reserveOrderStock(store, order) { for (const line of order.items || []) { const product = store.products.find((item) => item.id === line.id); if (!product || product.stock < line.quantity) return false; } for (const line of order.items) { const product = store.products.find((item) => item.id === line.id); product.stock -= line.quantity; syncProduct(product); } return true; }
+function expirePendingOrders(store) { let changed = false; const now = Date.now(); for (const order of store.orders || []) { if (order.status === 'pending' && new Date(order.expiresAt || new Date(new Date(order.createdAt).getTime() + ORDER_RESERVATION_MS)).getTime() <= now) { releaseOrderStock(store, order); order.status = 'expired'; order.expiredAt = new Date().toISOString(); changed = true; } } if (applyAutoRestock(store)) changed = true; return changed; }
 
 function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), { status, headers: { ...jsonHeaders, ...headers } });
@@ -33,9 +65,8 @@ async function ensureStore(env) {
   const row = await env.DB.prepare('SELECT data FROM app_state WHERE id = 1').first();
   if (row?.data) {
     const store = JSON.parse(row.data);
-    store.orders ||= [];
-    store.chats ||= [];
-    if (migrateStore(store)) await saveStore(env, store);
+    const changed = migrateStore(store);
+    if (expirePendingOrders(store) || changed) await saveStore(env, store);
     return store;
   }
 
@@ -44,6 +75,7 @@ async function ensureStore(env) {
   const seed = await seedResponse.json();
   seed.orders = [];
   seed.chats = [];
+  seed.reviews = [];
   migrateStore(seed);
   await env.DB.prepare('INSERT INTO app_state (id, data, updated_at) VALUES (1, ?, ?)').bind(JSON.stringify(seed), new Date().toISOString()).run();
   return seed;
@@ -178,14 +210,30 @@ async function api(request, env, pathname) {
 
   if (pathname === '/api/store' && request.method === 'GET') {
     const store = await ensureStore(env);
-    return json({ products: store.products });
+    return json({ products: store.products, maintenance: store.settings?.maintenance || false });
+  }
+
+  if (pathname === '/api/reviews' && request.method === 'GET') {
+    const store = await ensureStore(env);
+    return json({ reviews: [...store.reviews].sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt))) });
+  }
+
+  if (pathname === '/api/reviews' && request.method === 'POST') {
+    const user = await currentUser(request, env); if (!user) return json({ error: 'Silakan masuk untuk memberi ulasan.' }, 401);
+    const body = await readBody(request); const orderId = String(body.orderId || ''); const productId = Number(body.productId); const rating = Number(body.rating); const comment = String(body.comment || '').trim().slice(0, 600);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5 || comment.length < 8) return json({ error: 'Pilih 1-5 bintang dan tulis komentar minimal 8 karakter.' }, 400);
+    const store = await ensureStore(env); const order = store.orders.find((item) => item.id === orderId && item.userId === user.id);
+    if (!order || order.status !== 'completed' || !order.items.some((line) => line.id === productId)) return json({ error: 'Ulasan hanya tersedia untuk produk dari pesanan yang sudah selesai.' }, 403);
+    if (store.reviews.some((review) => review.orderId === orderId && review.productId === productId)) return json({ error: 'Produk ini sudah kamu ulas.' }, 409);
+    const review = { id: `rev-${randomId(10)}`, orderId, productId, userId: user.id, customerName: user.name.split(' ')[0], rating, comment, verified: true, createdAt: new Date().toISOString() };
+    store.reviews.unshift(review); await saveStore(env, store); return json(review, 201);
   }
 
   if (pathname === '/api/orders/me' && request.method === 'GET') {
     const user = await currentUser(request, env);
     if (!user) return json({ error: 'Silakan masuk untuk melihat pesanan.' }, 401);
     const store = await ensureStore(env);
-    return json({ orders: store.orders.filter((order) => order.userId === user.id).sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt))) });
+    return json({ orders: store.orders.filter((order) => order.userId === user.id).sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt))), reviews: store.reviews.filter((review) => review.userId === user.id) });
   }
 
   const chatMatch = pathname.match(/^\/api\/chat\/([a-zA-Z0-9-]{6,80})$/);
@@ -215,6 +263,8 @@ async function api(request, env, pathname) {
     if (!user) return json({ error: 'Silakan masuk sebelum membuat pesanan.' }, 401);
     const body = await readBody(request);
     const store = await ensureStore(env);
+    const pendingOrders = store.orders.filter((order) => order.userId === user.id && order.status === 'pending');
+    if (pendingOrders.length >= 2) return json({ error: 'Kamu masih punya 2 pesanan menunggu pembayaran. Bayar atau tunggu pesanan kedaluwarsa sebelum membuat pesanan baru.' }, 429);
     if (!Array.isArray(body.items) || !body.items.length) return json({ error: 'Keranjang kosong.' }, 400);
     let subtotal = 0;
     const normalizedItems = [];
@@ -236,11 +286,13 @@ async function api(request, env, pathname) {
       subtotal += lineTotal;
       normalizedItems.push({ id: product.id, title: product.title, quantity, ownGmail, reseller, unitPrice, regularUnitPrice, lineTotal });
     }
-    for (const line of normalizedItems) store.products.find((item) => item.id === line.id).stock -= line.quantity;
     const adminFee = 99;
     const customer = { name: user.name, email: user.email, whatsapp: String(body.customer?.whatsapp || '').trim().slice(0, 30), note: String(body.customer?.note || '').trim().slice(0, 500) };
     if (!/^\+?[0-9\s-]{8,20}$/.test(customer.whatsapp)) return json({ error: 'Nomor WhatsApp belum valid.' }, 400);
-    const order = { id: `DGP-${Date.now().toString().slice(-8)}`, userId: user.id, customer, chatId: body.chatId || '', items: normalizedItems, subtotal, adminFee, total: subtotal + adminFee, status: 'pending', createdAt: new Date().toISOString() };
+    const createdAt = new Date();
+    const order = { id: `DGP-${Date.now()}-${randomId(2).toUpperCase()}`, userId: user.id, customer, chatId: body.chatId || '', items: normalizedItems, subtotal, adminFee, total: subtotal + adminFee, status: 'pending', createdAt: createdAt.toISOString(), expiresAt: new Date(createdAt.getTime() + ORDER_RESERVATION_MS).toISOString() };
+    if (!reserveOrderStock(store, order)) return json({ error: 'Stok berubah dan tidak lagi mencukupi. Muat ulang keranjang.' }, 409);
+    applyAutoRestock(store);
     if (body.chatId) {
       let chat = store.chats.find((item) => item.id === body.chatId);
       if (!chat) {
@@ -276,7 +328,7 @@ async function api(request, env, pathname) {
     const rows = await env.DB.prepare('SELECT id, name, email, created_at, blocked, device_id FROM users ORDER BY created_at DESC').all();
     const users = (rows.results || []).map((user) => {
       const orders = store.orders.filter((order) => order.userId === user.id);
-      return { id: user.id, name: user.name, email: user.email, createdAt: user.created_at, blocked: Boolean(user.blocked), deviceId: user.device_id, orderCount: orders.length, totalSpent: orders.filter((order) => order.status !== 'cancelled').reduce((sum, order) => sum + Number(order.total || 0), 0), orders };
+      return { id: user.id, name: user.name, email: user.email, createdAt: user.created_at, blocked: Boolean(user.blocked), deviceId: user.device_id, orderCount: orders.length, totalSpent: orders.filter((order) => ['paid', 'completed'].includes(order.status)).reduce((sum, order) => sum + Number(order.total || 0), 0), orders };
     });
     return json({ ...store, users });
   }
@@ -318,7 +370,7 @@ async function api(request, env, pathname) {
     const stock = Number(body.stock);
     const price = Number(body.price);
     if (!Number.isInteger(stock) || stock < 0 || stock > 49 || !Number.isInteger(price) || price < 0) return json({ error: 'Harga atau stok tidak valid.' }, 400);
-    Object.assign(product, { stock, price, enabled: Boolean(body.enabled) });
+    Object.assign(product, { stock, price, enabled: Boolean(body.enabled), autoRestock: Boolean(body.autoRestock) }); syncProduct(product); applyAutoRestock(store);
     await saveStore(env, store);
     return json(product);
   }
@@ -331,16 +383,22 @@ async function api(request, env, pathname) {
     const order = store.orders.find((item) => item.id === orderMatch[1]);
     if (!order) return json({ error: 'Pesanan tidak ditemukan.' }, 404);
     if (!['pending', 'paid', 'completed', 'cancelled'].includes(body.status)) return json({ error: 'Status tidak valid.' }, 400);
-    if (order.status !== 'cancelled' && body.status === 'cancelled') {
-      for (const line of order.items) { const product = store.products.find((item) => item.id === line.id); if (product) product.stock = Math.min(49, product.stock + line.quantity); }
-    }
-    if (order.status === 'cancelled' && body.status !== 'cancelled') {
-      for (const line of order.items) { const product = store.products.find((item) => item.id === line.id); if (!product || product.stock < line.quantity) return json({ error: `Stok ${product?.title || line.id} tidak cukup untuk mengaktifkan pesanan.` }, 409); }
-      for (const line of order.items) store.products.find((item) => item.id === line.id).stock -= line.quantity;
-    }
-    order.status = body.status;
+    const previous = order.status; const next = body.status; const released = ['cancelled', 'expired'].includes(previous); const willRelease = ['cancelled', 'expired'].includes(next);
+    if (released && !willRelease && !reserveOrderStock(store, order)) return json({ error: 'Stok tidak cukup untuk mengaktifkan kembali pesanan.' }, 409);
+    if (!released && willRelease) releaseOrderStock(store, order);
+    if (next === 'completed' && !order.soldApplied) { for (const line of order.items) { const product = store.products.find((item) => item.id === line.id); if (product) { product.sold = Number(product.sold || 0) + line.quantity; syncProduct(product); } } order.soldApplied = true; }
+    if (previous === 'completed' && next !== 'completed' && order.soldApplied) { for (const line of order.items) { const product = store.products.find((item) => item.id === line.id); if (product) { product.sold = Math.max(0, Number(product.sold || 0) - line.quantity); syncProduct(product); } } order.soldApplied = false; }
+    order.status = next; order.updatedAt = new Date().toISOString(); if (next === 'completed') order.completedAt = order.updatedAt;
+    applyAutoRestock(store);
     await saveStore(env, store);
     return json(order);
+  }
+
+  if (pathname === '/api/admin/settings' && request.method === 'PUT') {
+    if (!(await isAdmin(request, env))) return json({ error: 'Unauthorized' }, 401);
+    const body = await readBody(request); const store = await ensureStore(env);
+    store.settings = { ...store.settings, maintenance: Boolean(body.maintenance), maintenanceMessage: String(body.maintenanceMessage || '').trim().slice(0, 240) || 'DigiePro sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.' };
+    await saveStore(env, store); return json(store.settings);
   }
 
   return json({ error: 'Endpoint tidak ditemukan.' }, 404);
@@ -354,6 +412,15 @@ export default {
       if (url.pathname === '/bolehdong') {
         const assetUrl = new URL('/admin.html', url);
         return env.ASSETS.fetch(new Request(assetUrl, request));
+      }
+      const adminAsset = ['/admin.html', '/admin.js', '/admin.css', '/admin-chat.css', '/admin-audit.css'].includes(url.pathname);
+      if (!url.pathname.startsWith('/api/admin/') && !adminAsset) {
+        const store = await ensureStore(env);
+        if (store.settings?.maintenance) {
+          if (url.pathname.startsWith('/api/')) return json({ error: store.settings.maintenanceMessage, maintenance: true }, 503);
+          const message = String(store.settings.maintenanceMessage || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
+          return new Response(`<!doctype html><html lang="id"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DigiePro Maintenance</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#eef8f6;color:#17211f;font-family:Arial,sans-serif}.box{width:min(520px,100%);background:#fff;border:1px solid #cee2dd;border-radius:8px;padding:36px;text-align:center;box-shadow:0 18px 55px #183c3420}.logo{width:52px;height:52px;margin:auto;display:grid;place-items:center;border-radius:8px;background:#17211f;color:#42d5ae;font-weight:900}.box h1{font-size:25px;margin:20px 0 10px}.box p{color:#60706c;line-height:1.7}.box button{margin-top:16px;height:42px;padding:0 20px;border:0;border-radius:5px;background:#0b9474;color:#fff;font-weight:700}</style><main class="box"><div class="logo">DP</div><h1>Sedang dalam pemeliharaan</h1><p>${message}</p><button onclick="location.reload()">Coba lagi</button></main></html>`, { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+        }
       }
       if (url.pathname === '/seed-store.json') return new Response('Not found', { status: 404 });
       if (url.pathname.startsWith('/api/')) return await api(request, env, url.pathname);
