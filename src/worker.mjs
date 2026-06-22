@@ -1,20 +1,264 @@
 const jsonHeaders = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
-const STORE_SCHEMA_VERSION = 4;
+const STORE_SCHEMA_VERSION = 5;
 const OFFICIAL_PRIVATE_DESCRIPTION = 'Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan DigiePro.';
 const ORDER_RESERVATION_MS = 30 * 60 * 1000;
 const SAMPLE_REVIEWS = [
-  { id: 'sample-01', productId: 90002, customerName: 'Raka', rating: 5, comment: 'Akun GPT Plus gw udah abis masa garansinya, tapi masih bisa dipake. Aneh banget tapi baguslah.', createdAt: '2026-06-18T08:20:00.000Z', isSample: true },
-  { id: 'sample-02', productId: 23725, customerName: 'Dimas', rating: 5, comment: 'CapCutnya kapan ready lagi bang? Yang kemarin udah abis, lancar banget dipakai edit konten.', createdAt: '2026-06-17T13:10:00.000Z', isSample: true },
-  { id: 'sample-03', productId: 46473, customerName: 'Nadia', rating: 5, comment: 'Claude Pro privat dan responsnya cepat. Cocok buat bantu ngerjain dokumen panjang.', createdAt: '2026-06-16T04:42:00.000Z', isSample: true },
-  { id: 'sample-04', productId: 23915, customerName: 'Adit', rating: 4, comment: 'Gemini Pro aktif sesuai petunjuk. Admin balasnya lumayan cepat dan akun aman.', createdAt: '2026-06-15T10:05:00.000Z', isSample: true },
-  { id: 'sample-05', productId: 90001, customerName: 'Fajar', rating: 5, comment: 'ChatGPT Plus masuk cepat, Codex juga bisa dipakai. Bakal order lagi.', createdAt: '2026-06-14T15:30:00.000Z', isSample: true },
-  { id: 'sample-06', productId: 43262, customerName: 'Alya', rating: 4, comment: 'iQIYI premiumnya jalan dan kualitas videonya bagus. Pengiriman akun jelas.', createdAt: '2026-06-13T09:12:00.000Z', isSample: true },
-  { id: 'sample-07', productId: 23935, customerName: 'Rio', rating: 5, comment: 'Spotify aman, playlist lama langsung bisa lanjut. Mantap.', createdAt: '2026-06-12T03:45:00.000Z', isSample: true },
-  { id: 'sample-08', productId: 40213, customerName: 'Sinta', rating: 4, comment: 'HBO Max lancar buat nonton. Instruksi login gampang dipahami.', createdAt: '2026-06-11T12:25:00.000Z', isSample: true },
-  { id: 'sample-09', productId: 23843, customerName: 'Bagus', rating: 5, comment: 'Paket ChatGPT Go tiga bulannya worth it buat belajar dan rangkum materi.', createdAt: '2026-06-10T06:15:00.000Z', isSample: true },
-  { id: 'sample-10', productId: 46473, customerName: 'Kevin', rating: 4, comment: 'Sudah seminggu masih aman. Fitur Claude lengkap dan akun tidak sharing.', createdAt: '2026-06-09T14:50:00.000Z', isSample: true },
-  { id: 'sample-11', productId: 40213, customerName: 'Anonim', rating: 1, comment: 'Sempat gagal login pertama kali dan harus menunggu bantuan admin.', createdAt: '2026-06-08T11:40:00.000Z', isSample: true },
-  { id: 'sample-12', productId: 23935, customerName: 'Miko', rating: 1, comment: 'Pengiriman lebih lama dari perkiraan walaupun akhirnya produk masuk.', createdAt: '2026-06-07T07:30:00.000Z', isSample: true }
+  {
+    id: "sample-01",
+    productId: 90002,
+    customerName: "Raka",
+    rating: 5,
+    comment: "ChatGPT Plus garansi 20 hari masuk cepat. Dipakai buat coding dan ngerangkum dokumen kerja lancar.",
+    createdAt: "2026-06-21T15:20:00.000Z"
+  },
+  {
+    id: "sample-02",
+    productId: 46473,
+    customerName: "Nadia",
+    rating: 5,
+    comment: "Claude Pro enak buat baca file panjang. Jawabannya rapi dan cocok buat bantu bikin draft laporan.",
+    createdAt: "2026-06-21T13:45:00.000Z"
+  },
+  {
+    id: "sample-03",
+    productId: 90001,
+    customerName: "Fajar",
+    rating: 5,
+    comment: "ChatGPT Plus garansi 2 hari aktif sesuai instruksi. Codex bisa dipakai dan akun terasa privat.",
+    createdAt: "2026-06-21T10:30:00.000Z"
+  },
+  {
+    id: "sample-04",
+    productId: 23843,
+    customerName: "Bagus",
+    rating: 5,
+    comment: "ChatGPT Go 3 bulan worth it buat belajar. Buat rangkum materi kuliah dan latihan soal sudah cukup banget.",
+    createdAt: "2026-06-20T16:15:00.000Z"
+  },
+  {
+    id: "sample-05",
+    productId: 46473,
+    customerName: "Kevin",
+    rating: 5,
+    comment: "Claude Pro masih aman setelah beberapa hari. Saya pakai buat analisis kontrak panjang, konteksnya kuat.",
+    createdAt: "2026-06-20T11:05:00.000Z"
+  },
+  {
+    id: "sample-06",
+    productId: 90002,
+    customerName: "Sinta",
+    rating: 5,
+    comment: "Paket ChatGPT Plus yang 20 hari garansi paling cocok buat kerja harian. Login jelas dan admin responsif.",
+    createdAt: "2026-06-19T18:40:00.000Z"
+  },
+  {
+    id: "sample-07",
+    productId: 23725,
+    customerName: "Dimas",
+    rating: 5,
+    comment: "CapCut Pro aktif dan template premiumnya kebuka. Buat edit konten pendek jadi lebih cepat.",
+    createdAt: "2026-06-19T14:10:00.000Z"
+  },
+  {
+    id: "sample-08",
+    productId: 23915,
+    customerName: "Adit",
+    rating: 5,
+    comment: "Gemini Pro aktif sesuai petunjuk. Enak buat riset cepat dan nyusun outline konten.",
+    createdAt: "2026-06-19T09:25:00.000Z"
+  },
+  {
+    id: "sample-09",
+    productId: 90001,
+    customerName: "Maya",
+    rating: 5,
+    comment: "ChatGPT Plus masuk tanpa ribet. Saya pakai buat bikin caption, ide campaign, dan revisi copywriting.",
+    createdAt: "2026-06-18T17:55:00.000Z"
+  },
+  {
+    id: "sample-10",
+    productId: 46473,
+    customerName: "Ilham",
+    rating: 5,
+    comment: "Claude Pro bagus buat brainstorming kode dan nulis dokumentasi. Akunnya privat jadi lebih nyaman dipakai.",
+    createdAt: "2026-06-18T13:30:00.000Z"
+  },
+  {
+    id: "sample-11",
+    productId: 23935,
+    customerName: "Rio",
+    rating: 5,
+    comment: "Spotify Premium aman, playlist lama bisa lanjut dan tidak ada iklan. Instruksi login mudah.",
+    createdAt: "2026-06-18T08:45:00.000Z"
+  },
+  {
+    id: "sample-12",
+    productId: 40213,
+    customerName: "Tika",
+    rating: 5,
+    comment: "HBO Max lancar buat nonton serial. Akun dikirim lewat WhatsApp dan bisa langsung dipakai.",
+    createdAt: "2026-06-17T19:35:00.000Z"
+  },
+  {
+    id: "sample-13",
+    productId: 90002,
+    customerName: "Reno",
+    rating: 5,
+    comment: "ChatGPT Plus saya pakai buat bantu debug project. Responnya stabil dan akses Codex muncul.",
+    createdAt: "2026-06-17T15:05:00.000Z"
+  },
+  {
+    id: "sample-14",
+    productId: 46473,
+    customerName: "Putri",
+    rating: 5,
+    comment: "Claude Pro cocok buat nulis email formal dan meringkas PDF. Pengiriman akunnya cepat.",
+    createdAt: "2026-06-17T10:15:00.000Z"
+  },
+  {
+    id: "sample-15",
+    productId: 31181,
+    customerName: "Yudha",
+    rating: 5,
+    comment: "Canva Pro aktif, semua elemen premium yang saya butuhkan kebuka. Cocok buat desain jualan.",
+    createdAt: "2026-06-16T20:10:00.000Z"
+  },
+  {
+    id: "sample-16",
+    productId: 25754,
+    customerName: "Hafiz",
+    rating: 5,
+    comment: "Grok bisa dipakai untuk cari ide dan baca isu terbaru. Admin juga bantu kalau bingung akses awal.",
+    createdAt: "2026-06-16T16:50:00.000Z"
+  },
+  {
+    id: "sample-17",
+    productId: 23843,
+    customerName: "Lia",
+    rating: 5,
+    comment: "ChatGPT Go hemat buat pemakaian ringan. Buat parafrase dan bikin rangkuman sekolah sudah memadai.",
+    createdAt: "2026-06-16T12:25:00.000Z"
+  },
+  {
+    id: "sample-18",
+    productId: 90001,
+    customerName: "Bayu",
+    rating: 5,
+    comment: "ChatGPT Plus aktif cepat. Saya pilih garansi 2 hari karena cuma butuh buat sprint kerja singkat.",
+    createdAt: "2026-06-15T18:05:00.000Z"
+  },
+  {
+    id: "sample-19",
+    productId: 46473,
+    customerName: "Sarah",
+    rating: 5,
+    comment: "Claude Pro membantu banget untuk review tulisan panjang. Jawabannya tidak gampang keluar konteks.",
+    createdAt: "2026-06-15T13:40:00.000Z"
+  },
+  {
+    id: "sample-20",
+    productId: 23930,
+    customerName: "Dewi",
+    rating: 5,
+    comment: "YouTube Premium aktif dan bisa dipakai tanpa iklan. Cocok buat belajar sambil layar mati.",
+    createdAt: "2026-06-15T09:10:00.000Z"
+  },
+  {
+    id: "sample-21",
+    productId: 40138,
+    customerName: "Arman",
+    rating: 5,
+    comment: "Leonardo AI jalan untuk generate gambar produk. Kuota dan fiturnya sesuai deskripsi.",
+    createdAt: "2026-06-14T17:45:00.000Z"
+  },
+  {
+    id: "sample-22",
+    productId: 90002,
+    customerName: "Gilang",
+    rating: 5,
+    comment: "ChatGPT Plus garansi 20 hari terasa lebih aman. Dipakai tiap hari buat coding dan riset kecil.",
+    createdAt: "2026-06-14T11:35:00.000Z"
+  },
+  {
+    id: "sample-23",
+    productId: 46473,
+    customerName: "Vina",
+    rating: 5,
+    comment: "Claude Pro responsnya cepat untuk bikin kerangka artikel. Akun tidak sharing jadi tidak saling ganggu.",
+    createdAt: "2026-06-14T07:50:00.000Z"
+  },
+  {
+    id: "sample-24",
+    productId: 40212,
+    customerName: "Reza",
+    rating: 5,
+    comment: "Kiro Power+ membantu buat nyusun spec fitur. Akses masuk dan instruksi dari admin jelas.",
+    createdAt: "2026-06-13T20:30:00.000Z"
+  },
+  {
+    id: "sample-25",
+    productId: 43262,
+    customerName: "Alya",
+    rating: 5,
+    comment: "iQIYI VIP lancar buat nonton drama. Kualitas video bagus dan akun langsung bisa dipakai.",
+    createdAt: "2026-06-13T15:20:00.000Z"
+  },
+  {
+    id: "sample-26",
+    productId: 90001,
+    customerName: "Naufal",
+    rating: 5,
+    comment: "ChatGPT Plus cocok buat bantu tugas kantor. Ada sedikit tanya jawab dulu, tapi admin jelasin sampai beres.",
+    createdAt: "2026-06-13T10:05:00.000Z"
+  },
+  {
+    id: "sample-27",
+    productId: 46473,
+    customerName: "Citra",
+    rating: 5,
+    comment: "Claude Pro saya pakai untuk rangkum meeting note. Hasilnya enak dibaca dan hemat waktu.",
+    createdAt: "2026-06-12T18:15:00.000Z"
+  },
+  {
+    id: "sample-28",
+    productId: 90002,
+    customerName: "Yoga",
+    rating: 4,
+    comment: "ChatGPT Plus aktif dan fiturnya lengkap. Pengiriman agak menunggu beberapa menit, tapi hasilnya sesuai.",
+    createdAt: "2026-06-12T13:00:00.000Z"
+  },
+  {
+    id: "sample-29",
+    productId: 46473,
+    customerName: "Miko",
+    rating: 4,
+    comment: "Claude Pro lancar untuk kerja dokumen. Awal login perlu baca instruksi pelan-pelan, setelah itu aman.",
+    createdAt: "2026-06-12T09:45:00.000Z"
+  },
+  {
+    id: "sample-30",
+    productId: 23725,
+    customerName: "Eka",
+    rating: 4,
+    comment: "CapCut Pro jalan dan efek premium kebuka. Balasan admin tidak instan, tapi tetap dibantu sampai bisa.",
+    createdAt: "2026-06-11T21:10:00.000Z"
+  },
+  {
+    id: "sample-31",
+    productId: 23935,
+    customerName: "Oki",
+    rating: 4,
+    comment: "Spotify Premium aktif. Sempat salah langkah login, untung instruksi ulang dari admin cukup jelas.",
+    createdAt: "2026-06-11T16:25:00.000Z"
+  },
+  {
+    id: "sample-32",
+    productId: 40213,
+    customerName: "Anisa",
+    rating: 3,
+    comment: "HBO Max akhirnya bisa dipakai, tapi proses awalnya lebih lama dari ekspektasi. Setelah aktif kualitasnya oke.",
+    createdAt: "2026-06-11T11:40:00.000Z"
+  }
 ];
 let authTablesReady = false;
 class ApiResult extends Error { constructor(response) { super('api-result'); this.response = response; } }
@@ -35,7 +279,8 @@ function migrateStore(store) {
   store.orders ||= []; store.chats ||= []; store.reviews ||= [];
   store.settings ||= { maintenance: false, maintenanceMessage: 'DigiePro sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.' };
   for (const product of store.products || []) if (typeof product.autoRestock !== 'boolean') product.autoRestock = false;
-  if ((store.schemaVersion || 0) < 4) {
+  if ((store.schemaVersion || 0) < 5) {
+    store.reviews = (store.reviews || []).filter((review) => !review.isSample && !String(review.id || '').startsWith('sample-'));
     store.reviews.push(...SAMPLE_REVIEWS.filter((review) => !store.reviews.some((item) => item.id === review.id)));
     for (const order of store.orders) if (order.status === 'completed' && !order.soldApplied) { for (const line of order.items || []) { const product = store.products.find((item) => item.id === line.id); if (product) { product.sold = Number(product.sold || 0) + Number(line.quantity || 0); syncProduct(product); } } order.soldApplied = true; }
     changed = true;
