@@ -8,7 +8,7 @@ const root = join(projectRoot, 'public');
 const port = Number(process.env.PORT || process.argv[2] || 8000);
 const dataDir = join(projectRoot, 'data');
 const storeFile = join(dataDir, 'store.json');
-const adminPassword = process.env.ADMIN_PASSWORD || 'digiepro123';
+const adminPassword = process.env.ADMIN_PASSWORD;
 const adminToken = randomBytes(24).toString('hex');
 const loginAttempts = new Map();
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
@@ -105,7 +105,7 @@ const server = createServer(async (request, response) => {
     return;
   }
   if (pathname === '/api/admin/login' && request.method === 'POST') {
-    try { const body = await readBody(request); const key = `admin:${request.socket.remoteAddress}`; if (isRateLimited(key)) return sendJson(response, 429, { error: 'Terlalu banyak percobaan. Coba lagi dalam 15 menit.' }); if (body.password !== adminPassword) { recordFailure(key); return sendJson(response, 401, { error: 'Password salah.' }); } loginAttempts.delete(key); sendJson(response, 200, { ok: true }, { 'Set-Cookie': `digiepro_admin=${adminToken}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800` }); } catch { sendJson(response, 400, { error: 'Permintaan tidak valid.' }); }
+    try { if (!adminPassword) return sendJson(response, 503, { error: 'ADMIN_PASSWORD belum dikonfigurasi.' }); const body = await readBody(request); const key = `admin:${request.socket.remoteAddress}`; if (isRateLimited(key)) return sendJson(response, 429, { error: 'Terlalu banyak percobaan. Coba lagi dalam 15 menit.' }); if (body.password !== adminPassword) { recordFailure(key); return sendJson(response, 401, { error: 'Password salah.' }); } loginAttempts.delete(key); sendJson(response, 200, { ok: true }, { 'Set-Cookie': `digiepro_admin=${adminToken}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800` }); } catch { sendJson(response, 400, { error: 'Permintaan tidak valid.' }); }
     return;
   }
   if (pathname === '/api/admin/logout' && request.method === 'POST') { sendJson(response, 200, { ok: true }, { 'Set-Cookie': 'digiepro_admin=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0' }); return; }

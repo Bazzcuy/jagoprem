@@ -580,52 +580,6 @@
       "featuredRank": 99
     }
   ],
-  "orders": [
-    {
-      "id": "DGP-86397931",
-      "customer": {
-        "name": "editor-images",
-        "whatsapp": "089484848855",
-        "note": ""
-      },
-      "chatId": "chat-3905345d-7a24-49f5-8e7d-0cc6631daca3",
-      "items": [
-        {
-          "id": 90002,
-          "quantity": 1
-        }
-      ],
-      "subtotal": 56000,
-      "adminFee": 99,
-      "total": 56099,
-      "status": "pending",
-      "createdAt": "2026-06-18T12:39:57.931Z"
-    }
-  ],
-  "chats": [
-    {
-      "id": "chat-3905345d-7a24-49f5-8e7d-0cc6631daca3",
-      "customer": {
-        "name": "editor-images",
-        "whatsapp": "089484848855",
-        "note": ""
-      },
-      "messages": [
-        {
-          "id": "6681a91bcc5fa302",
-          "sender": "customer",
-          "text": "halo",
-          "createdAt": "2026-06-18T11:48:36.583Z"
-        },
-        {
-          "id": "0f7cc55cbce27635",
-          "sender": "customer",
-          "text": "Saya sudah menyelesaikan pembayaran untuk pesanan DGP-86397931.",
-          "createdAt": "2026-06-18T12:40:27.589Z"
-        }
-      ],
-      "updatedAt": "2026-06-18T12:40:27.589Z",
-      "orderId": "DGP-86397931"
-    }
-  ]
+  "orders": [],
+  "chats": []
 }

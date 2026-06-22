@@ -17,6 +17,7 @@ const SAMPLE_REVIEWS = [
   { id: 'sample-12', productId: 23935, customerName: 'Miko', rating: 1, comment: 'Pengiriman lebih lama dari perkiraan walaupun akhirnya produk masuk.', createdAt: '2026-06-07T07:30:00.000Z', isSample: true }
 ];
 let authTablesReady = false;
+class ApiResult extends Error { constructor(response) { super('api-result'); this.response = response; } }
 
 function migrateStore(store) {
   let changed = false;
@@ -59,14 +60,18 @@ function randomId(bytes = 8) {
   return Array.from(value, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+function stateVersion() { return `${new Date().toISOString()}-${randomId(4)}`; }
+function attachStoreVersion(store, version) { Object.defineProperty(store, '__version', { value: version, writable: true, enumerable: false }); return store; }
+function stopMutation(response) { throw new ApiResult(response); }
+
 async function ensureStore(env) {
   if (!env.DB) throw new Error('D1 binding DB belum dikonfigurasi.');
   await env.DB.prepare('CREATE TABLE IF NOT EXISTS app_state (id INTEGER PRIMARY KEY CHECK (id = 1), data TEXT NOT NULL, updated_at TEXT NOT NULL)').run();
-  const row = await env.DB.prepare('SELECT data FROM app_state WHERE id = 1').first();
+  const row = await env.DB.prepare('SELECT data, updated_at FROM app_state WHERE id = 1').first();
   if (row?.data) {
-    const store = JSON.parse(row.data);
+    const store = attachStoreVersion(JSON.parse(row.data), row.updated_at);
     const changed = migrateStore(store);
-    if (expirePendingOrders(store) || changed) await saveStore(env, store);
+    if ((expirePendingOrders(store) || changed) && !(await saveStore(env, store))) return await ensureStore(env);
     return store;
   }
 
@@ -76,13 +81,37 @@ async function ensureStore(env) {
   seed.orders = [];
   seed.chats = [];
   seed.reviews = [];
+  seed.settings ||= { maintenance: false, maintenanceMessage: 'DigiePro sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.' };
   migrateStore(seed);
-  await env.DB.prepare('INSERT INTO app_state (id, data, updated_at) VALUES (1, ?, ?)').bind(JSON.stringify(seed), new Date().toISOString()).run();
-  return seed;
+  const version = stateVersion();
+  const insert = await env.DB.prepare('INSERT OR IGNORE INTO app_state (id, data, updated_at) VALUES (1, ?, ?)').bind(JSON.stringify(seed), version).run();
+  if (!insert.meta?.changes) return await ensureStore(env);
+  return attachStoreVersion(seed, version);
 }
 
 async function saveStore(env, store) {
-  await env.DB.prepare('UPDATE app_state SET data = ?, updated_at = ? WHERE id = 1').bind(JSON.stringify(store), new Date().toISOString()).run();
+  const version = stateVersion();
+  const expected = store.__version;
+  const result = expected
+    ? await env.DB.prepare('UPDATE app_state SET data = ?, updated_at = ? WHERE id = 1 AND updated_at = ?').bind(JSON.stringify(store), version, expected).run()
+    : await env.DB.prepare('UPDATE app_state SET data = ?, updated_at = ? WHERE id = 1').bind(JSON.stringify(store), version).run();
+  if (!result.meta?.changes) return false;
+  store.__version = version;
+  return true;
+}
+
+async function mutateStore(env, mutator) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const store = await ensureStore(env);
+    try {
+      const result = await mutator(store);
+      if (await saveStore(env, store)) return result;
+    } catch (error) {
+      if (error instanceof ApiResult) return error.response;
+      throw error;
+    }
+  }
+  return json({ error: 'Data toko sedang diperbarui. Coba ulangi beberapa detik lagi.' }, 409);
 }
 
 async function ensureAuthTables(env) {
@@ -222,11 +251,14 @@ async function api(request, env, pathname) {
     const user = await currentUser(request, env); if (!user) return json({ error: 'Silakan masuk untuk memberi ulasan.' }, 401);
     const body = await readBody(request); const orderId = String(body.orderId || ''); const productId = Number(body.productId); const rating = Number(body.rating); const comment = String(body.comment || '').trim().slice(0, 600);
     if (!Number.isInteger(rating) || rating < 1 || rating > 5 || comment.length < 8) return json({ error: 'Pilih 1-5 bintang dan tulis komentar minimal 8 karakter.' }, 400);
-    const store = await ensureStore(env); const order = store.orders.find((item) => item.id === orderId && item.userId === user.id);
-    if (!order || order.status !== 'completed' || !order.items.some((line) => line.id === productId)) return json({ error: 'Ulasan hanya tersedia untuk produk dari pesanan yang sudah selesai.' }, 403);
-    if (store.reviews.some((review) => review.orderId === orderId && review.productId === productId)) return json({ error: 'Produk ini sudah kamu ulas.' }, 409);
-    const review = { id: `rev-${randomId(10)}`, orderId, productId, userId: user.id, customerName: user.name.split(' ')[0], rating, comment, verified: true, createdAt: new Date().toISOString() };
-    store.reviews.unshift(review); await saveStore(env, store); return json(review, 201);
+    return await mutateStore(env, (store) => {
+      const order = store.orders.find((item) => item.id === orderId && item.userId === user.id);
+      if (!order || order.status !== 'completed' || !order.items.some((line) => line.id === productId)) stopMutation(json({ error: 'Ulasan hanya tersedia untuk produk dari pesanan yang sudah selesai.' }, 403));
+      if (store.reviews.some((review) => review.orderId === orderId && review.productId === productId)) stopMutation(json({ error: 'Produk ini sudah kamu ulas.' }, 409));
+      const review = { id: `rev-${randomId(10)}`, orderId, productId, userId: user.id, customerName: user.name.split(' ')[0], rating, comment, verified: true, createdAt: new Date().toISOString() };
+      store.reviews.unshift(review);
+      return json(review, 201);
+    });
   }
 
   if (pathname === '/api/orders/me' && request.method === 'GET') {
@@ -245,66 +277,66 @@ async function api(request, env, pathname) {
     const body = await readBody(request);
     const text = String(body.message || '').trim().slice(0, 1000);
     if (!text) return json({ error: 'Pesan kosong.' }, 400);
-    const store = await ensureStore(env);
-    let chat = store.chats.find((item) => item.id === chatMatch[1]);
-    if (!chat) {
-      chat = { id: chatMatch[1], customer: body.customer || {}, messages: [], updatedAt: new Date().toISOString() };
-      store.chats.unshift(chat);
-    }
-    if (body.customer) chat.customer = { ...chat.customer, ...body.customer };
-    chat.messages.push({ id: randomId(), sender: 'customer', text, createdAt: new Date().toISOString() });
-    chat.updatedAt = new Date().toISOString();
-    await saveStore(env, store);
-    return json(chat, 201);
+    return await mutateStore(env, (store) => {
+      let chat = store.chats.find((item) => item.id === chatMatch[1]);
+      if (!chat) {
+        chat = { id: chatMatch[1], customer: body.customer || {}, messages: [], updatedAt: new Date().toISOString() };
+        store.chats.unshift(chat);
+      }
+      if (body.customer) chat.customer = { ...chat.customer, ...body.customer };
+      chat.messages.push({ id: randomId(), sender: 'customer', text, createdAt: new Date().toISOString() });
+      chat.updatedAt = new Date().toISOString();
+      return json(chat, 201);
+    });
   }
 
   if (pathname === '/api/orders' && request.method === 'POST') {
     const user = await currentUser(request, env);
     if (!user) return json({ error: 'Silakan masuk sebelum membuat pesanan.' }, 401);
     const body = await readBody(request);
-    const store = await ensureStore(env);
-    const pendingOrders = store.orders.filter((order) => order.userId === user.id && order.status === 'pending');
-    if (pendingOrders.length >= 2) return json({ error: 'Kamu masih punya 2 pesanan menunggu pembayaran. Bayar atau tunggu pesanan kedaluwarsa sebelum membuat pesanan baru.' }, 429);
     if (!Array.isArray(body.items) || !body.items.length) return json({ error: 'Keranjang kosong.' }, 400);
-    let subtotal = 0;
-    const normalizedItems = [];
-    const requestedStock = new Map();
-    for (const line of body.items) {
-      const product = store.products.find((item) => item.id === Number(line.id));
-      const quantity = Number(line.quantity);
-      if (!product || !product.enabled) return json({ error: 'Produk tidak tersedia.' }, 400);
-      const requested = (requestedStock.get(product.id) || 0) + quantity;
-      if (!Number.isInteger(quantity) || quantity < 1 || requested > product.stock) return json({ error: `Stok ${product.title} tidak mencukupi.` }, 409);
-      requestedStock.set(product.id, requested);
-      const ownGmail = product.title.includes('CHATGPT PLUS') && Boolean(line.ownGmail);
-      const reseller = Boolean(line.reseller);
-      const minimum = resellerMinimum(product.price);
-      if (reseller && quantity < minimum) return json({ error: `Harga reseller ${product.title} minimal ${minimum} item.` }, 400);
-      const regularUnitPrice = product.price + (ownGmail ? 5000 : 0);
-      const unitPrice = reseller ? resellerPrice(regularUnitPrice) : regularUnitPrice;
-      const lineTotal = unitPrice * quantity;
-      subtotal += lineTotal;
-      normalizedItems.push({ id: product.id, title: product.title, quantity, ownGmail, reseller, unitPrice, regularUnitPrice, lineTotal });
-    }
-    const adminFee = 99;
     const customer = { name: user.name, email: user.email, whatsapp: String(body.customer?.whatsapp || '').trim().slice(0, 30), note: String(body.customer?.note || '').trim().slice(0, 500) };
     if (!/^\+?[0-9\s-]{8,20}$/.test(customer.whatsapp)) return json({ error: 'Nomor WhatsApp belum valid.' }, 400);
-    const createdAt = new Date();
-    const order = { id: `DGP-${Date.now()}-${randomId(2).toUpperCase()}`, userId: user.id, customer, chatId: body.chatId || '', items: normalizedItems, subtotal, adminFee, total: subtotal + adminFee, status: 'pending', createdAt: createdAt.toISOString(), expiresAt: new Date(createdAt.getTime() + ORDER_RESERVATION_MS).toISOString() };
-    if (!reserveOrderStock(store, order)) return json({ error: 'Stok berubah dan tidak lagi mencukupi. Muat ulang keranjang.' }, 409);
-    applyAutoRestock(store);
-    if (body.chatId) {
-      let chat = store.chats.find((item) => item.id === body.chatId);
-      if (!chat) {
-        chat = { id: body.chatId, customer, messages: [], updatedAt: new Date().toISOString() };
-        store.chats.unshift(chat);
+    return await mutateStore(env, (store) => {
+      const pendingOrders = store.orders.filter((order) => order.userId === user.id && order.status === 'pending');
+      if (pendingOrders.length >= 2) stopMutation(json({ error: 'Kamu masih punya 2 pesanan menunggu pembayaran. Bayar atau tunggu pesanan kedaluwarsa sebelum membuat pesanan baru.' }, 429));
+      let subtotal = 0;
+      const normalizedItems = [];
+      const requestedStock = new Map();
+      for (const line of body.items) {
+        const product = store.products.find((item) => item.id === Number(line.id));
+        const quantity = Number(line.quantity);
+        if (!product || !product.enabled) stopMutation(json({ error: 'Produk tidak tersedia.' }, 400));
+        const requested = (requestedStock.get(product.id) || 0) + quantity;
+        if (!Number.isInteger(quantity) || quantity < 1 || requested > product.stock) stopMutation(json({ error: `Stok ${product.title} tidak mencukupi.` }, 409));
+        requestedStock.set(product.id, requested);
+        const ownGmail = product.title.includes('CHATGPT PLUS') && Boolean(line.ownGmail);
+        const reseller = Boolean(line.reseller);
+        const minimum = resellerMinimum(product.price);
+        if (reseller && quantity < minimum) stopMutation(json({ error: `Harga reseller ${product.title} minimal ${minimum} item.` }, 400));
+        const regularUnitPrice = product.price + (ownGmail ? 5000 : 0);
+        const unitPrice = reseller ? resellerPrice(regularUnitPrice) : regularUnitPrice;
+        const lineTotal = unitPrice * quantity;
+        subtotal += lineTotal;
+        normalizedItems.push({ id: product.id, title: product.title, quantity, ownGmail, reseller, unitPrice, regularUnitPrice, lineTotal });
       }
-      chat.customer = { ...chat.customer, ...customer };
-      chat.orderId = order.id;
-    }
-    store.orders.unshift(order);
-    await saveStore(env, store);
-    return json(order, 201);
+      const adminFee = 99;
+      const createdAt = new Date();
+      const order = { id: `DGP-${Date.now()}-${randomId(2).toUpperCase()}`, userId: user.id, customer, chatId: body.chatId || '', items: normalizedItems, subtotal, adminFee, total: subtotal + adminFee, status: 'pending', createdAt: createdAt.toISOString(), expiresAt: new Date(createdAt.getTime() + ORDER_RESERVATION_MS).toISOString() };
+      if (!reserveOrderStock(store, order)) stopMutation(json({ error: 'Stok berubah dan tidak lagi mencukupi. Muat ulang keranjang.' }, 409));
+      applyAutoRestock(store);
+      if (body.chatId) {
+        let chat = store.chats.find((item) => item.id === body.chatId);
+        if (!chat) {
+          chat = { id: body.chatId, customer, messages: [], updatedAt: new Date().toISOString() };
+          store.chats.unshift(chat);
+        }
+        chat.customer = { ...chat.customer, ...customer };
+        chat.orderId = order.id;
+      }
+      store.orders.unshift(order);
+      return json(order, 201);
+    });
   }
 
   if (pathname === '/api/admin/login' && request.method === 'POST') {
@@ -351,54 +383,56 @@ async function api(request, env, pathname) {
     const body = await readBody(request);
     const text = String(body.message || '').trim().slice(0, 1000);
     if (!text) return json({ error: 'Pesan kosong.' }, 400);
-    const store = await ensureStore(env);
-    const chat = store.chats.find((item) => item.id === adminChatMatch[1]);
-    if (!chat) return json({ error: 'Chat tidak ditemukan.' }, 404);
-    chat.messages.push({ id: randomId(), sender: 'admin', text, createdAt: new Date().toISOString() });
-    chat.updatedAt = new Date().toISOString();
-    await saveStore(env, store);
-    return json(chat, 201);
+    return await mutateStore(env, (store) => {
+      const chat = store.chats.find((item) => item.id === adminChatMatch[1]);
+      if (!chat) stopMutation(json({ error: 'Chat tidak ditemukan.' }, 404));
+      chat.messages.push({ id: randomId(), sender: 'admin', text, createdAt: new Date().toISOString() });
+      chat.updatedAt = new Date().toISOString();
+      return json(chat, 201);
+    });
   }
 
   const productMatch = pathname.match(/^\/api\/admin\/products\/(\d+)$/);
   if (productMatch && request.method === 'PUT') {
     if (!(await isAdmin(request, env))) return json({ error: 'Unauthorized' }, 401);
     const body = await readBody(request);
-    const store = await ensureStore(env);
-    const product = store.products.find((item) => item.id === Number(productMatch[1]));
-    if (!product) return json({ error: 'Produk tidak ditemukan.' }, 404);
     const stock = Number(body.stock);
     const price = Number(body.price);
     if (!Number.isInteger(stock) || stock < 0 || stock > 49 || !Number.isInteger(price) || price < 0) return json({ error: 'Harga atau stok tidak valid.' }, 400);
-    Object.assign(product, { stock, price, enabled: Boolean(body.enabled), autoRestock: Boolean(body.autoRestock) }); syncProduct(product); applyAutoRestock(store);
-    await saveStore(env, store);
-    return json(product);
+    return await mutateStore(env, (store) => {
+      const product = store.products.find((item) => item.id === Number(productMatch[1]));
+      if (!product) stopMutation(json({ error: 'Produk tidak ditemukan.' }, 404));
+      Object.assign(product, { stock, price, enabled: Boolean(body.enabled), autoRestock: Boolean(body.autoRestock) }); syncProduct(product); applyAutoRestock(store);
+      return json(product);
+    });
   }
 
   const orderMatch = pathname.match(/^\/api\/admin\/orders\/([^/]+)$/);
   if (orderMatch && request.method === 'PUT') {
     if (!(await isAdmin(request, env))) return json({ error: 'Unauthorized' }, 401);
     const body = await readBody(request);
-    const store = await ensureStore(env);
-    const order = store.orders.find((item) => item.id === orderMatch[1]);
-    if (!order) return json({ error: 'Pesanan tidak ditemukan.' }, 404);
     if (!['pending', 'paid', 'completed', 'cancelled'].includes(body.status)) return json({ error: 'Status tidak valid.' }, 400);
-    const previous = order.status; const next = body.status; const released = ['cancelled', 'expired'].includes(previous); const willRelease = ['cancelled', 'expired'].includes(next);
-    if (released && !willRelease && !reserveOrderStock(store, order)) return json({ error: 'Stok tidak cukup untuk mengaktifkan kembali pesanan.' }, 409);
-    if (!released && willRelease) releaseOrderStock(store, order);
-    if (next === 'completed' && !order.soldApplied) { for (const line of order.items) { const product = store.products.find((item) => item.id === line.id); if (product) { product.sold = Number(product.sold || 0) + line.quantity; syncProduct(product); } } order.soldApplied = true; }
-    if (previous === 'completed' && next !== 'completed' && order.soldApplied) { for (const line of order.items) { const product = store.products.find((item) => item.id === line.id); if (product) { product.sold = Math.max(0, Number(product.sold || 0) - line.quantity); syncProduct(product); } } order.soldApplied = false; }
-    order.status = next; order.updatedAt = new Date().toISOString(); if (next === 'completed') order.completedAt = order.updatedAt;
-    applyAutoRestock(store);
-    await saveStore(env, store);
-    return json(order);
+    return await mutateStore(env, (store) => {
+      const order = store.orders.find((item) => item.id === orderMatch[1]);
+      if (!order) stopMutation(json({ error: 'Pesanan tidak ditemukan.' }, 404));
+      const previous = order.status; const next = body.status; const released = ['cancelled', 'expired'].includes(previous); const willRelease = ['cancelled', 'expired'].includes(next);
+      if (released && !willRelease && !reserveOrderStock(store, order)) stopMutation(json({ error: 'Stok tidak cukup untuk mengaktifkan kembali pesanan.' }, 409));
+      if (!released && willRelease) releaseOrderStock(store, order);
+      if (next === 'completed' && !order.soldApplied) { for (const line of order.items) { const product = store.products.find((item) => item.id === line.id); if (product) { product.sold = Number(product.sold || 0) + line.quantity; syncProduct(product); } } order.soldApplied = true; }
+      if (previous === 'completed' && next !== 'completed' && order.soldApplied) { for (const line of order.items) { const product = store.products.find((item) => item.id === line.id); if (product) { product.sold = Math.max(0, Number(product.sold || 0) - line.quantity); syncProduct(product); } } order.soldApplied = false; }
+      order.status = next; order.updatedAt = new Date().toISOString(); if (next === 'completed') order.completedAt = order.updatedAt;
+      applyAutoRestock(store);
+      return json(order);
+    });
   }
 
   if (pathname === '/api/admin/settings' && request.method === 'PUT') {
     if (!(await isAdmin(request, env))) return json({ error: 'Unauthorized' }, 401);
-    const body = await readBody(request); const store = await ensureStore(env);
-    store.settings = { ...store.settings, maintenance: Boolean(body.maintenance), maintenanceMessage: String(body.maintenanceMessage || '').trim().slice(0, 240) || 'DigiePro sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.' };
-    await saveStore(env, store); return json(store.settings);
+    const body = await readBody(request);
+    return await mutateStore(env, (store) => {
+      store.settings = { ...store.settings, maintenance: Boolean(body.maintenance), maintenanceMessage: String(body.maintenanceMessage || '').trim().slice(0, 240) || 'DigiePro sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.' };
+      return json(store.settings);
+    });
   }
 
   return json({ error: 'Endpoint tidak ditemukan.' }, 404);
