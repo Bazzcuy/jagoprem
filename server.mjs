@@ -12,7 +12,7 @@ const adminPassword = process.env.ADMIN_PASSWORD;
 const adminToken = randomBytes(24).toString('hex');
 const loginAttempts = new Map();
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.jpg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
-const STORE_SCHEMA_VERSION = 5;
+const STORE_SCHEMA_VERSION = 6;
 const OFFICIAL_PRIVATE_DESCRIPTION = 'Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan DigiePro.';
 const ORDER_RESERVATION_MS = 30 * 60 * 1000;
 const SAMPLE_REVIEWS = [
@@ -271,6 +271,246 @@ const SAMPLE_REVIEWS = [
     rating: 3,
     comment: "HBO Max akhirnya bisa dipakai, tapi proses awalnya lebih lama dari ekspektasi. Setelah aktif kualitasnya oke.",
     createdAt: "2026-06-11T11:40:00.000Z"
+  },
+  {
+    id: "sample-33",
+    productId: 90002,
+    customerName: "Kenzi",
+    rating: 5,
+    comment: "ChatGPT Plus dipakai buat bikin prompt image dan coding kecil. Aksesnya stabil, no drama.",
+    createdAt: "2026-06-10T20:15:00.000Z"
+  },
+  {
+    id: "sample-34",
+    productId: 46473,
+    customerName: "Zea",
+    rating: 5,
+    comment: "Claude Pro kepake banget buat bikin rangkuman jurnal. Bahasanya natural dan tidak kaku.",
+    createdAt: "2026-06-10T16:50:00.000Z"
+  },
+  {
+    id: "sample-35",
+    productId: 90001,
+    customerName: "Bima",
+    rating: 5,
+    comment: "ChatGPT Plus buat ngerjain proposal cepat banget. Admin kirim detail login dengan jelas.",
+    createdAt: "2026-06-10T13:30:00.000Z"
+  },
+  {
+    id: "sample-36",
+    productId: 46473,
+    customerName: "Kayla",
+    rating: 5,
+    comment: "Claude Pro nyaman buat rewrite caption panjang. Hasilnya lebih halus daripada tool yang biasa saya pakai.",
+    createdAt: "2026-06-10T09:05:00.000Z"
+  },
+  {
+    id: "sample-37",
+    productId: 23843,
+    customerName: "Daffa",
+    rating: 5,
+    comment: "ChatGPT Go pas buat belajar UTBK. Buat tanya konsep dan latihan penjelasan sudah lebih dari cukup.",
+    createdAt: "2026-06-09T21:20:00.000Z"
+  },
+  {
+    id: "sample-38",
+    productId: 90002,
+    customerName: "Nara",
+    rating: 5,
+    comment: "ChatGPT Plus garansi 20 hari saya pakai buat kerja remote. Lumayan hemat dan performanya oke.",
+    createdAt: "2026-06-09T17:40:00.000Z"
+  },
+  {
+    id: "sample-39",
+    productId: 46473,
+    customerName: "Aksa",
+    rating: 5,
+    comment: "Claude Pro bantu banget buat bikin user story dan acceptance criteria. Konteks panjangnya kerasa.",
+    createdAt: "2026-06-09T14:00:00.000Z"
+  },
+  {
+    id: "sample-40",
+    productId: 90001,
+    customerName: "Shafa",
+    rating: 5,
+    comment: "ChatGPT Plus aktif cepat, cocok buat bikin skrip konten harian. Instruksi loginnya gampang diikuti.",
+    createdAt: "2026-06-09T10:25:00.000Z"
+  },
+  {
+    id: "sample-41",
+    productId: 46473,
+    customerName: "Rizky",
+    rating: 5,
+    comment: "Claude Pro buat review CV dan surat lamaran hasilnya rapi. Aksesnya privat, jadi lebih tenang.",
+    createdAt: "2026-06-08T21:10:00.000Z"
+  },
+  {
+    id: "sample-42",
+    productId: 25754,
+    customerName: "Juna",
+    rating: 5,
+    comment: "Grok oke buat cari insight cepat dan bahan diskusi. Produknya sesuai katalog, admin responsif.",
+    createdAt: "2026-06-08T18:05:00.000Z"
+  },
+  {
+    id: "sample-43",
+    productId: 31181,
+    customerName: "Nay",
+    rating: 5,
+    comment: "Canva Pro mantul buat desain poster event kampus. Elemen premium langsung kebuka.",
+    createdAt: "2026-06-08T14:35:00.000Z"
+  },
+  {
+    id: "sample-44",
+    productId: 90002,
+    customerName: "Alvin",
+    rating: 5,
+    comment: "ChatGPT Plus dipakai buat refactor kode. Lumayan ngebantu nemu bug yang kelewat.",
+    createdAt: "2026-06-08T10:45:00.000Z"
+  },
+  {
+    id: "sample-45",
+    productId: 46473,
+    customerName: "Caca",
+    rating: 5,
+    comment: "Claude Pro buat bikin thread edukasi enak banget. Hasilnya panjang tapi tetap nyambung.",
+    createdAt: "2026-06-07T22:00:00.000Z"
+  },
+  {
+    id: "sample-46",
+    productId: 23915,
+    customerName: "Ghea",
+    rating: 5,
+    comment: "Gemini Pro kebuka dan sinkron sama kebutuhan riset Google. Cocok buat cari draft ide.",
+    createdAt: "2026-06-07T18:20:00.000Z"
+  },
+  {
+    id: "sample-47",
+    productId: 90001,
+    customerName: "Fay",
+    rating: 5,
+    comment: "ChatGPT Plus buat bikin outline tugas kelompok. Cepat aktif dan tidak ada kendala login.",
+    createdAt: "2026-06-07T15:10:00.000Z"
+  },
+  {
+    id: "sample-48",
+    productId: 40212,
+    customerName: "Rafli",
+    rating: 5,
+    comment: "Kiro Power+ berguna buat nyusun flow fitur. Saya suka karena instruksi aksesnya tidak ribet.",
+    createdAt: "2026-06-07T11:55:00.000Z"
+  },
+  {
+    id: "sample-49",
+    productId: 46473,
+    customerName: "Milea",
+    rating: 5,
+    comment: "Claude Pro saya pakai untuk nulis draft novel pendek. Gaya bahasanya bisa diarahin pelan-pelan.",
+    createdAt: "2026-06-06T21:35:00.000Z"
+  },
+  {
+    id: "sample-50",
+    productId: 90002,
+    customerName: "Dito",
+    rating: 5,
+    comment: "ChatGPT Plus stabil buat pair programming. Harga masuk akal untuk pemakaian sebulan.",
+    createdAt: "2026-06-06T17:15:00.000Z"
+  },
+  {
+    id: "sample-51",
+    productId: 23930,
+    customerName: "Tasya",
+    rating: 5,
+    comment: "YouTube Premium aktif, enak buat denger podcast tanpa iklan. Akun dikirim cukup cepat.",
+    createdAt: "2026-06-06T13:25:00.000Z"
+  },
+  {
+    id: "sample-52",
+    productId: 40138,
+    customerName: "Neo",
+    rating: 5,
+    comment: "Leonardo AI cocok buat bikin konsep visual produk. Outputnya tajam dan fiturnya sesuai.",
+    createdAt: "2026-06-06T09:40:00.000Z"
+  },
+  {
+    id: "sample-53",
+    productId: 90002,
+    customerName: "Vano",
+    rating: 5,
+    comment: "ChatGPT Plus garansi 20 hari bikin lebih yakin. Saya pakai buat analisis data kecil dan bikin query.",
+    createdAt: "2026-06-05T22:10:00.000Z"
+  },
+  {
+    id: "sample-54",
+    productId: 46473,
+    customerName: "Naya",
+    rating: 5,
+    comment: "Claude Pro buat QA dokumen panjang hasilnya solid. Jarang melenceng dari konteks utama.",
+    createdAt: "2026-06-05T18:45:00.000Z"
+  },
+  {
+    id: "sample-55",
+    productId: 23725,
+    customerName: "Jovian",
+    rating: 5,
+    comment: "CapCut Pro membantu edit konten jualan. Fitur premium aktif dan export aman.",
+    createdAt: "2026-06-05T14:30:00.000Z"
+  },
+  {
+    id: "sample-56",
+    productId: 90001,
+    customerName: "Luna",
+    rating: 5,
+    comment: "ChatGPT Plus aktif buat bantu bikin itinerary liburan. Jawaban cepat dan detail.",
+    createdAt: "2026-06-05T10:05:00.000Z"
+  },
+  {
+    id: "sample-57",
+    productId: 46473,
+    customerName: "Arka",
+    rating: 4,
+    comment: "Claude Pro bagus buat riset, cuma awalnya saya sempat bingung step login. Setelah dibantu aman.",
+    createdAt: "2026-06-04T21:50:00.000Z"
+  },
+  {
+    id: "sample-58",
+    productId: 90002,
+    customerName: "Cleo",
+    rating: 4,
+    comment: "ChatGPT Plus fiturnya lengkap. Pengiriman akun agak ngantri, tapi masih wajar dan akhirnya lancar.",
+    createdAt: "2026-06-04T17:35:00.000Z"
+  },
+  {
+    id: "sample-59",
+    productId: 43262,
+    customerName: "Rani",
+    rating: 4,
+    comment: "iQIYI VIP bisa dipakai nonton drama. Ada kendala kecil saat login pertama, admin bantu sampai masuk.",
+    createdAt: "2026-06-04T13:20:00.000Z"
+  },
+  {
+    id: "sample-60",
+    productId: 31181,
+    customerName: "Zidan",
+    rating: 4,
+    comment: "Canva Pro aktif dan desain premium kebuka. Instruksi awal bisa dibuat lebih singkat, tapi produknya oke.",
+    createdAt: "2026-06-04T09:55:00.000Z"
+  },
+  {
+    id: "sample-61",
+    productId: 23935,
+    customerName: "Meisya",
+    rating: 4,
+    comment: "Spotify Premium jalan lancar. Balasan admin agak telat karena malam, tapi akun tetap beres.",
+    createdAt: "2026-06-03T20:25:00.000Z"
+  },
+  {
+    id: "sample-62",
+    productId: 40213,
+    customerName: "Ariel",
+    rating: 4,
+    comment: "HBO Max aktif dan bisa nonton normal. Prosesnya tidak instan, tapi masih sesuai ekspektasi.",
+    createdAt: "2026-06-03T16:05:00.000Z"
   }
 ];
 
@@ -281,7 +521,7 @@ function applyAutoRestock(store) { let changed = false; for (const product of st
 function releaseOrderStock(store, order) { for (const line of order.items || []) { const product = store.products.find((item) => item.id === line.id); if (product) { product.stock += line.quantity; syncProduct(product); } } }
 function reserveOrderStock(store, order) { for (const line of order.items || []) { const product = store.products.find((item) => item.id === line.id); if (!product || product.stock < line.quantity) return false; } for (const line of order.items) { const product = store.products.find((item) => item.id === line.id); product.stock -= line.quantity; syncProduct(product); } return true; }
 function expirePendingOrders(store) { let changed = false; for (const order of store.orders || []) if (order.status === 'pending' && new Date(order.expiresAt || new Date(new Date(order.createdAt).getTime() + ORDER_RESERVATION_MS)) <= new Date()) { releaseOrderStock(store, order); order.status = 'expired'; order.expiredAt = new Date().toISOString(); changed = true; } return applyAutoRestock(store) || changed; }
-function readStore() { const data = JSON.parse(readFileSync(storeFile, 'utf8')); data.orders ||= []; data.chats ||= []; data.users ||= []; data.userSessions ||= []; data.reviews ||= []; data.settings ||= { maintenance: false, maintenanceMessage: 'DigiePro sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.' }; let changed = false; for (const product of data.products || []) if (typeof product.autoRestock !== 'boolean') { product.autoRestock = false; changed = true; } if ((data.schemaVersion || 0) < 5) { data.reviews = (data.reviews || []).filter((review) => !review.isSample && !String(review.id || '').startsWith('sample-')); data.reviews.push(...SAMPLE_REVIEWS.filter((review) => !data.reviews.some((item) => item.id === review.id))); for (const order of data.orders) if (order.status === 'completed' && !order.soldApplied) { for (const line of order.items || []) { const product = data.products.find((item) => item.id === line.id); if (product) { product.sold = Number(product.sold || 0) + Number(line.quantity || 0); syncProduct(product); } } order.soldApplied = true; } data.schemaVersion = STORE_SCHEMA_VERSION; changed = true; } if (expirePendingOrders(data)) changed = true; if (changed) writeStore(data); return data; }
+function readStore() { const data = JSON.parse(readFileSync(storeFile, 'utf8')); data.orders ||= []; data.chats ||= []; data.users ||= []; data.userSessions ||= []; data.reviews ||= []; data.settings ||= { maintenance: false, maintenanceMessage: 'DigiePro sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.' }; let changed = false; for (const product of data.products || []) if (typeof product.autoRestock !== 'boolean') { product.autoRestock = false; changed = true; } if ((data.schemaVersion || 0) < 6) { data.reviews = (data.reviews || []).filter((review) => !review.isSample && !String(review.id || '').startsWith('sample-')); data.reviews.push(...SAMPLE_REVIEWS.filter((review) => !data.reviews.some((item) => item.id === review.id))); for (const order of data.orders) if (order.status === 'completed' && !order.soldApplied) { for (const line of order.items || []) { const product = data.products.find((item) => item.id === line.id); if (product) { product.sold = Number(product.sold || 0) + Number(line.quantity || 0); syncProduct(product); } } order.soldApplied = true; } data.schemaVersion = STORE_SCHEMA_VERSION; changed = true; } if (expirePendingOrders(data)) changed = true; if (changed) writeStore(data); return data; }
 function writeStore(data) { writeFileSync(storeFile, JSON.stringify(data, null, 2)); }
 function sendJson(response, status, data, headers = {}) { response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', ...headers }); response.end(JSON.stringify(data)); }
 function readBody(request) { return new Promise((resolve, reject) => { let body = ''; request.on('data', (chunk) => { body += chunk; if (body.length > 1e6) request.destroy(); }); request.on('end', () => { try { resolve(body ? JSON.parse(body) : {}); } catch (error) { reject(error); } }); request.on('error', reject); }); }
