@@ -5,17 +5,19 @@ const STORE_CONFIG = {
 
 const CHATGPT_PLUS_DESCRIPTION = 'Akun ChatGPT Plus privat, bukan sharing, dengan dukungan Codex. Aktivasi menggunakan payment credit card pada akun privat agar akses lebih aman dan tidak bercampur dengan pengguna lain. Tersedia opsi aktivasi memakai Gmail sendiri dengan tambahan Rp5.000.';
 const OFFICIAL_PRIVATE_DESCRIPTION = 'Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan DigiePro.';
+const CLAUDE_PRO_DESCRIPTION = 'Akun resmi Claude Pro login di claude.ai. Akun Vietnam dengan pembayaran credit card Vietnam, garansi 30 hari, dan dijamin aman dari deactive selama tidak mengubah pembayaran, info login seperti email dan password, serta tidak terlalu sering ganti device.';
 const PRODUCT_OVERRIDES = {
-  46473: { stock: 13, available_stock: 13, warranty: '30 hari', access: 'Akun resmi privat', description: OFFICIAL_PRIVATE_DESCRIPTION },
+  46473: { price: 83000, stock: 13, available_stock: 13, duration: '1 bulan', warranty: '30 hari', access: 'Akun resmi Claude Pro di claude.ai', description: CLAUDE_PRO_DESCRIPTION },
   23915: { stock: 3, available_stock: 3, warranty: '30 hari', access: 'Akun resmi privat', description: OFFICIAL_PRIVATE_DESCRIPTION }
 };
 function applyCatalogDefaults(item) { return { ...item, ...(PRODUCT_OVERRIDES[item.id] || {}) }; }
+const DOLA_PRODUCT = { id: 91001, is_best_seller: false, title: 'DOLA AI 1 BULAN', cashback_amount: 0, cashback_type: 'amount', thumbnail: 'https://sf-sf-flow-web-cdn-nontt.ciciaicdn.com/obj/ocean-flow-web-sg/favicon/new-dola/192x192.png', price: 37000, available_stock: 8, sold: 34, total_stock: 42, has_wholesale: false, stock: 8, enabled: true, featuredRank: 5, duration: '1 bulan', warranty: 'Garansi akses', access: 'Dola AI', description: 'Dola AI adalah asisten chat AI untuk percakapan, menulis, menerjemahkan, coding, mencari inspirasi, dan membahas berbagai topik. Produk aktif 1 bulan sesuai ketentuan penggunaan DigiePro.' };
 
-const fallbackCatalog = (window.VIOLA_PRODUCTS || []).flatMap((item) => item.id === 23843 ? [
+const fallbackCatalog = [...(window.VIOLA_PRODUCTS || []).flatMap((item) => item.id === 23843 ? [
   { ...item, title: 'CHATGPT GO 3 BULAN', price: 25000, stock: 6, available_stock: 6, has_wholesale: false, featuredRank: 1, duration: '3 bulan', warranty: 'Garansi penuh', access: 'ChatGPT Go', description: 'Akses ChatGPT Go selama 3 bulan untuk chat AI, menulis, belajar, merangkum, dan membantu pekerjaan harian. Produk mendapat garansi penuh selama masa aktif dengan mengikuti ketentuan penggunaan.' },
   { ...item, id: 90001, title: 'CHATGPT PLUS 1 BULAN - GARANSI 2 HARI', price: 30000, stock: 5, available_stock: 5, sold: 86, has_wholesale: false, featuredRank: 2, duration: '1 bulan', warranty: '2 hari', access: 'Akun privat + Codex', description: CHATGPT_PLUS_DESCRIPTION },
   { ...item, id: 90002, title: 'CHATGPT PLUS 1 BULAN - GARANSI 20 HARI', price: 56000, stock: 7, available_stock: 7, sold: 151, has_wholesale: false, featuredRank: 3, duration: '1 bulan', warranty: '20 hari', access: 'Akun privat + Codex', description: CHATGPT_PLUS_DESCRIPTION }
-] : [applyCatalogDefaults({ ...item, stock: Math.min(item.available_stock || 0, 49), enabled: true, featuredRank: item.id === 46473 ? 4 : 99 })]);
+] : [applyCatalogDefaults({ ...item, stock: Math.min(item.available_stock || 0, 49), enabled: true, featuredRank: item.id === 46473 ? 4 : 99 })]), DOLA_PRODUCT];
 let products = fallbackCatalog.map((item) => ({ enabled: true, ...item }));
 let validIds = new Set(products.map((item) => item.id));
 const savedCart = JSON.parse(localStorage.getItem('digiepro_cart') || '[]');
@@ -48,6 +50,8 @@ function rupiah(value) { return new Intl.NumberFormat('id-ID', { style: 'currenc
 function icons() { if (window.lucide) window.lucide.createIcons(); }
 function notify(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(notify.timer); notify.timer = setTimeout(() => toast.classList.remove('show'), 2400); }
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[character])); }
+function formatChatDateTime(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
+function messageBubble(text, role, createdAt = new Date().toISOString()) { return `<div class="message ${role}"><span class="message-text">${escapeHtml(text)}</span><time class="message-meta">${formatChatDateTime(createdAt)}</time></div>`; }
 function getProduct(id) { return products.find((item) => item.id === Number(id)); }
 function supportsOwnGmail(item) { return item?.title.includes('CHATGPT PLUS'); }
 function resellerMinimum(item) { return Number(item?.price || 0) > 20000 ? 3 : 5; }
@@ -117,6 +121,7 @@ const PRODUCT_COPY = [
   ['KIRO', 'Akses Kiro Power+ untuk mendukung coding, penyusunan spesifikasi, dan workflow pengembangan berbantuan AI.'],
   ['LEONARDO', 'Akses Leonardo AI untuk membuat dan mengolah gambar dengan fitur premium sesuai paket yang tersedia.'],
   ['KLING', 'Akses Kling AI untuk pembuatan video dan konten visual berbasis AI sesuai kuota pada akun.'],
+  ['DOLA', 'Dola AI membantu percakapan, menulis, menerjemahkan, coding, mencari inspirasi, dan membahas berbagai topik dalam satu asisten chat.'],
   ['CANVA', 'Akses Canva Pro untuk template premium, elemen desain, background remover, dan fitur kolaborasi.'],
   ['CAPCUT', 'Akses CapCut Pro untuk efek, filter, template, alat editing, dan aset premium yang tersedia.'],
   ['ALIGHT', 'Akses Alight Motion Pro untuk editing video, motion graphics, efek visual, dan ekspor premium.'],
@@ -224,10 +229,10 @@ function reviewForm(orderId, productId) { const product = getProduct(productId);
 function chatWelcome() { return '<div class="message bot">Hai! Saya bisa bantu cek stok, harga, varian, garansi, pembayaran, dan cara pemesanan.</div><div class="quick-chat"><button data-question="Produk apa yang ready?" type="button">Cek stok</button><button data-question="Tampilkan paket ChatGPT" type="button">Paket ChatGPT</button><button data-question="Bagaimana cara pesan?" type="button">Cara pesan</button><button data-question="Bagaimana pembayaran QRIS?" type="button">Pembayaran</button><button data-question="Bagaimana garansi produk?" type="button">Garansi</button><button data-question="Apa itu Gmail sendiri?" type="button">Gmail sendiri</button><button data-question="Bagaimana produk dikirim?" type="button">Pengiriman</button><button data-admin type="button">Chat admin</button></div>'; }
 function openChat() { chatPanel.classList.add('open'); chatPanel.setAttribute('aria-hidden', 'false'); if (window.innerWidth > 760) document.querySelector('#chatInput').focus(); }
 function closeChat() { chatPanel.classList.remove('open'); chatPanel.setAttribute('aria-hidden', 'true'); }
-function addMessage(text, role) { const node = document.createElement('div'); node.className = `message ${role}`; node.textContent = text; chatMessages.appendChild(node); chatMessages.scrollTop = chatMessages.scrollHeight; }
+function addMessage(text, role) { chatMessages.insertAdjacentHTML('beforeend', messageBubble(text, role)); chatMessages.scrollTop = chatMessages.scrollHeight; }
 function contactAdmin() { switchChatMode('admin'); }
 function customerIdentity() { const last = JSON.parse(localStorage.getItem('digiepro_last_order') || 'null'); return last?.customer || state.user || {}; }
-async function loadAdminChat() { try { const response = await fetch(`/api/chat/${state.chatId}`, { cache: 'no-store' }); const chat = await response.json(); if (state.chatMode !== 'admin') return; chatMessages.innerHTML = chat.messages?.length ? chat.messages.map((item) => `<div class="message ${item.sender === 'admin' ? 'bot' : 'user'}">${escapeHtml(item.text)}</div>`).join('') : '<div class="message bot">Kamu sudah masuk ke chat admin. Tulis pesan dan admin akan membalas dari dashboard.</div>'; chatMessages.scrollTop = chatMessages.scrollHeight; } catch {} }
+async function loadAdminChat() { try { const response = await fetch(`/api/chat/${state.chatId}`, { cache: 'no-store' }); const chat = await response.json(); if (state.chatMode !== 'admin') return; chatMessages.innerHTML = chat.messages?.length ? chat.messages.map((item) => messageBubble(item.text, item.sender === 'admin' ? 'bot' : 'user', item.createdAt)).join('') : '<div class="message bot">Kamu sudah masuk ke chat admin. Tulis pesan dan admin akan membalas dari dashboard.</div>'; chatMessages.scrollTop = chatMessages.scrollHeight; } catch {} }
 function switchChatMode(mode) { state.chatMode = mode; document.querySelectorAll('[data-chat-mode]').forEach((button) => button.classList.toggle('active', button.dataset.chatMode === mode)); document.querySelector('#chatTitle').textContent = mode === 'admin' ? 'Admin DigiePro' : 'Asisten DigiePro'; if (mode === 'admin') loadAdminChat(); else chatMessages.innerHTML = chatWelcome(); }
 async function sendAdminMessage(message) { const response = await fetch(`/api/chat/${state.chatId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, customer: customerIdentity() }) }); if (!response.ok) throw new Error('Pesan gagal dikirim.'); await loadAdminChat(); }
 function localBotAnswer(question) {
