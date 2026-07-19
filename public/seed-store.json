@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 8,
+  "schemaVersion": 10,
   "products": [
     {
       "id": 46473,
@@ -216,7 +216,7 @@
     {
       "id": 23944,
       "is_best_seller": false,
-      "title": "CAMSCNNER PREMIUM",
+      "title": "CAMSCANNER PREMIUM",
       "cashback_amount": 0,
       "cashback_type": "percent",
       "thumbnail": "https://s3.xoftware.id/f/23944_camscanner1b_997_1780631601503.png",
@@ -493,6 +493,36 @@
       "description": "Dola AI adalah asisten chat AI untuk percakapan, menulis, menerjemahkan, coding, mencari inspirasi, dan membahas berbagai topik. Produk aktif 1 bulan sesuai ketentuan penggunaan DigiePro."
     },
     {
+      "id": 92000,
+      "is_best_seller": true,
+      "title": "GPT EDU K12",
+      "cashback_amount": 0,
+      "cashback_type": "amount",
+      "thumbnail": "https://cdn.gradual.com/images/https://d2xo500swnpgl1.cloudfront.net/uploads/oaiacademy/EDU-Content-Covers-37--16823a96-45ae-4dac-b79e-5c805bf5c7c3-1780455465231.jpeg?fit=scale-down&width=900",
+      "price": 360000,
+      "available_stock": 12,
+      "sold": 0,
+      "total_stock": 12,
+      "has_wholesale": false,
+      "stock": 12,
+      "enabled": true,
+      "featuredRank": 1,
+      "duration": "1 tahun",
+      "warranty": "3 bulan",
+      "access": "GPT Edu K12 + Codex",
+      "description": "Akses GPT Edu K12 untuk kebutuhan belajar, membuat materi, merangkum, menulis, riset ringan, pendampingan tugas sekolah, dan penggunaan Codex untuk belajar coding. Produk tidak menyediakan opsi email sendiri; detail akses dan panduan penggunaan dikirim admin setelah pembayaran.",
+      "variants": [
+        {
+          "id": "1y",
+          "label": "1 Tahun",
+          "price": 360000,
+          "duration": "1 tahun",
+          "warranty": "3 bulan"
+        },,
+        {
+      "description": "Akses GPT Edu K12 untuk kebutuhan belajar, membuat materi, merangkum, menulis, riset ringan, pendampingan tugas sekolah, dan penggunaan Codex untuk belajar coding. Produk tidak menyediakan opsi email sendiri; detail akses dan panduan penggunaan dikirim admin setelah pembayaran."
+    },
+    {
       "id": 23843,
       "is_best_seller": true,
       "title": "CHATGPT GO 3 BULAN",
@@ -599,6 +629,26 @@
       "stock": 8,
       "enabled": true,
       "featuredRank": 99
+    },
+    {
+      "id": 93000,
+      "is_best_seller": false,
+      "title": "SALDO API DIGIEPROLLM",
+      "cashback_amount": 0,
+      "cashback_type": "amount",
+      "thumbnail": "favicon.svg",
+      "price": 12300,
+      "available_stock": 999,
+      "sold": 0,
+      "total_stock": 999,
+      "has_wholesale": false,
+      "stock": 49,
+      "enabled": true,
+      "featuredRank": 2,
+      "duration": "Pay-as-you-go",
+      "warranty": "Garansi saldo masuk",
+      "access": "API Key DigieProllm",
+      "description": "Top-up saldo API DigieProllm untuk mengakses 100+ model AI (GPT-4o, Claude, Gemini, DeepSeek, dll) melalui endpoint yang kompatibel OpenAI. Kurs tetap Rp12.300/. Akun dan API Key akan dibuatkan oleh admin setelah pembayaran dikonfirmasi."
     }
   ],
   "orders": [],
@@ -1083,6 +1133,41 @@
       "rating": 4,
       "comment": "Canva Pro aktif. Instruksi awal bisa dibuat lebih singkat, tapi produknya oke.",
       "createdAt": "2026-06-04T09:55:00.000Z"
+    },
+    {
+      "id": 92000,
+      "is_best_seller": true,
+      "title": "GPT EDU K12",
+      "cashback_amount": 0,
+      "cashback_type": "amount",
+      "thumbnail": "https://cdn.example.com/gpt-edu-k12.png",
+      "price": 360000,
+      "available_stock": 8,
+      "sold": 0,
+      "total_stock": 8,
+      "has_wholesale": false,
+      "stock": 8,
+      "enabled": true,
+      "featuredRank": 1,
+      "duration": "1 tahun",
+      "warranty": "3 bulan",
+      "access": "GPT Edu K12 + Codex",
+      "description": "Akses GPT Edu K12 untuk kebutuhan belajar, membuat materi, merangkum, menulis, riset ringan, pendampingan tugas sekolah, dan penggunaan Codex untuk belajar coding. Produk tidak menyediakan opsi email sendiri; detail akses dan panduan penggunaan dikirim admin setelah pembayaran."
+    }
+  ],
+  "vouchers": [
+    {
+      "code": "SPESIALAI07",
+      "description": "Diskon 16% untuk produk kategori AI (Min. beli 2)",
+      "type": "percent",
+      "value": 16,
+      "minSubtotal": 0,
+      "maxUses": 0,
+      "used": 0,
+      "enabled": true,
+      "requiredCategory": "AI & produktivitas",
+      "minQuantity": 2,
+      "createdAt": "2026-07-17T13:30:51.580Z"
     }
   ]
 }

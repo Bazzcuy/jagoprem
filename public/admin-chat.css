@@ -19,3 +19,18 @@
 @media(max-width:900px){.chat-workspace{grid-template-columns:260px minmax(0,1fr)}}
 @media(max-width:720px){.chat-workspace{grid-template-columns:1fr;height:calc(100dvh - 168px);max-height:none;min-height:0}.chat-list{max-height:142px;border-right:0;border-bottom:1px solid var(--line)}.admin-conversation{min-height:0}.conversation-head{align-items:flex-start;flex-direction:column}.conversation-messages{padding:14px 12px 18px}.admin-message{max-width:90%;font-size:10px}#adminReply{min-height:60px;grid-template-columns:1fr 68px;padding:10px}#adminReply input{font-size:10px}}
 @media(max-width:420px){.chat-workspace{height:calc(100dvh - 156px);min-height:0}.chat-list{max-height:120px}.conversation-head a{width:100%;justify-content:center}.admin-message{max-width:94%}}
+
+/* Message action buttons */
+.admin-message{position:relative;flex-direction:column}
+.msg-bubble-content{display:flex;flex-direction:column;gap:3px;width:100%}
+.msg-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s;align-self:flex-end;margin-top:4px}
+.admin-message:hover .msg-actions{opacity:1}
+.msg-action-btn{width:24px;height:24px;border:1px solid var(--line);background:#fff;border-radius:4px;display:grid;place-items:center;padding:0;cursor:pointer;transition:background .12s}
+.msg-action-btn svg{width:12px;stroke:var(--muted)}
+.msg-action-btn:hover{background:#f0f4f3}
+.msg-action-btn.danger:hover{background:#fff0ee;border-color:#f5c5be}
+.msg-action-btn.danger svg{stroke:var(--danger)}
+.admin-message.admin .msg-action-btn{background:#cdeae0;border-color:#b6dfd4}
+.admin-message.admin .msg-action-btn:hover{background:#b8e2d4}
+.message-meta em{font-style:normal;color:#aaa;font-size:7px}
+

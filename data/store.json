@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 8,
+  "schemaVersion": 10,
   "products": [
     {
       "id": 46473,
@@ -19,8 +19,8 @@
       "warranty": "30 hari",
       "access": "Akun resmi Claude Pro di claude.ai",
       "description": "Akun resmi Claude Pro login di claude.ai. Akun Vietnam dengan pembayaran credit card Vietnam, garansi 30 hari, dan dijamin aman dari deactive selama tidak mengubah pembayaran, info login seperti email dan password, serta tidak terlalu sering ganti device.",
-      "autoRestock": false,
-      "duration": "1 bulan"
+      "duration": "1 bulan",
+      "autoRestock": false
     },
     {
       "id": 43262,
@@ -229,7 +229,7 @@
     {
       "id": 23944,
       "is_best_seller": false,
-      "title": "CAMSCNNER PREMIUM",
+      "title": "CAMSCANNER PREMIUM",
       "cashback_amount": 0,
       "cashback_type": "percent",
       "thumbnail": "https://s3.xoftware.id/f/23944_camscanner1b_997_1780631601503.png",
@@ -523,6 +523,43 @@
       "autoRestock": false
     },
     {
+      "id": 92000,
+      "is_best_seller": true,
+      "title": "GPT EDU K12",
+      "cashback_amount": 0,
+      "cashback_type": "amount",
+      "thumbnail": "https://cdn.gradual.com/images/https://d2xo500swnpgl1.cloudfront.net/uploads/oaiacademy/EDU-Content-Covers-37--16823a96-45ae-4dac-b79e-5c805bf5c7c3-1780455465231.jpeg?fit=scale-down&width=900",
+      "price": 360000,
+      "available_stock": 12,
+      "sold": 0,
+      "total_stock": 12,
+      "has_wholesale": false,
+      "stock": 12,
+      "enabled": true,
+      "featuredRank": 1,
+      "duration": "1 tahun",
+      "warranty": "3 bulan",
+      "access": "GPT Edu K12 + Codex",
+      "description": "Akses GPT Edu K12 untuk kebutuhan belajar, membuat materi, merangkum, menulis, riset ringan, pendampingan tugas sekolah, dan penggunaan Codex untuk belajar coding. Produk tidak menyediakan opsi email sendiri; detail akses dan panduan penggunaan dikirim admin setelah pembayaran.",
+      "variants": [
+        {
+          "id": "1y",
+          "label": "1 Tahun",
+          "price": 360000,
+          "duration": "1 tahun",
+          "warranty": "3 bulan"
+        },
+        {
+          "id": "2y",
+          "label": "2 Tahun",
+          "price": 675000,
+          "duration": "2 tahun",
+          "warranty": "8 bulan"
+        }
+      ],
+      "autoRestock": false
+    },
+    {
       "id": 23843,
       "is_best_seller": true,
       "title": "CHATGPT GO 3 BULAN",
@@ -560,8 +597,8 @@
       "featuredRank": 2,
       "duration": "1 bulan",
       "warranty": "2 hari",
-      "access": "ChatGPT Plus",
-      "description": "Akses ChatGPT Plus selama 1 bulan dengan garansi akses 2 hari. Cocok untuk kebutuhan singkat dengan harga lebih hemat.",
+      "access": "Akun privat + Codex",
+      "description": "Akun ChatGPT Plus privat, bukan sharing, dengan dukungan Codex. Aktivasi menggunakan payment credit card pada akun privat agar akses lebih aman dan tidak bercampur dengan pengguna lain. Tersedia opsi aktivasi memakai Gmail sendiri dengan tambahan Rp5.000.",
       "autoRestock": false
     },
     {
@@ -581,8 +618,8 @@
       "featuredRank": 3,
       "duration": "1 bulan",
       "warranty": "20 hari",
-      "access": "ChatGPT Plus",
-      "description": "Akses ChatGPT Plus selama 1 bulan dengan perlindungan garansi akses hingga 20 hari untuk pemakaian yang lebih tenang.",
+      "access": "Akun privat + Codex",
+      "description": "Akun ChatGPT Plus privat, bukan sharing, dengan dukungan Codex. Aktivasi menggunakan payment credit card pada akun privat agar akses lebih aman dan tidak bercampur dengan pengguna lain. Tersedia opsi aktivasi memakai Gmail sendiri dengan tambahan Rp5.000.",
       "autoRestock": false
     },
     {
@@ -634,6 +671,64 @@
       "stock": 8,
       "enabled": true,
       "featuredRank": 99,
+      "autoRestock": false
+    },
+    {
+      "id": 93000,
+      "is_best_seller": false,
+      "title": "SALDO API DIGIEPROLLM",
+      "cashback_amount": 0,
+      "cashback_type": "amount",
+      "thumbnail": "favicon.svg",
+      "price": 12300,
+      "available_stock": 999,
+      "sold": 0,
+      "total_stock": 999,
+      "has_wholesale": false,
+      "stock": 49,
+      "enabled": true,
+      "featuredRank": 2,
+      "duration": "Pay-as-you-go",
+      "warranty": "Garansi saldo masuk",
+      "access": "API Key DigieProllm",
+      "description": "Top-up saldo API DigieProllm untuk mengakses 100+ model AI (GPT-4o, Claude, Gemini, DeepSeek, dll) melalui endpoint yang kompatibel OpenAI. Kurs tetap Rp12.300/. Akun dan API Key akan dibuatkan oleh admin setelah pembayaran dikonfirmasi.",
+      "variants": [
+        {
+          "id": "5usd",
+          "label": "Saldo $5 USD",
+          "price": 61500,
+          "duration": "Pay-as-you-go",
+          "warranty": "Garansi saldo masuk"
+        },
+        {
+          "id": "10usd",
+          "label": "Saldo $10 USD",
+          "price": 123000,
+          "duration": "Pay-as-you-go",
+          "warranty": "Garansi saldo masuk"
+        },
+        {
+          "id": "25usd",
+          "label": "Saldo $25 USD",
+          "price": 307500,
+          "duration": "Pay-as-you-go",
+          "warranty": "Garansi saldo masuk"
+        },
+        {
+          "id": "50usd",
+          "label": "Saldo $50 USD",
+          "price": 615000,
+          "duration": "Pay-as-you-go",
+          "warranty": "Garansi saldo masuk"
+        },
+        {
+          "id": "100usd",
+          "label": "Saldo $100 USD",
+          "price": 1230000,
+          "duration": "Pay-as-you-go",
+          "warranty": "Garansi saldo masuk"
+        }
+      ],
       "autoRestock": false
     }
   ],
@@ -1121,11 +1216,37 @@
       "createdAt": "2026-06-04T09:55:00.000Z"
     }
   ],
-  "users": [],
+  "users": [
+    {
+      "id": "usr-46ed030506bd2ad60a2fbe07",
+      "name": "Test User",
+      "email": "testuser@gmail.com",
+      "salt": "5eb1952da5ae450366e5a15f3e0f62aa",
+      "passwordHash": "b551bebf9c3d9eb0f437260796ee8ae74e0fc10ed625b6714ac35d2c69d6c1fb",
+      "deviceId": "2531353d-eb4c-40a4-9eb8-00cbb930c425",
+      "blocked": false,
+      "createdAt": "2026-07-17T13:09:51.472Z"
+    }
+  ],
   "userSessions": [],
   "settings": {
     "maintenance": false,
     "maintenanceMessage": "DigiePro sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.",
     "reviewsEnabled": true
-  }
+  },
+  "vouchers": [
+    {
+      "code": "SPESIALAI07",
+      "description": "Diskon 16% untuk produk kategori AI (Min. beli 2)",
+      "type": "percent",
+      "value": 16,
+      "minSubtotal": 0,
+      "maxUses": 0,
+      "used": 0,
+      "enabled": true,
+      "requiredCategory": "AI & produktivitas",
+      "minQuantity": 2,
+      "createdAt": "2026-07-17T13:30:51.565Z"
+    }
+  ]
 }
