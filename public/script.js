@@ -73,6 +73,7 @@ const modalContent = document.querySelector('#modalContent');
 const toast = document.querySelector('#toast');
 const chatPanel = document.querySelector('#chatPanel');
 const chatMessages = document.querySelector('#chatMessages');
+const chatInput = document.querySelector('#chatInput');
 
 function rupiah(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
 function productCategory(item) {
@@ -86,6 +87,7 @@ function notify(message) { toast.textContent = message; toast.classList.add('sho
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[character])); }
 function formatChatDateTime(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 function messageBubble(text, role, createdAt = new Date().toISOString()) { return `<div class="message ${role}"><span class="message-text">${escapeHtml(text)}</span><time class="message-meta">${formatChatDateTime(createdAt)}</time></div>`; }
+function resizeChatComposer() { const input = document.querySelector('#chatInput'); if (!input) return; input.style.height = 'auto'; input.style.height = `${Math.min(input.scrollHeight, 120)}px`; }
 function getProduct(id) { return products.find((item) => item.id === Number(id)); }
 function supportsOwnGmail(item) { return item?.title.includes('CHATGPT PLUS'); }
 function productVariant(item, variantId) { return (item?.variants || []).find((variant) => variant.id === String(variantId || '')) || item?.variants?.[0] || null; }
@@ -278,7 +280,7 @@ function checkoutModal() {
       <p class="field-help">Email ini akan didaftarkan oleh admin sebagai identitas akun DigieProllm kamu. API Key akan dikirimkan ke WhatsApp.</p>
     </div>
   ` : '';
-  openModal(`${modalHead('Checkout')}<div class="modal-body"><div class="order-summary">${cartItemsHtml}<div><span>Biaya admin</span><b>${rupiah(99)}</b></div><div class="total" id="checkoutTotalRow"><span>Total sebelum voucher</span><b>${rupiah(cartTotal() + 99)}</b></div></div><form id="checkoutForm"><div class="form-group voucher-field"><label>KODE VOUCHER (OPSIONAL)</label><div class="voucher-input-row"><div class="voucher-input-wrap"><i data-lucide="ticket-percent"></i><input id="voucherInput" name="voucherCode" autocomplete="off" maxlength="32" placeholder="Contoh: SPESIALAI07"></div><button class="voucher-apply-btn" type="button" id="applyVoucher">Gunakan</button></div><div id="voucherFeedback" class="voucher-feedback"></div><p class="field-help" id="voucherHint">Voucher SPESIALAI07 — diskon 16% untuk 2+ produk AI</p></div><div class="form-group"><label>NAMA PENERIMA</label><input name="name" required value="${escapeHtml(state.user?.name || '')}" placeholder="Nama kamu"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" inputmode="tel" required pattern="\\+?[0-9]{9,15}" placeholder="Contoh: 081234567890 atau +6281234567890"><p class="field-help">Nomor ini dipakai admin untuk menghubungi dan mengirim detail produk.</p></div>${devApiField}<div class="form-group"><label>CATATAN (OPSIONAL)</label><textarea name="note" placeholder="Permintaan atau informasi tambahan"></textarea></div><button class="submit-button" type="submit">Lanjut ke pembayaran</button></form></div>`);
+  openModal(`${modalHead('Checkout')}<div class="modal-body"><div class="order-summary">${cartItemsHtml}<div><span>Biaya admin</span><b>${rupiah(99)}</b></div><div class="total" id="checkoutTotalRow"><span>Total sebelum voucher</span><b>${rupiah(cartTotal() + 99)}</b></div></div><form id="checkoutForm"><div class="form-group voucher-field"><label>KODE VOUCHER (OPSIONAL)</label><div class="voucher-input-row"><div class="voucher-input-wrap"><i data-lucide="ticket-percent"></i><input id="voucherInput" name="voucherCode" autocomplete="off" maxlength="32" placeholder="Contoh: SPESIALAI07"></div><button class="voucher-apply-btn" type="button" id="applyVoucher">Gunakan</button></div><div id="voucherFeedback" class="voucher-feedback"></div><p class="field-help" id="voucherHint">Voucher SPESIALAI07: diskon 16% untuk minimal 2 produk AI yang sama</p></div><div class="form-group"><label>NAMA PENERIMA</label><input name="name" required value="${escapeHtml(state.user?.name || '')}" placeholder="Nama kamu"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" inputmode="tel" required pattern="\\+?[0-9]{9,15}" placeholder="Contoh: 081234567890 atau +6281234567890"><p class="field-help">Nomor ini dipakai admin untuk menghubungi dan mengirim detail produk.</p></div>${devApiField}<div class="form-group"><label>CATATAN (OPSIONAL)</label><textarea name="note" placeholder="Permintaan atau informasi tambahan"></textarea></div><button class="submit-button" type="submit">Lanjut ke pembayaran</button></form></div>`);
   // Voucher apply button handler
   document.querySelector('#applyVoucher')?.addEventListener('click', async () => {
     const code = document.querySelector('#voucherInput')?.value.trim();
@@ -344,29 +346,29 @@ async function reviewsModal() {
 function reviewForm(orderId, productId) { const product = getProduct(productId); openModal(`${modalHead('Tulis ulasan')}<div class="modal-body"><div class="review-product"><img src="${product.thumbnail}" alt=""><span><small>PRODUK YANG DIULAS</small><b>${escapeHtml(product.title)}</b></span></div><form id="reviewForm" data-order-id="${orderId}" data-product-id="${productId}"><fieldset class="rating-field"><legend>BERI BINTANG</legend>${[5,4,3,2,1].map((rating) => `<label><input type="radio" name="rating" value="${rating}" required><span>${rating}<i data-lucide="star"></i></span></label>`).join('')}</fieldset><div class="form-group"><label>KOMENTAR</label><textarea name="comment" minlength="8" maxlength="600" required placeholder="Ceritakan pengalamanmu menggunakan produk ini..."></textarea></div><button class="submit-button" type="submit">Kirim ulasan</button></form></div>`); }
 
 function chatWelcome() { return '<div class="message bot">Hai! Saya bisa bantu cek stok, harga, varian, garansi, pembayaran, dan cara pemesanan.</div><div class="quick-chat"><button data-question="Produk apa yang ready?" type="button">Cek stok</button><button data-question="Tampilkan paket ChatGPT" type="button">Paket ChatGPT</button><button data-question="Bagaimana cara pesan?" type="button">Cara pesan</button><button data-question="Bagaimana pembayaran QRIS?" type="button">Pembayaran</button><button data-question="Bagaimana garansi produk?" type="button">Garansi</button><button data-question="Apa itu Gmail sendiri?" type="button">Gmail sendiri</button><button data-question="Bagaimana produk dikirim?" type="button">Pengiriman</button><button data-admin type="button">Chat admin</button></div>'; }
-function openChat() { chatPanel.classList.add('open'); chatPanel.setAttribute('aria-hidden', 'false'); if (window.innerWidth > 760) document.querySelector('#chatInput').focus(); }
+function openChat() { chatPanel.classList.add('open'); chatPanel.setAttribute('aria-hidden', 'false'); requestAnimationFrame(() => { chatInput?.focus(); resizeChatComposer(); }); chatMessages.scrollTop = chatMessages.scrollHeight; }
 function closeChat() { chatPanel.classList.remove('open'); chatPanel.setAttribute('aria-hidden', 'true'); }
 function addMessage(text, role) { chatMessages.insertAdjacentHTML('beforeend', messageBubble(text, role)); chatMessages.scrollTop = chatMessages.scrollHeight; }
 function contactAdmin() { switchChatMode('admin'); }
 function customerIdentity() { const last = JSON.parse(localStorage.getItem('digiepro_last_order') || 'null'); return last?.customer || state.user || {}; }
-async function loadAdminChat() { 
-  try { 
-    const response = await fetch(`/api/chat/${state.chatId}`, { cache: 'no-store' }); 
-    const chat = await response.json(); 
+async function loadAdminChat() {
+  try {
+    const response = await fetch(`/api/chat/${state.chatId}`, { cache: 'no-store' });
+    const chat = await response.json();
     if (chat?.id) setChatId(chat.id);
-    if (state.chatMode !== 'admin') return; 
-    chatMessages.innerHTML = chat.messages?.length ? chat.messages.map((item) => messageBubble(item.text, item.sender === 'admin' ? 'bot' : 'user', item.createdAt)).join('') : '<div class="message bot">Kamu sudah masuk ke chat admin. Tulis pesan dan admin akan membalas dari dashboard.</div>'; 
-    chatMessages.scrollTop = chatMessages.scrollHeight; 
+    if (state.chatMode !== 'admin') return;
+    chatMessages.innerHTML = chat.messages?.length ? chat.messages.map((item) => messageBubble(item.text, item.sender === 'admin' ? 'bot' : 'user', item.createdAt)).join('') : '<div class="message bot">Kamu sudah masuk ke chat admin. Tulis pesan dan admin akan membalas dari dashboard.</div>';
+    chatMessages.scrollTop = chatMessages.scrollHeight;
     // Mark as read
     fetch(`/api/chat/${state.chatId}/read`, { method: 'POST' }).catch(()=>{});
     updateChatBadge(0);
-  } catch {} 
+  } catch {}
 }
-function switchChatMode(mode) { 
-  state.chatMode = mode; 
-  document.querySelectorAll('[data-chat-mode]').forEach((button) => button.classList.toggle('active', button.dataset.chatMode === mode)); 
-  document.querySelector('#chatTitle').textContent = mode === 'admin' ? 'Admin DigiePro' : 'Asisten DigiePro'; 
-  if (mode === 'admin') loadAdminChat(); else chatMessages.innerHTML = chatWelcome(); 
+function switchChatMode(mode) {
+  state.chatMode = mode;
+  document.querySelectorAll('[data-chat-mode]').forEach((button) => button.classList.toggle('active', button.dataset.chatMode === mode));
+  document.querySelector('#chatTitle').textContent = mode === 'admin' ? 'Admin DigiePro' : 'Asisten DigiePro';
+  if (mode === 'admin') loadAdminChat(); else chatMessages.innerHTML = chatWelcome(); resizeChatComposer();
 }
 async function sendAdminMessage(message) { const response = await fetch(`/api/chat/${state.chatId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, customer: customerIdentity() }) }); const chat = await response.json().catch(() => null); if (!response.ok) throw new Error(chat?.error || 'Pesan gagal dikirim.'); if (chat?.id) setChatId(chat.id); await loadAdminChat(); }
 function localBotAnswer(question) {
@@ -440,9 +442,11 @@ document.querySelector('#menuButton').addEventListener('click', () => { document
 document.querySelector('#sidebarOverlay').addEventListener('click', () => { document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('show'); });
 document.querySelectorAll('.side-nav a').forEach((link) => link.addEventListener('click', () => { document.querySelectorAll('.side-nav a').forEach((item) => item.classList.remove('active')); link.classList.add('active'); document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('show'); }));
 document.querySelector('#chatBubble').addEventListener('click', openChat); document.querySelector('#openChatSide').addEventListener('click', openChat); document.querySelector('#closeChat').addEventListener('click', closeChat);
+chatInput?.addEventListener('input', resizeChatComposer);
+chatInput?.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.querySelector('#chatForm').requestSubmit(); } });
 document.querySelectorAll('[data-chat-mode]').forEach((button) => button.addEventListener('click', () => switchChatMode(button.dataset.chatMode)));
-chatMessages.addEventListener('click', (event) => { const question = event.target.closest('[data-question]'); if (question) { document.querySelector('#chatInput').value = question.dataset.question; document.querySelector('#chatForm').requestSubmit(); } if (event.target.closest('[data-admin]')) contactAdmin(); });
-document.querySelector('#chatForm').addEventListener('submit', async (event) => { event.preventDefault(); const input = document.querySelector('#chatInput'); const question = input.value.trim(); if (!question) return; input.value = ''; if (state.chatMode === 'admin') { try { await sendAdminMessage(question); } catch (error) { notify(error.message); } return; } addMessage(question, 'user'); const answer = await askBot(question); addMessage(answer, 'bot'); });
+chatMessages.addEventListener('click', (event) => { const question = event.target.closest('[data-question]'); if (question) { chatInput.value = question.dataset.question; resizeChatComposer(); document.querySelector('#chatForm').requestSubmit(); } if (event.target.closest('[data-admin]')) contactAdmin(); });
+document.querySelector('#chatForm').addEventListener('submit', async (event) => { event.preventDefault(); const input = chatInput; const question = input.value.trim(); if (!question) return; input.value = ''; resizeChatComposer(); if (state.chatMode === 'admin') { try { await sendAdminMessage(question); } catch (error) { notify(error.message); } return; } addMessage(question, 'user'); const answer = await askBot(question); addMessage(answer, 'bot'); });
 
 function setDetailQuantity(value) {
   const input = document.querySelector('#detailQuantity'); if (!input) return;
@@ -580,7 +584,7 @@ async function syncUser() {
     if (!res.ok) return;
     const data = await res.json();
     if (data.chatId) setChatId(data.chatId);
-    
+
     // Update lastSyncTime to now (provided by server)
     if (data.timestamp) lastSyncTime = data.timestamp;
 
@@ -618,7 +622,7 @@ setInterval(syncUser, 5000);
 document.querySelector('#notifButton').addEventListener('click', () => {
   unreadNotifCount = 0;
   updateNotifBadge();
-  const notifHtml = notifications.length 
+  const notifHtml = notifications.length
     ? notifications.map(n => `<div class="notif-modal-item"><h4>${escapeHtml(n.title)}</h4><p>${escapeHtml(n.text)}</p><time>${formatChatDateTime(n.createdAt)}</time></div>`).join('')
     : '<div style="padding:24px;text-align:center;color:var(--muted)">Belum ada notifikasi</div>';
   openModal(`${modalHead('Notifikasi')}<div class="modal-body" style="padding:0;max-height:400px;overflow-y:auto">${notifHtml}</div>`);
@@ -649,7 +653,7 @@ function showPromoPopup() {
 
           <div class="promo-desc-block">
             <div class="promo-desc-item"><i data-lucide="zap"></i><span>Berlaku untuk ChatGPT, Claude, Grok, GPT Edu, Dola AI, dll.</span></div>
-            <div class="promo-desc-item"><i data-lucide="shopping-cart"></i><span>Minimal beli <strong>2 produk</strong> kategori AI dalam 1 transaksi</span></div>
+            <div class="promo-desc-item"><i data-lucide="shopping-cart"></i><span>Minimal beli <strong>2 produk AI yang sama</strong> dalam 1 transaksi</span></div>
             <div class="promo-desc-item"><i data-lucide="tag"></i><span>Masukkan kode saat checkout, diskon langsung terpotong</span></div>
           </div>
 

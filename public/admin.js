@@ -15,6 +15,82 @@ function formatDateTime(value) { const date = new Date(value); return Number.isN
 function formatChatTime(value) { const date = new Date(value); if (Number.isNaN(date.getTime())) return ''; const sameDay = date.toDateString() === new Date().toDateString(); return date.toLocaleString('id-ID', sameDay ? { hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
 function toast(message) { const node = document.querySelector('#adminToast'); node.textContent = message; node.classList.add('show'); clearTimeout(toast.timer); toast.timer = setTimeout(() => node.classList.remove('show'), 2400); }
 
+const adminModalLayer = document.querySelector('#adminModalLayer');
+const adminModal = document.querySelector('#adminModal');
+let adminDialogState = null;
+
+function closeAdminDialog(result = null) {
+  if (adminDialogState?.resolve) adminDialogState.resolve(result);
+  adminDialogState = null;
+  adminModal.innerHTML = '';
+  adminModalLayer.classList.remove('open');
+  adminModalLayer.setAttribute('aria-hidden', 'true');
+}
+
+function renderAdminDialog() {
+  if (!adminDialogState) return;
+  const state = adminDialogState;
+  const title = escapeHtml(state.title || 'Dialog');
+  const description = state.description ? `<p class="admin-modal-desc">${escapeHtml(state.description)}</p>` : '';
+  let fields = '';
+  if (state.kind === 'compose-message' || state.kind === 'edit-message') {
+    fields = `<label class="admin-modal-field">Pesan<textarea name="message" required maxlength="1000" rows="6" placeholder="${escapeHtml(state.placeholder || 'Tulis pesan...')}">${escapeHtml(state.value || '')}</textarea></label>`;
+  } else if (state.kind === 'notification') {
+    fields = `<label class="admin-modal-field">Judul<input name="title" required maxlength="100" value="${escapeHtml(state.value?.title || '')}" placeholder="Contoh: Promo spesial"></label><label class="admin-modal-field">Isi pesan<textarea name="text" required maxlength="500" rows="6" placeholder="Tulis isi notifikasi...">${escapeHtml(state.value?.text || '')}</textarea></label>`;
+  } else if (state.kind === 'confirm-text') {
+    fields = `<label class="admin-modal-field">Ketik "${escapeHtml(state.requiredValue || '')}"<input name="value" required autocomplete="off" maxlength="120" value="${escapeHtml(state.value || '')}" placeholder="${escapeHtml(state.requiredValue || '')}"></label>`;
+  } else if (state.kind === 'confirm') {
+    fields = '<p class="admin-modal-note">Tindakan ini tidak bisa dibatalkan.</p>';
+  }
+  adminModal.innerHTML = `<form class="admin-modal-shell" id="adminModalForm"><div class="admin-modal-head"><div><small>${escapeHtml(state.eyebrow || 'ADMIN ACTION')}</small><h2 id="adminModalTitle">${title}</h2>${description}</div><button type="button" class="admin-modal-close" data-admin-modal-cancel aria-label="Tutup"><i data-lucide="x"></i></button></div><div class="admin-modal-body">${fields}</div><div class="admin-modal-actions"><button type="button" class="admin-modal-cancel" data-admin-modal-cancel>${escapeHtml(state.cancelLabel || 'Batal')}</button><button type="submit" class="admin-modal-submit ${state.destructive ? 'danger' : ''}">${escapeHtml(state.confirmLabel || 'Simpan')}</button></div></form>`;
+  icons();
+  requestAnimationFrame(() => {
+    adminModal.querySelector('textarea, input')?.focus();
+  });
+}
+
+function openAdminDialog(state) {
+  return new Promise((resolve) => {
+    adminDialogState = { ...state, resolve };
+    adminModalLayer.classList.add('open');
+    adminModalLayer.setAttribute('aria-hidden', 'false');
+    renderAdminDialog();
+  });
+}
+
+adminModalLayer.addEventListener('click', (event) => {
+  if (event.target === adminModalLayer || event.target.closest('[data-admin-modal-cancel]')) closeAdminDialog(null);
+});
+adminModalLayer.addEventListener('submit', (event) => {
+  if (event.target.id !== 'adminModalForm') return;
+  event.preventDefault();
+  const form = Object.fromEntries(new FormData(event.target));
+  if (!adminDialogState) return;
+  if (adminDialogState.kind === 'compose-message' || adminDialogState.kind === 'edit-message') {
+    const message = String(form.message || '').trim();
+    if (!message) return toast('Pesan tidak boleh kosong.');
+    closeAdminDialog(message);
+    return;
+  }
+  if (adminDialogState.kind === 'notification') {
+    const title = String(form.title || '').trim();
+    const text = String(form.text || '').trim();
+    if (!title || !text) return toast('Judul dan isi notifikasi wajib diisi.');
+    closeAdminDialog({ title, text });
+    return;
+  }
+  if (adminDialogState.kind === 'confirm-text') {
+    const value = String(form.value || '').trim();
+    if (!value) return toast('Konfirmasi tidak boleh kosong.');
+    closeAdminDialog(value);
+    return;
+  }
+  closeAdminDialog(true);
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && adminModalLayer.classList.contains('open')) closeAdminDialog(null);
+});
+
 async function api(url, options = {}) {
   const response = await fetch(url, { headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }, ...options });
   const data = await response.json().catch(() => ({}));
@@ -60,7 +136,9 @@ function orderTable() {
 
 function voucherPanel() {
   const vouchers = adminState.vouchers || [];
-  return `<div class="voucher-workspace"><form class="panel voucher-form" id="voucherForm"><div class="panel-head"><div><h2>Buat voucher</h2><span class="panel-meta">Kode promo dipakai pembeli saat checkout</span></div></div><div class="voucher-fields"><label>KODE<input name="code" required maxlength="32" placeholder="HEMATK12"></label><label>TIPE<select name="type"><option value="amount">Potongan nominal</option><option value="percent">Persen subtotal</option></select></label><label>NILAI<input name="value" required type="number" min="1" placeholder="50000"></label><label>MIN. BELANJA<input name="minSubtotal" type="number" min="0" value="0"></label><label>MIN. PRODUK<input name="minQuantity" type="number" min="0" value="0"></label><label>KATEGORI<select name="requiredCategory"><option value="">Semua Kategori</option><option value="AI & produktivitas">AI & produktivitas</option><option value="Developer API">Developer API</option><option value="Hiburan premium">Hiburan premium</option><option value="Aplikasi premium">Aplikasi premium</option></select></label><label>KUOTA<input name="maxUses" type="number" min="0" value="0"><small>0 = tanpa batas</small></label><label>EXPIRED<input name="expiresAt" type="date"></label><label class="wide">DESKRIPSI<input name="description" maxlength="120" placeholder="Promo launching GPT Edu K12"></label><label class="voucher-active"><input name="enabled" type="checkbox" checked> Aktif</label></div><button type="submit">Buat voucher</button></form><div class="panel"><div class="panel-head"><div><h2>Kelola voucher</h2><span class="panel-meta">${vouchers.length} kode promo</span></div><input id="voucherSearch" type="search" placeholder="Cari kode..."></div><div class="table-wrap"><table><thead><tr><th>KODE</th><th>DISKON</th><th>SYARAT</th><th>KUOTA</th><th>EXPIRED</th><th>AKTIF</th><th></th></tr></thead><tbody>${vouchers.length ? vouchers.map((voucher) => `<tr data-voucher-row="${escapeHtml(voucher.code)}"><td><b>${escapeHtml(voucher.code)}</b><br><small>${escapeHtml(voucher.description || '-')}</small></td><td>${voucher.type === 'percent' ? `${Number(voucher.value || 0)}%` : money(voucher.value)}</td><td>Min ${money(voucher.minSubtotal)}${voucher.minQuantity ? `<br>Min ${voucher.minQuantity} item` : ''}${voucher.requiredCategory ? `<br>Khusus: ${escapeHtml(voucher.requiredCategory)}` : ''}</td><td>${Number(voucher.used || 0)} / ${Number(voucher.maxUses || 0) || 'tanpa batas'}</td><td>${voucher.expiresAt ? formatDateTime(voucher.expiresAt) : '-'}</td><td><input class="toggle" data-voucher-enabled type="checkbox" ${voucher.enabled === false ? '' : 'checked'}></td><td><button class="save-product" data-save-voucher="${escapeHtml(voucher.code)}">Simpan</button><button class="delete-voucher" data-delete-voucher="${escapeHtml(voucher.code)}">Hapus</button></td></tr>`).join('') : '<tr><td colspan="7" class="empty-admin">Belum ada voucher.</td></tr>'}</tbody></table></div></div></div>`;
+  const categoryOptions = (selected = '') => ['', 'AI & produktivitas', 'Developer API', 'Hiburan premium', 'Aplikasi premium'].map((category) => `<option value="${escapeHtml(category)}" ${category === selected ? 'selected' : ''}>${category || 'Semua kategori'}</option>`).join('');
+  const typeOptions = (selected = 'amount') => `<option value="amount" ${selected === 'amount' ? 'selected' : ''}>Nominal</option><option value="percent" ${selected === 'percent' ? 'selected' : ''}>Persen</option>`;
+  return `<div class="voucher-workspace"><form class="panel voucher-form" id="voucherForm"><div class="panel-head"><div><h2>Buat voucher</h2><span class="panel-meta">Kode promo dipakai pembeli saat checkout</span></div></div><div class="voucher-fields"><label>KODE<input name="code" required maxlength="32" placeholder="SPESIALAI07"></label><label>TIPE<select name="type">${typeOptions('percent')}</select></label><label>NILAI<input name="value" required type="number" min="1" placeholder="16"></label><label>MIN. BELANJA<input name="minSubtotal" type="number" min="0" value="0"></label><label>MIN. PRODUK<input name="minQuantity" type="number" min="0" value="2"></label><label>KATEGORI<select name="requiredCategory">${categoryOptions('AI & produktivitas')}</select></label><label>KUOTA<input name="maxUses" type="number" min="0" value="0"><small>0 = tanpa batas</small></label><label>EXPIRED<input name="expiresAt" type="date"></label><label class="wide">DESKRIPSI<input name="description" maxlength="120" placeholder="Diskon 16% minimal 2 produk AI yang sama"></label><label class="voucher-active"><input name="requireSameProduct" type="checkbox" checked> Wajib produk sama</label><label class="voucher-active"><input name="enabled" type="checkbox" checked> Aktif</label></div><button type="submit">Buat voucher</button></form><div class="panel"><div class="panel-head"><div><h2>Kelola voucher</h2><span class="panel-meta">${vouchers.length} kode promo</span></div><input id="voucherSearch" type="search" placeholder="Cari kode..."></div><div class="voucher-cards">${vouchers.length ? vouchers.map((voucher) => `<article class="voucher-admin-card" data-voucher-row="${escapeHtml(voucher.code)}"><div class="voucher-admin-top"><div><b>${escapeHtml(voucher.code)}</b><small>${Number(voucher.used || 0)} terpakai${Number(voucher.maxUses || 0) ? ` dari ${Number(voucher.maxUses || 0)}` : ''}</small></div><label class="voucher-switch"><input data-voucher-enabled type="checkbox" ${voucher.enabled === false ? '' : 'checked'}> Aktif</label></div><div class="voucher-edit-grid"><label>Kode<input data-voucher-code maxlength="32" value="${escapeHtml(voucher.code)}"></label><label>Tipe<select data-voucher-type>${typeOptions(voucher.type)}</select></label><label>Nilai<input data-voucher-value type="number" min="1" value="${Number(voucher.value || 0)}"></label><label>Min. belanja<input data-voucher-min-subtotal type="number" min="0" value="${Number(voucher.minSubtotal || 0)}"></label><label>Min. produk<input data-voucher-min-quantity type="number" min="0" value="${Number(voucher.minQuantity || 0)}"></label><label>Kategori<select data-voucher-category>${categoryOptions(voucher.requiredCategory || '')}</select></label><label>Kuota<input data-voucher-max-uses type="number" min="0" value="${Number(voucher.maxUses || 0)}"></label><label>Expired<input data-voucher-expires type="date" value="${escapeHtml(String(voucher.expiresAt || '').slice(0, 10))}"></label><label class="wide">Deskripsi<input data-voucher-description maxlength="120" value="${escapeHtml(voucher.description || '')}"></label><label class="voucher-check"><input data-voucher-same-product type="checkbox" ${voucher.requireSameProduct ? 'checked' : ''}> Minimal produk harus dari produk yang sama</label></div><div class="voucher-admin-actions"><button class="save-product" data-save-voucher="${escapeHtml(voucher.code)}">Simpan</button><button class="delete-voucher" data-delete-voucher="${escapeHtml(voucher.code)}">Hapus</button></div></article>`).join('') : '<div class="empty-admin">Belum ada voucher.</div>'}</div></div></div>`;
 }
 
 function accountTable() {
@@ -181,7 +259,7 @@ function chatWorkspace() {
   if (chats.length && !chats.some((chat) => chat.id === activeChatId)) activeChatId = chats[0].id;
   const chat = chats.find((item) => item.id === activeChatId);
   const whatsapp = String(chat?.customer?.whatsapp || '').replace(/\D/g, '').replace(/^0/, '62');
-  return `<div class="chat-workspace"><aside class="chat-list"><h2>Chat pembeli <span>${chats.length}</span></h2>${chats.length ? chats.map((item) => { const last = item.messages?.at(-1); return `<button class="${item.id === activeChatId ? 'active' : ''}" data-open-chat="${escapeHtml(item.id)}"><b>${escapeHtml(item.customer?.name || 'Pengunjung')}</b><span>${escapeHtml(last?.text || 'Percakapan baru')}</span><time>${formatChatTime(last?.createdAt || item.updatedAt)}</time></button>`; }).join('') : '<p>Belum ada chat.</p>'}</aside><section class="admin-conversation">${chat ? `<div class="conversation-head"><div><b>${escapeHtml(chat.customer?.name || 'Pengunjung')}</b><span>${escapeHtml(chat.customer?.whatsapp || 'Nomor WhatsApp belum tersedia')}${chat.orderId ? ` | ${escapeHtml(chat.orderId)}` : ''}</span></div>${whatsapp ? `<a href="https://wa.me/${whatsapp}" target="_blank" rel="noopener">Chat WhatsApp <i data-lucide="external-link"></i></a>` : ''}</div><div class="conversation-messages">${(chat.messages || []).map((message) => `<div class="admin-message ${message.sender === 'admin' ? 'admin' : 'customer'}" data-message-id="${escapeHtml(message.id)}" data-chat-id="${escapeHtml(chat.id)}"><div class="msg-bubble-content"><span class="message-text">${escapeHtml(message.text)}</span><time class="message-meta">${formatDateTime(message.createdAt)}</time></div><div class="msg-actions"><button class="msg-action-btn" data-edit-message="${escapeHtml(message.id)}" data-chat-id="${escapeHtml(chat.id)}" title="Edit pesan"><i data-lucide="pencil"></i></button><button class="msg-action-btn danger" data-delete-message="${escapeHtml(message.id)}" data-chat-id="${escapeHtml(chat.id)}" title="Hapus pesan"><i data-lucide="trash-2"></i></button></div></div>`).join('')}</div><form id="adminReply"><input name="message" required maxlength="1000" autocomplete="off" placeholder="Balas pembeli..."><button type="submit">Kirim</button></form>` : '<div class="empty-admin">Belum ada percakapan.</div>'}</section></div>`;
+  return `<div class="chat-workspace"><aside class="chat-list"><h2>Chat pembeli <span>${chats.length}</span></h2>${chats.length ? chats.map((item) => { const last = item.messages?.at(-1); return `<button class="${item.id === activeChatId ? 'active' : ''}" data-open-chat="${escapeHtml(item.id)}"><b>${escapeHtml(item.customer?.name || 'Pengunjung')}</b><span>${escapeHtml(last?.text || 'Percakapan baru')}</span><time>${formatChatTime(last?.createdAt || item.updatedAt)}</time></button>`; }).join('') : '<p>Belum ada chat.</p>'}</aside><section class="admin-conversation">${chat ? `<div class="conversation-head"><div><b>${escapeHtml(chat.customer?.name || 'Pengunjung')}</b><span>${escapeHtml(chat.customer?.whatsapp || 'Nomor WhatsApp belum tersedia')}${chat.orderId ? ` | ${escapeHtml(chat.orderId)}` : ''}</span></div>${whatsapp ? `<a href="https://wa.me/${whatsapp}" target="_blank" rel="noopener">Chat WhatsApp <i data-lucide="external-link"></i></a>` : ''}</div><div class="conversation-messages">${(chat.messages || []).map((message) => `<div class="admin-message ${message.sender === 'admin' ? 'admin' : 'customer'}" data-message-id="${escapeHtml(message.id)}" data-chat-id="${escapeHtml(chat.id)}"><div class="msg-bubble-content"><span class="message-text">${escapeHtml(message.text)}</span><time class="message-meta">${formatDateTime(message.createdAt)}</time></div><div class="msg-actions"><button class="msg-action-btn" data-edit-message="${escapeHtml(message.id)}" data-chat-id="${escapeHtml(chat.id)}" title="Edit pesan"><i data-lucide="pencil"></i></button><button class="msg-action-btn danger" data-delete-message="${escapeHtml(message.id)}" data-chat-id="${escapeHtml(chat.id)}" title="Hapus pesan"><i data-lucide="trash-2"></i></button></div></div>`).join('')}</div><form id="adminReply"><textarea name="message" required maxlength="1000" autocomplete="off" rows="1" placeholder="Balas pembeli..."></textarea><button type="submit">Kirim</button></form>` : '<div class="empty-admin">Belum ada percakapan.</div>'}</section></div>`;
 }
 
 function notificationPanel() {
@@ -263,7 +341,7 @@ content.addEventListener('click', async (event) => {
     const variantId = deleteVariant.dataset.deleteVariant;
     const product = adminState.products.find((item) => item.id === productId);
     if (!product) return;
-    if (!confirm(`Hapus varian "${variantId}"?`)) return;
+    const confirmed = await openAdminDialog({ kind: 'confirm', title: 'Hapus varian?', description: `Varian "${variantId}" akan dihapus permanen.`, confirmLabel: 'Hapus varian', destructive: true, eyebrow: 'VARIAN' }); if (!confirmed) return;
     product.variants = (product.variants || []).filter((v) => v.id !== variantId);
     const editor = content.querySelector(`#variant-editor-${productId}`);
     if (editor) editor.innerHTML = variantEditorHtml(product);
@@ -292,8 +370,8 @@ content.addEventListener('click', async (event) => {
   if (chatUserBtn) {
     const userId = chatUserBtn.dataset.chatUser;
     const userName = chatUserBtn.dataset.chatName;
-    const message = prompt(`Kirim pesan pertama ke ${userName}:`);
-    if (!message || !message.trim()) return;
+    const message = await openAdminDialog({ kind: 'compose-message', title: `Kirim pesan ke ${userName}`, description: 'Pesan pertama akan membuka atau melanjutkan chat yang sama.', confirmLabel: 'Kirim pesan', placeholder: 'Tulis pesan untuk pembeli...', eyebrow: 'CHAT' });
+    if (!message) return;
     chatUserBtn.disabled = true;
     try {
       const chat = await api('/api/admin/chats/initiate', { method: 'POST', body: JSON.stringify({ userId, message: message.trim() }) });
@@ -313,10 +391,11 @@ content.addEventListener('click', async (event) => {
   const notifyUserBtn = event.target.closest('[data-notify-user]');
   if (notifyUserBtn) {
     const userId = notifyUserBtn.dataset.notifyUser;
-    const title = prompt("Judul notifikasi:");
-    if (!title) return;
-    const text = prompt("Isi notifikasi:");
-    if (!text) return;
+    const userName = adminState.users.find((item) => item.id === userId)?.name || 'pengguna';
+    const notification = await openAdminDialog({ kind: 'notification', title: `Kirim notifikasi ke ${userName}`, description: 'Notifikasi ini hanya dikirim ke akun tersebut.', confirmLabel: 'Kirim notifikasi', eyebrow: 'NOTIFIKASI', value: { title: '', text: '' } });
+    if (!notification) return;
+    const { title, text } = notification;
+
     try {
       await api('/api/admin/notifications', { method: 'POST', body: JSON.stringify({ title, text, targetUserId: userId }) });
       toast("Notifikasi berhasil dikirim.");
@@ -360,7 +439,7 @@ content.addEventListener('click', async (event) => {
 
   const deleteReview = event.target.closest('[data-delete-review]');
   if (deleteReview) {
-    if (!confirm('Hapus ulasan ini dari toko?')) return;
+    const confirmed = await openAdminDialog({ kind: 'confirm', title: 'Hapus ulasan ini?', description: 'Ulasan akan dihapus permanen dari toko.', confirmLabel: 'Hapus ulasan', destructive: true, eyebrow: 'ULASAN' }); if (!confirmed) return;
     deleteReview.disabled = true;
     try { await api(`/api/admin/reviews/${encodeURIComponent(deleteReview.dataset.deleteReview)}`, { method: 'DELETE' }); adminState.reviews = adminState.reviews.filter((review) => review.id !== deleteReview.dataset.deleteReview); render(); toast('Ulasan dihapus'); }
     catch (error) { deleteReview.disabled = false; toast(error.message); }
@@ -369,7 +448,7 @@ content.addEventListener('click', async (event) => {
   const deleteUser = event.target.closest('[data-delete-account]');
   if (deleteUser) {
     const name = deleteUser.dataset.accountName;
-    const typed = prompt(`Ketik nama akun untuk konfirmasi hapus:\n"${name}"`);
+    const typed = await openAdminDialog({ kind: 'confirm-text', title: `Hapus akun ${name}?`, description: 'Ketik nama akun untuk konfirmasi.', confirmLabel: 'Hapus akun', requiredValue: name, value: name, destructive: true, eyebrow: 'AKUN' });
     if (typed === null) return;
     if (typed.trim() !== name.trim()) { toast('Nama tidak cocok, akun tidak dihapus.'); return; }
     deleteUser.disabled = true;
@@ -413,7 +492,7 @@ content.addEventListener('click', async (event) => {
 
   const regenKeyBtn = event.target.closest('[data-regen-llm]');
   if (regenKeyBtn) {
-    if (!confirm('Regenerate API Key akan membuat key lama tidak bisa digunakan. Lanjutkan?')) return;
+    const confirmed = await openAdminDialog({ kind: 'confirm', title: 'Regenerate API Key?', description: 'API Key lama akan tidak bisa digunakan setelah diganti.', confirmLabel: 'Regenerate', destructive: true, eyebrow: 'LLM USER' }); if (!confirmed) return;
     regenKeyBtn.disabled = true;
     try {
       const updated = await api(`/api/admin/llm-users/${regenKeyBtn.dataset.regenLlm}/regenerate-key`, { method: 'POST' });
@@ -438,7 +517,7 @@ content.addEventListener('click', async (event) => {
   const deleteLlmUser = event.target.closest('[data-delete-llm]');
   if (deleteLlmUser) {
     const name = deleteLlmUser.dataset.llmName;
-    if (prompt(`Ketik nama akun untuk menghapus:\n"${name}"`) !== name) { toast('Dibatalkan'); return; }
+    const typed = await openAdminDialog({ kind: 'confirm-text', title: `Hapus LLM user ${name}?`, description: 'Ketik nama akun untuk konfirmasi.', confirmLabel: 'Hapus user', requiredValue: name, value: name, destructive: true, eyebrow: 'LLM USER' }); if (typed === null || typed.trim() !== name.trim()) { toast('Dibatalkan'); return; }
     deleteLlmUser.disabled = true;
     try {
       await api(`/api/admin/llm-users/${deleteLlmUser.dataset.deleteLlm}`, { method: 'DELETE' });
@@ -452,7 +531,7 @@ content.addEventListener('click', async (event) => {
 
   const deleteMsg = event.target.closest('[data-delete-message]');
   if (deleteMsg) {
-    if (!confirm('Hapus pesan ini?')) return;
+    const confirmed = await openAdminDialog({ kind: 'confirm', title: 'Hapus pesan ini?', description: 'Pesan yang dihapus tidak bisa dikembalikan.', confirmLabel: 'Hapus pesan', destructive: true, eyebrow: 'CHAT' }); if (!confirmed) return;
     deleteMsg.disabled = true;
     const chatId = deleteMsg.dataset.chatId;
     const messageId = deleteMsg.dataset.deleteMessage;
@@ -472,7 +551,7 @@ content.addEventListener('click', async (event) => {
     const bubble = editMsg.closest('[data-message-id]');
     if (!bubble) return;
     const currentText = bubble.querySelector('.message-text')?.textContent || '';
-    const newText = prompt('Edit pesan:', currentText);
+    const newText = await openAdminDialog({ kind: 'edit-message', title: 'Edit pesan', description: 'Perbarui isi pesan lalu simpan.', confirmLabel: 'Simpan perubahan', value: currentText, eyebrow: 'CHAT' });
     if (newText === null || newText.trim() === currentText.trim()) return;
     if (!newText.trim()) { toast('Pesan tidak boleh kosong.'); return; }
     editMsg.disabled = true;
@@ -492,8 +571,23 @@ content.addEventListener('click', async (event) => {
     if (!voucher) return;
     saveVoucher.disabled = true;
     try {
-      const updated = await api(`/api/admin/vouchers/${encodeURIComponent(voucher.code)}`, { method: 'PUT', body: JSON.stringify({ ...voucher, enabled: row.querySelector('[data-voucher-enabled]').checked }) });
+      const payload = {
+        code: row.querySelector('[data-voucher-code]')?.value || voucher.code,
+        description: row.querySelector('[data-voucher-description]')?.value || '',
+        type: row.querySelector('[data-voucher-type]')?.value || voucher.type,
+        value: Number(row.querySelector('[data-voucher-value]')?.value || 0),
+        minSubtotal: Number(row.querySelector('[data-voucher-min-subtotal]')?.value || 0),
+        minQuantity: Number(row.querySelector('[data-voucher-min-quantity]')?.value || 0),
+        requiredCategory: row.querySelector('[data-voucher-category]')?.value || '',
+        maxUses: Number(row.querySelector('[data-voucher-max-uses]')?.value || 0),
+        used: Number(voucher.used || 0),
+        expiresAt: row.querySelector('[data-voucher-expires]')?.value || '',
+        requireSameProduct: Boolean(row.querySelector('[data-voucher-same-product]')?.checked),
+        enabled: row.querySelector('[data-voucher-enabled]').checked
+      };
+      const updated = await api(`/api/admin/vouchers/${encodeURIComponent(voucher.code)}`, { method: 'PUT', body: JSON.stringify(payload) });
       Object.assign(voucher, updated);
+      adminState.vouchers = adminState.vouchers.map((item) => item.code === saveVoucher.dataset.saveVoucher ? updated : item);
       render();
       toast('Voucher diperbarui');
     } catch (error) { saveVoucher.disabled = false; toast(error.message); }
@@ -501,7 +595,7 @@ content.addEventListener('click', async (event) => {
 
   const deleteVoucher = event.target.closest('[data-delete-voucher]');
   if (deleteVoucher) {
-    if (!confirm(`Hapus voucher ${deleteVoucher.dataset.deleteVoucher}?`)) return;
+    const confirmed = await openAdminDialog({ kind: 'confirm', title: `Hapus voucher ${deleteVoucher.dataset.deleteVoucher}?`, description: 'Voucher yang dihapus tidak bisa dipakai lagi.', confirmLabel: 'Hapus voucher', destructive: true, eyebrow: 'VOUCHER' }); if (!confirmed) return;
     deleteVoucher.disabled = true;
     try { await api(`/api/admin/vouchers/${encodeURIComponent(deleteVoucher.dataset.deleteVoucher)}`, { method: 'DELETE' }); adminState.vouchers = adminState.vouchers.filter((voucher) => voucher.code !== deleteVoucher.dataset.deleteVoucher); render(); toast('Voucher dihapus'); }
     catch (error) { deleteVoucher.disabled = false; toast(error.message); }
@@ -523,10 +617,20 @@ content.addEventListener('change', async (event) => {
 });
 
 content.addEventListener('input', (event) => {
+  if (event.target.matches('#adminReply textarea')) {
+    event.target.style.height = 'auto';
+    event.target.style.height = `${Math.min(event.target.scrollHeight, 120)}px`;
+    return;
+  }
   if (!['adminSearch', 'accountSearch', 'reviewSearch', 'voucherSearch'].includes(event.target.id)) return;
   const query = event.target.value.toLowerCase();
   const selector = event.target.id === 'adminSearch' ? '[data-product-row]' : event.target.id === 'accountSearch' ? '[data-account-row]' : event.target.id === 'voucherSearch' ? '[data-voucher-row]' : '[data-review-row]';
   content.querySelectorAll(selector).forEach((row) => { row.hidden = !row.textContent.toLowerCase().includes(query); });
+});
+
+content.addEventListener('keydown', (event) => {
+  if (!event.target.matches('#adminReply textarea')) return;
+  if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); event.target.closest('form')?.requestSubmit(); }
 });
 
 content.addEventListener('submit', async (event) => {
@@ -555,6 +659,7 @@ content.addEventListener('submit', async (event) => {
     try {
       const form = Object.fromEntries(new FormData(event.target));
       form.enabled = event.target.elements.enabled.checked;
+      form.requireSameProduct = event.target.elements.requireSameProduct.checked;
       const voucher = await api('/api/admin/vouchers', { method: 'POST', body: JSON.stringify(form) });
       adminState.vouchers = [voucher, ...(adminState.vouchers || [])];
       event.target.reset();
@@ -596,7 +701,7 @@ content.addEventListener('submit', async (event) => {
   if (event.target.id !== 'adminReply') return;
   event.preventDefault();
   const button = event.target.querySelector('button');
-  const input = event.target.querySelector('input[name="message"]');
+  const input = event.target.querySelector('textarea[name="message"]');
   const message = input.value.trim();
   if (!activeChatId || !message) return;
   button.disabled = true;
@@ -605,6 +710,7 @@ content.addEventListener('submit', async (event) => {
     const chat = adminState.chats.find((item) => item.id === updated.id);
     if (chat) Object.assign(chat, updated); else adminState.chats.unshift(updated);
     input.value = '';
+    input.style.height = 'auto';
     render({ preserveScroll: true, scrollToEnd: true });
   } catch (error) { button.disabled = false; toast(error.message); }
 });
@@ -664,7 +770,7 @@ content.addEventListener('submit', async (event) => {
 });
 
 setInterval(async () => {
-  const draft = document.querySelector('#adminReply input');
+  const draft = document.querySelector('#adminReply textarea');
   if (activeTab !== 'chats' || adminApp.hidden || draft?.value) return;
   try { adminState = await api('/api/admin/state'); render({ preserveScroll: true }); } catch {}
 }, 5000);
