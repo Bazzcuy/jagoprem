@@ -1,5 +1,5 @@
 const jsonHeaders = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
-const STORE_SCHEMA_VERSION = 12;
+const STORE_SCHEMA_VERSION = 13;
 const OFFICIAL_PRIVATE_DESCRIPTION = 'Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan DigiePro.';
 const CLAUDE_PRO_DESCRIPTION = 'Akun resmi Claude Pro login di claude.ai. Akun Vietnam dengan pembayaran credit card Vietnam, garansi 30 hari, dan dijamin aman dari deactive selama tidak mengubah pembayaran, info login seperti email dan password, serta tidak terlalu sering ganti device.';
 const ORDER_RESERVATION_MS = 30 * 60 * 1000;
@@ -802,6 +802,16 @@ function migrateStore(store) {
     store.schemaVersion = 12;
     changed = true;
   }
+  if ((store.schemaVersion || 0) < 13) {
+    const specialAiVoucher = (store.vouchers || []).find((voucher) => normalizeVoucherCode(voucher.code) === 'SPESIALAI07');
+    if (specialAiVoucher) Object.assign(specialAiVoucher, { description: 'Diskon 16% minimal 2 produk AI yang sama', requiredCategory: 'AI & produktivitas', minQuantity: 2, requireSameProduct: true });
+    store.schemaVersion = 13;
+    changed = true;
+  }
+  if (!(store.vouchers || []).some((voucher) => normalizeVoucherCode(voucher.code) === 'SPESIALAI07')) {
+    store.vouchers.unshift({ code: 'SPESIALAI07', description: 'Diskon 16% minimal 2 produk AI yang sama', type: 'percent', value: 16, minSubtotal: 0, maxUses: 0, used: 0, enabled: true, expiresAt: '', requiredCategory: 'AI & produktivitas', minQuantity: 2, requireSameProduct: true, createdAt: new Date().toISOString() });
+    changed = true;
+  }
   if (store.schemaVersion !== STORE_SCHEMA_VERSION) { store.schemaVersion = STORE_SCHEMA_VERSION; changed = true; }
   return changed;
 }
@@ -915,6 +925,33 @@ function normalizeEmail(value) { return String(value || '').trim().toLowerCase()
 function publicUser(user) { return { id: user.id, name: user.name, email: user.email }; }
 function chatCustomer(user) { return { name: user?.name || '', email: user?.email || '' }; }
 function chatMessageKey(message) { return message?.id || `${message?.sender || ''}:${message?.createdAt || ''}:${message?.text || ''}`; }
+function latestTimestamp(...values) {
+  return values.reduce((latest, value) => {
+    const time = new Date(value || '').getTime();
+    return Number.isNaN(time) ? latest : Math.max(latest, time);
+  }, 0);
+}
+function chatUnreadCount(chat) {
+  const lastReadAt = new Date(chat?.adminLastReadAt || 0).getTime() || 0;
+  return (chat?.messages || []).filter((message) => message.sender !== 'admin' && new Date(message.createdAt || '').getTime() > lastReadAt).length;
+}
+function summarizeChat(chat) {
+  const messages = chat?.messages || [];
+  const lastMessage = messages.at(-1) || null;
+  return {
+    id: chat.id,
+    userId: chat.userId || '',
+    orderId: chat.orderId || '',
+    customer: chat.customer || {},
+    updatedAt: chat.updatedAt || lastMessage?.createdAt || '',
+    adminLastReadAt: chat.adminLastReadAt || '',
+    lastMessageAt: lastMessage?.createdAt || chat.updatedAt || '',
+    lastMessageText: lastMessage?.text || '',
+    lastMessageSender: lastMessage?.sender || '',
+    unreadCount: chatUnreadCount(chat),
+    messageCount: messages.length
+  };
+}
 function mergeChatMessages(target, source) {
   const seen = new Set((target.messages || []).map(chatMessageKey));
   for (const message of source.messages || []) {
@@ -948,6 +985,7 @@ function claimUserChat(store, user, preferredChatId = '', customer = {}) {
   for (const chat of matching) {
     if (chat === target) continue;
     mergeChatMessages(target, chat);
+    target.adminLastReadAt = latestTimestamp(target.adminLastReadAt, chat.adminLastReadAt) ? new Date(latestTimestamp(target.adminLastReadAt, chat.adminLastReadAt)).toISOString() : (target.adminLastReadAt || chat.adminLastReadAt || '');
     target.customer = { ...chat.customer, ...target.customer, ...chatCustomer(user), ...customer };
     if (chat.orderId && !target.orderId) target.orderId = chat.orderId;
   }
@@ -975,11 +1013,31 @@ function sanitizeVoucher(input = {}) {
   const minSubtotal = Math.max(0, Math.floor(Number(input.minSubtotal || 0)));
   const maxUses = input.maxUses === '' || input.maxUses === null || input.maxUses === undefined ? 0 : Math.max(0, Math.floor(Number(input.maxUses || 0)));
   const expiresAt = String(input.expiresAt || '').trim();
-  return { code: normalizeVoucherCode(input.code), description: String(input.description || '').trim().slice(0, 120), type, value, minSubtotal, maxUses, used: Math.max(0, Math.floor(Number(input.used || 0))), enabled: input.enabled !== false, expiresAt, requiredCategory: String(input.requiredCategory || '').trim(), minQuantity: Math.max(0, Math.floor(Number(input.minQuantity || 0))) };
+  return { code: normalizeVoucherCode(input.code), description: String(input.description || '').trim().slice(0, 120), type, value, minSubtotal, maxUses, used: Math.max(0, Math.floor(Number(input.used || 0))), enabled: input.enabled !== false, expiresAt, requiredCategory: String(input.requiredCategory || '').trim(), minQuantity: Math.max(0, Math.floor(Number(input.minQuantity || 0))), requireSameProduct: Boolean(input.requireSameProduct) };
 }
 function voucherDiscount(voucher, subtotal) {
   const amount = voucher.type === 'percent' ? Math.floor(Number(subtotal || 0) * Math.min(100, Number(voucher.value || 0)) / 100) : Number(voucher.value || 0);
   return Math.max(0, Math.min(Number(subtotal || 0), amount));
+}
+function voucherQualifiedQuantity(store, voucher, items = []) {
+  const requiredCategory = String(voucher.requiredCategory || '').trim();
+  const qualified = items.filter((item) => {
+    const product = store.products.find((p) => p.id === Number(item.id));
+    return product && (!requiredCategory || productCategory(product) === requiredCategory);
+  });
+  if (!voucher.requireSameProduct) return qualified.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+  const byProduct = new Map();
+  for (const item of qualified) byProduct.set(Number(item.id), (byProduct.get(Number(item.id)) || 0) + Number(item.quantity || 0));
+  return Math.max(0, ...byProduct.values());
+}
+function voucherRequirementError(store, voucher, items = []) {
+  const minQuantity = Number(voucher.minQuantity || 0);
+  if (minQuantity <= 0) return '';
+  const qualifiedQuantity = voucherQualifiedQuantity(store, voucher, items);
+  if (qualifiedQuantity >= minQuantity) return '';
+  const categoryText = voucher.requiredCategory ? ` kategori "${voucher.requiredCategory}"` : '';
+  const sameText = voucher.requireSameProduct ? ' yang sama' : '';
+  return `Voucher ini berlaku untuk minimal ${minQuantity} produk${categoryText}${sameText}. Saat ini kamu baru punya ${qualifiedQuantity} produk yang memenuhi syarat.`;
 }
 function validateVoucher(store, code, subtotal, items = []) {
   const normalized = normalizeVoucherCode(code);
@@ -989,10 +1047,8 @@ function validateVoucher(store, code, subtotal, items = []) {
   if (voucher.expiresAt && new Date(voucher.expiresAt).getTime() < Date.now()) stopMutation(json({ error: 'Kode voucher sudah kedaluwarsa.' }, 410));
   if (Number(voucher.minSubtotal || 0) > subtotal) stopMutation(json({ error: `Minimal belanja voucher ini ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(voucher.minSubtotal || 0))}.` }, 400));
   if (Number(voucher.maxUses || 0) > 0 && Number(voucher.used || 0) >= Number(voucher.maxUses || 0)) stopMutation(json({ error: 'Kuota voucher sudah habis.' }, 409));
-  if (Number(voucher.minQuantity || 0) > 0) {
-    const totalQty = items.reduce((sum, item) => sum + item.quantity, 0);
-    if (totalQty < Number(voucher.minQuantity)) stopMutation(json({ error: `Voucher ini mensyaratkan minimal pembelian ${voucher.minQuantity} produk.` }, 400));
-  }
+  const quantityError = voucherRequirementError(store, voucher, items);
+  if (quantityError) stopMutation(json({ error: quantityError }, 400));
   if (voucher.requiredCategory) {
     const hasCategory = items.some((item) => {
       const product = store.products.find((p) => p.id === item.id);
@@ -1012,12 +1068,8 @@ function previewVoucher(store, code, subtotal, items = []) {
   if (voucher.expiresAt && new Date(voucher.expiresAt).getTime() < Date.now()) return { error: 'Kode voucher sudah kedaluwarsa.' };
   if (Number(voucher.minSubtotal || 0) > subtotal) return { error: `Minimal belanja voucher ini ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(voucher.minSubtotal || 0))}.` };
   if (Number(voucher.maxUses || 0) > 0 && Number(voucher.used || 0) >= Number(voucher.maxUses || 0)) return { error: 'Kuota voucher sudah habis.' };
-  if (Number(voucher.minQuantity || 0) > 0) {
-    const totalQty = items.reduce((sum, item) => sum + item.quantity, 0);
-    const cat = voucher.requiredCategory;
-    const catQty = cat ? items.filter((item) => { const product = store.products.find((p) => p.id === item.id); return product && productCategory(product) === cat; }).reduce((sum, item) => sum + item.quantity, 0) : totalQty;
-    if (catQty < Number(voucher.minQuantity)) return { error: `Voucher ini berlaku untuk minimal ${voucher.minQuantity} produk${cat ? ` kategori "${cat}"` : ''}. Saat ini kamu baru punya ${catQty} produk yang memenuhi syarat.` };
-  }
+  const quantityError = voucherRequirementError(store, voucher, items);
+  if (quantityError) return { error: quantityError };
   if (voucher.requiredCategory) {
     const hasCategory = items.some((item) => { const product = store.products.find((p) => p.id === item.id); return product && productCategory(product) === voucher.requiredCategory; });
     if (!hasCategory) return { error: `Voucher ini khusus untuk produk kategori: ${voucher.requiredCategory}. Tambahkan produk AI seperti ChatGPT, Claude, atau Grok ke keranjang.` };
@@ -1106,16 +1158,9 @@ async function api(request, env, pathname) {
       if (String(error?.message || error).toLowerCase().includes('unique')) return json({ error: 'Email sudah terdaftar. Silakan masuk.' }, 409);
       throw error;
     }
-    const user = { id, name, email };
     const chatId = String(body.chatId || '').trim();
-    let resolvedChatId = id;
-    if (chatId) {
-      await mutateStore(env, (store) => {
-        resolvedChatId = claimUserChat(store, user, chatId, chatCustomer(user)).id;
-        return json({ ok: true });
-      });
-    }
-    return json({ user, chatId: resolvedChatId }, 201, { 'Set-Cookie': await createUserSession(env, id) });
+    const resolvedChatId = chatId || id;
+    return json({ user: { id, name, email }, chatId: resolvedChatId }, 201, { 'Set-Cookie': await createUserSession(env, id) });
   }
   if (pathname === '/api/auth/login' && request.method === 'POST') {
     const body = await readBody(request); const email = normalizeEmail(body.email); const password = String(body.password || ''); const ip = request.headers.get('CF-Connecting-IP') || 'unknown'; const key = `user:${ip}:${email}`;
@@ -1125,12 +1170,7 @@ async function api(request, env, pathname) {
     if (Number(user.blocked)) return json({ error: 'Akun ini diblokir. Hubungi admin melalui chat bantuan.' }, 403);
     await clearFailures(env, key);
     const publicAccount = publicUser(user);
-    const chatId = String(body.chatId || '').trim();
-    let resolvedChatId = user.id;
-    await mutateStore(env, (store) => {
-      resolvedChatId = claimUserChat(store, publicAccount, chatId, chatCustomer(publicAccount)).id;
-      return json({ ok: true });
-    });
+    const resolvedChatId = String(body.chatId || '').trim() || publicAccount.id;
     return json({ user: publicAccount, chatId: resolvedChatId }, 200, { 'Set-Cookie': await createUserSession(env, user.id) });
   }
   if (pathname === '/api/auth/me' && request.method === 'GET') {
@@ -1138,12 +1178,7 @@ async function api(request, env, pathname) {
     if (!user) return json({ user: null }, 401);
     const url = new URL(request.url);
     const chatId = url.searchParams.get('chatId') || '';
-    let resolvedChatId = user.id;
-    await mutateStore(env, (store) => {
-      resolvedChatId = claimUserChat(store, user, chatId, chatCustomer(user)).id;
-      return json({ ok: true });
-    });
-    return json({ user, chatId: resolvedChatId });
+    return json({ user, chatId: chatId || user.id });
   }
   if (pathname === '/api/auth/logout' && request.method === 'POST') {
     const token = getCookie(request, 'digiepro_user'); if (token) await env.DB.prepare('DELETE FROM user_sessions WHERE token_hash = ?').bind(await sha256(token)).run();
@@ -1402,7 +1437,29 @@ async function api(request, env, pathname) {
     });
     const llmRows = await env.DB.prepare('SELECT * FROM llm_users ORDER BY created_at DESC').all();
     const llmUsers = llmRows.results || [];
-    return json({ ...store, users, llmUsers });
+    return json({ ...store, chats: (store.chats || []).map(summarizeChat), users, llmUsers });
+  }
+
+  const adminChatDetailMatch = pathname.match(/^\/api\/admin\/chats\/([a-zA-Z0-9-]{6,80})$/);
+  if (adminChatDetailMatch && request.method === 'GET') {
+    if (!(await isAdmin(request, env))) return json({ error: 'Unauthorized' }, 401);
+    return await mutateStore(env, (store) => {
+      const chat = store.chats.find((item) => item.id === adminChatDetailMatch[1]);
+      if (!chat) stopMutation(json({ error: 'Chat tidak ditemukan.' }, 404));
+      chat.adminLastReadAt = new Date().toISOString();
+      return json(chat);
+    });
+  }
+
+  const adminChatReadMatch = pathname.match(/^\/api\/admin\/chats\/([a-zA-Z0-9-]{6,80})\/read$/);
+  if (adminChatReadMatch && request.method === 'POST') {
+    if (!(await isAdmin(request, env))) return json({ error: 'Unauthorized' }, 401);
+    return await mutateStore(env, (store) => {
+      const chat = store.chats.find((item) => item.id === adminChatReadMatch[1]);
+      if (!chat) stopMutation(json({ error: 'Chat tidak ditemukan.' }, 404));
+      chat.adminLastReadAt = new Date().toISOString();
+      return json({ ok: true, chat: summarizeChat(chat) });
+    });
   }
 
   const adminUserBlockMatch = pathname.match(/^\/api\/admin\/users\/([^/]+)\/block$/);
@@ -1603,12 +1660,14 @@ async function api(request, env, pathname) {
   if (voucherMatch && request.method === 'PUT') {
     if (!(await isAdmin(request, env))) return json({ error: 'Unauthorized' }, 401);
     const body = await readBody(request);
-    const next = sanitizeVoucher({ ...body, code: voucherMatch[1] });
+    const next = sanitizeVoucher(body);
+    if (!next.code) return json({ error: 'Kode voucher wajib diisi.' }, 400);
     if (!next.value) return json({ error: 'Nilai diskon wajib lebih dari 0.' }, 400);
     return await mutateStore(env, (store) => {
       const voucher = (store.vouchers || []).find((item) => normalizeVoucherCode(item.code) === normalizeVoucherCode(voucherMatch[1]));
       if (!voucher) stopMutation(json({ error: 'Voucher tidak ditemukan.' }, 404));
-      Object.assign(voucher, next, { code: voucher.code, updatedAt: new Date().toISOString() });
+      if (next.code !== normalizeVoucherCode(voucherMatch[1]) && (store.vouchers || []).some((item) => item !== voucher && normalizeVoucherCode(item.code) === next.code)) stopMutation(json({ error: 'Kode voucher sudah dipakai.' }, 409));
+      Object.assign(voucher, next, { updatedAt: new Date().toISOString() });
       return json(voucher);
     });
   }
@@ -1778,6 +1837,7 @@ export default {
     }
     try {
       if (url.pathname === '/bolehnihadmin') return Response.redirect(new URL('/bolehdong', url), 302);
+      if (url.pathname === '/admin') return Response.redirect(new URL('/admin.html', url), 302);
       if (url.pathname === '/bolehdong') {
         const assetUrl = new URL('/admin.html', url);
         return env.ASSETS.fetch(new Request(assetUrl, request));
@@ -1820,3 +1880,4 @@ export default {
     }
   }
 };
+

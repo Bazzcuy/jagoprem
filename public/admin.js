@@ -3,6 +3,9 @@ let activeTab = 'overview';
 let activeChatId = '';
 let activeAccountId = '';
 let activeLlmUserId = '';
+let chatSortMode = 'unread';
+const chatDetails = {};
+let chatDetailLoadingId = '';
 
 const loginView = document.querySelector('#loginView');
 const adminApp = document.querySelector('#adminApp');
@@ -14,6 +17,61 @@ function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (cha
 function formatDateTime(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 function formatChatTime(value) { const date = new Date(value); if (Number.isNaN(date.getTime())) return ''; const sameDay = date.toDateString() === new Date().toDateString(); return date.toLocaleString('id-ID', sameDay ? { hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
 function toast(message) { const node = document.querySelector('#adminToast'); node.textContent = message; node.classList.add('show'); clearTimeout(toast.timer); toast.timer = setTimeout(() => node.classList.remove('show'), 2400); }
+function chatSummary(chat) {
+  const messages = chat?.messages || [];
+  const lastMessage = messages.at(-1) || null;
+  const lastReadAt = new Date(chat?.adminLastReadAt || 0).getTime() || 0;
+  return {
+    id: chat.id,
+    userId: chat.userId || '',
+    orderId: chat.orderId || '',
+    customer: chat.customer || {},
+    updatedAt: chat.updatedAt || lastMessage?.createdAt || '',
+    adminLastReadAt: chat.adminLastReadAt || '',
+    lastMessageAt: lastMessage?.createdAt || chat.updatedAt || '',
+    lastMessageText: lastMessage?.text || '',
+    lastMessageSender: lastMessage?.sender || '',
+    unreadCount: messages.filter((message) => message.sender !== 'admin' && new Date(message.createdAt || '').getTime() > lastReadAt).length,
+    messageCount: messages.length
+  };
+}
+function upsertChat(chat) {
+  if (!chat) return null;
+  const detail = Array.isArray(chat.messages) ? chat : chatDetails[chat.id] || chat;
+  chatDetails[chat.id] = detail;
+  const summary = chatSummary(detail);
+  const index = (adminState.chats || []).findIndex((item) => item.id === summary.id);
+  if (index >= 0) adminState.chats[index] = { ...(adminState.chats[index] || {}), ...summary };
+  else adminState.chats.unshift(summary);
+  return detail;
+}
+function sortChats(chats) {
+  const comparator = chatSortMode === 'newest'
+    ? (left, right) => String(right.lastMessageAt || right.updatedAt || '').localeCompare(String(left.lastMessageAt || left.updatedAt || '')) || Number(right.unreadCount || 0) - Number(left.unreadCount || 0)
+    : (left, right) => Number(right.unreadCount || 0) - Number(left.unreadCount || 0) || String(right.lastMessageAt || right.updatedAt || '').localeCompare(String(left.lastMessageAt || left.updatedAt || ''));
+  return [...chats].sort(comparator);
+}
+async function loadChatDetail(chatId) {
+  if (!chatId || chatDetailLoadingId === chatId) return chatDetails[chatId] || null;
+  chatDetailLoadingId = chatId;
+  render({ preserveScroll: true });
+  try {
+    const chat = await api(`/api/admin/chats/${encodeURIComponent(chatId)}`);
+    return upsertChat(chat);
+  } catch (error) {
+    toast(error.message);
+    return null;
+  } finally {
+    chatDetailLoadingId = '';
+    if (activeTab === 'chats') render({ preserveScroll: true });
+  }
+}
+function openChat(chatId) {
+  if (!chatId) return;
+  activeChatId = chatId;
+  if (activeTab !== 'chats') activeTab = 'chats';
+  void loadChatDetail(chatId);
+}
 
 const adminModalLayer = document.querySelector('#adminModalLayer');
 const adminModal = document.querySelector('#adminModal');
@@ -255,11 +313,12 @@ function settingsPanel() {
 }
 
 function chatWorkspace() {
-  const chats = [...(adminState.chats || [])].sort((left, right) => String(right.updatedAt).localeCompare(String(left.updatedAt)));
+  const chats = sortChats(adminState.chats || []);
   if (chats.length && !chats.some((chat) => chat.id === activeChatId)) activeChatId = chats[0].id;
-  const chat = chats.find((item) => item.id === activeChatId);
+  const chat = chatDetails[activeChatId] || chats.find((item) => item.id === activeChatId) || null;
   const whatsapp = String(chat?.customer?.whatsapp || '').replace(/\D/g, '').replace(/^0/, '62');
-  return `<div class="chat-workspace"><aside class="chat-list"><h2>Chat pembeli <span>${chats.length}</span></h2>${chats.length ? chats.map((item) => { const last = item.messages?.at(-1); return `<button class="${item.id === activeChatId ? 'active' : ''}" data-open-chat="${escapeHtml(item.id)}"><b>${escapeHtml(item.customer?.name || 'Pengunjung')}</b><span>${escapeHtml(last?.text || 'Percakapan baru')}</span><time>${formatChatTime(last?.createdAt || item.updatedAt)}</time></button>`; }).join('') : '<p>Belum ada chat.</p>'}</aside><section class="admin-conversation">${chat ? `<div class="conversation-head"><div><b>${escapeHtml(chat.customer?.name || 'Pengunjung')}</b><span>${escapeHtml(chat.customer?.whatsapp || 'Nomor WhatsApp belum tersedia')}${chat.orderId ? ` | ${escapeHtml(chat.orderId)}` : ''}</span></div>${whatsapp ? `<a href="https://wa.me/${whatsapp}" target="_blank" rel="noopener">Chat WhatsApp <i data-lucide="external-link"></i></a>` : ''}</div><div class="conversation-messages">${(chat.messages || []).map((message) => `<div class="admin-message ${message.sender === 'admin' ? 'admin' : 'customer'}" data-message-id="${escapeHtml(message.id)}" data-chat-id="${escapeHtml(chat.id)}"><div class="msg-bubble-content"><span class="message-text">${escapeHtml(message.text)}</span><time class="message-meta">${formatDateTime(message.createdAt)}</time></div><div class="msg-actions"><button class="msg-action-btn" data-edit-message="${escapeHtml(message.id)}" data-chat-id="${escapeHtml(chat.id)}" title="Edit pesan"><i data-lucide="pencil"></i></button><button class="msg-action-btn danger" data-delete-message="${escapeHtml(message.id)}" data-chat-id="${escapeHtml(chat.id)}" title="Hapus pesan"><i data-lucide="trash-2"></i></button></div></div>`).join('')}</div><form id="adminReply"><textarea name="message" required maxlength="1000" autocomplete="off" rows="1" placeholder="Balas pembeli..."></textarea><button type="submit">Kirim</button></form>` : '<div class="empty-admin">Belum ada percakapan.</div>'}</section></div>`;
+  const loadingChat = Boolean(activeChatId && !chatDetails[activeChatId] && chatDetailLoadingId === activeChatId);
+  return `<div class="chat-workspace"><aside class="chat-list"><div class="chat-list-head"><div><h2>Chat pembeli <span>${chats.length}</span></h2><small>${chatSortMode === 'unread' ? 'Prioritas belum dibaca' : 'Prioritas terbaru'}</small></div><div class="chat-sort-controls"><button type="button" class="chat-sort-btn ${chatSortMode === 'newest' ? 'active' : ''}" data-chat-sort="newest"><i data-lucide="arrow-down-wide-narrow"></i>Terbaru</button><button type="button" class="chat-sort-btn ${chatSortMode === 'unread' ? 'active' : ''}" data-chat-sort="unread"><i data-lucide="badge-alert"></i>Unread</button></div></div>${chats.length ? chats.map((item) => { const hasUnread = Number(item.unreadCount || 0) > 0; return `<button class="${item.id === activeChatId ? 'active' : ''} ${hasUnread ? 'unread' : ''}" data-open-chat="${escapeHtml(item.id)}"><div class="chat-item-top"><b>${escapeHtml(item.customer?.name || 'Pengunjung')}</b>${hasUnread ? `<span class="chat-unread">${Number(item.unreadCount || 0)}</span>` : ''}</div><span>${escapeHtml(item.lastMessageText || 'Percakapan baru')}</span><time>${formatChatTime(item.lastMessageAt || item.updatedAt)}</time></button>`; }).join('') : '<p>Belum ada chat.</p>'}</aside><section class="admin-conversation">${chat ? `<div class="conversation-head"><div><b>${escapeHtml(chat.customer?.name || 'Pengunjung')}</b><span>${escapeHtml(chat.customer?.whatsapp || 'Nomor WhatsApp belum tersedia')}${chat.orderId ? ` | ${escapeHtml(chat.orderId)}` : ''}</span></div>${whatsapp ? `<a href="https://wa.me/${whatsapp}" target="_blank" rel="noopener">Chat WhatsApp <i data-lucide="external-link"></i></a>` : ''}</div><div class="conversation-messages">${(chat.messages || []).map((message) => `<div class="admin-message ${message.sender === 'admin' ? 'admin' : 'customer'}" data-message-id="${escapeHtml(message.id)}" data-chat-id="${escapeHtml(chat.id)}"><div class="msg-bubble-content"><span class="message-text">${escapeHtml(message.text)}</span><time class="message-meta">${formatDateTime(message.createdAt)}</time></div><div class="msg-actions"><button class="msg-action-btn" data-edit-message="${escapeHtml(message.id)}" data-chat-id="${escapeHtml(chat.id)}" title="Edit pesan"><i data-lucide="pencil"></i></button><button class="msg-action-btn danger" data-delete-message="${escapeHtml(message.id)}" data-chat-id="${escapeHtml(chat.id)}" title="Hapus pesan"><i data-lucide="trash-2"></i></button></div></div>`).join('')}</div><form id="adminReply"><textarea name="message" required maxlength="1000" autocomplete="off" rows="1" placeholder="Balas pembeli..."></textarea><button type="submit">Kirim</button></form>` : `<div class="empty-admin">${loadingChat ? 'Memuat percakapan...' : 'Belum ada percakapan.'}</div>`}</section></div>`;
 }
 
 function notificationPanel() {
@@ -300,6 +359,7 @@ function render(options = {}) {
   document.querySelector('#adminTitle').textContent = titles[activeTab] || 'Dashboard';
   content.innerHTML = activeTab === 'overview' ? statsPanel() + orderTable() : activeTab === 'products' ? productTable() : activeTab === 'orders' ? orderTable() : activeTab === 'vouchers' ? voucherPanel() : activeTab === 'accounts' ? accountTable() : activeTab === 'llm-users' ? llmUserTable() : activeTab === 'reviews' ? reviewPanel() : activeTab === 'settings' ? settingsPanel() : activeTab === 'notifications' ? notificationPanel() : chatWorkspace();
   icons();
+  if (activeTab === 'chats' && activeChatId && !chatDetails[activeChatId] && !chatDetailLoadingId) void loadChatDetail(activeChatId);
   if (activeTab === 'chats') {
     const list = content.querySelector('.chat-list');
     const messages = content.querySelector('.conversation-messages');
@@ -326,6 +386,13 @@ document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListe
 document.querySelector('#adminLogout').addEventListener('click', async () => { await api('/api/admin/logout', { method: 'POST' }); location.reload(); });
 
 content.addEventListener('click', async (event) => {
+  const sortButton = event.target.closest('[data-chat-sort]');
+  if (sortButton) {
+    chatSortMode = sortButton.dataset.chatSort === 'newest' ? 'newest' : 'unread';
+    render({ preserveScroll: true });
+    return;
+  }
+
   // Variant toggle
   const variantBtn = event.target.closest('[data-variant-product]');
   if (variantBtn) {
@@ -375,12 +442,12 @@ content.addEventListener('click', async (event) => {
     chatUserBtn.disabled = true;
     try {
       const chat = await api('/api/admin/chats/initiate', { method: 'POST', body: JSON.stringify({ userId, message: message.trim() }) });
-      const existing = adminState.chats.find((item) => item.id === chat.id);
-      if (existing) Object.assign(existing, chat); else adminState.chats.unshift(chat);
+      upsertChat(chat);
       activeChatId = chat.id;
       activeTab = 'chats';
       document.querySelectorAll('[data-tab]').forEach((item) => item.classList.toggle('active', item.dataset.tab === 'chats'));
       render({ scrollToEnd: true });
+      void loadChatDetail(chat.id);
       toast(`Pesan terkirim ke ${userName}`);
     } catch (error) { toast(error.message); }
     chatUserBtn.disabled = false;
@@ -419,7 +486,7 @@ content.addEventListener('click', async (event) => {
   }
 
   const chatButton = event.target.closest('[data-open-chat]');
-  if (chatButton) { const listScroll = content.querySelector('.chat-list')?.scrollTop || 0; activeChatId = chatButton.dataset.openChat; render({ preserveScroll: true, scrollToEnd: true }); const list = content.querySelector('.chat-list'); if (list) list.scrollTop = listScroll; }
+  if (chatButton) { openChat(chatButton.dataset.openChat); }
 
   const accountButton = event.target.closest('[data-account-detail]');
   if (accountButton) { activeAccountId = accountButton.dataset.accountDetail; render(); }
@@ -537,8 +604,7 @@ content.addEventListener('click', async (event) => {
     const messageId = deleteMsg.dataset.deleteMessage;
     try {
       const updated = await api(`/api/admin/chats/${chatId}/messages/${messageId}`, { method: 'DELETE' });
-      const chat = adminState.chats.find((item) => item.id === updated.id);
-      if (chat) Object.assign(chat, updated);
+      upsertChat(updated);
       render({ preserveScroll: true, scrollToEnd: false });
       toast('Pesan dihapus.');
     } catch (error) { deleteMsg.disabled = false; toast(error.message); }
@@ -557,8 +623,7 @@ content.addEventListener('click', async (event) => {
     editMsg.disabled = true;
     try {
       const updated = await api(`/api/admin/chats/${chatId}/messages/${messageId}`, { method: 'PUT', body: JSON.stringify({ text: newText.trim() }) });
-      const chat = adminState.chats.find((item) => item.id === updated.id);
-      if (chat) Object.assign(chat, updated);
+      upsertChat(updated);
       render({ preserveScroll: true, scrollToEnd: false });
       toast('Pesan diperbarui.');
     } catch (error) { editMsg.disabled = false; toast(error.message); }
@@ -707,8 +772,7 @@ content.addEventListener('submit', async (event) => {
   button.disabled = true;
   try {
     const updated = await api(`/api/admin/chats/${activeChatId}/reply`, { method: 'POST', body: JSON.stringify({ message }) });
-    const chat = adminState.chats.find((item) => item.id === updated.id);
-    if (chat) Object.assign(chat, updated); else adminState.chats.unshift(updated);
+    upsertChat(updated);
     input.value = '';
     input.style.height = 'auto';
     render({ preserveScroll: true, scrollToEnd: true });
@@ -772,8 +836,14 @@ content.addEventListener('submit', async (event) => {
 setInterval(async () => {
   const draft = document.querySelector('#adminReply textarea');
   if (activeTab !== 'chats' || adminApp.hidden || draft?.value) return;
-  try { adminState = await api('/api/admin/state'); render({ preserveScroll: true }); } catch {}
+  try {
+    adminState = await api('/api/admin/state');
+    render({ preserveScroll: true });
+    if (activeChatId) void loadChatDetail(activeChatId);
+  } catch {}
 }, 5000);
 
 load();
 icons();
+
+
