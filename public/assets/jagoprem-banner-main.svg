@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 520">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1400" y2="520" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0a2440"/>
+      <stop offset="0.52" stop-color="#0a6f84"/>
+      <stop offset="1" stop-color="#1ee6ef"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="190" y1="70" x2="1000" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="1400" height="520" fill="url(#bg)"/>
+  <circle cx="1210" cy="110" r="170" fill="#ffffff" fill-opacity=".08"/>
+  <circle cx="1060" cy="430" r="220" fill="#ffffff" fill-opacity=".06"/>
+  <path d="M0 390c190-78 324-48 520 28 148 58 310 80 515 18 175-53 260-30 365 26v78H0z" fill="#062532" fill-opacity=".35"/>
+  <g transform="translate(88 86)">
+    <rect width="132" height="132" rx="34" fill="#ffffff" fill-opacity=".12"/>
+    <rect x="22" y="22" width="88" height="88" rx="24" fill="#ffffff" fill-opacity=".9"/>
+    <path d="M44 40h20c20 0 34 10 34 27S84 94 64 94H44V40Zm20 16h-4v22h4c11 0 18-4 18-11s-7-11-18-11Z" fill="#0a6f84"/>
+    <path d="M68 51h9c10 0 16 3 16 9s-6 9-16 9h-9v-6h11c3 0 5-1 5-3s-2-3-5-3H68v-6Z" fill="#062532"/>
+  </g>
+  <text x="262" y="160" fill="#ffffff" font-size="48" font-weight="800" font-family="Arial, sans-serif">JagoPrem</text>
+  <text x="262" y="228" fill="#d9ffff" font-size="86" font-weight="900" font-family="Arial, sans-serif">AKUN DIGITAL PREMIUM</text>
+  <text x="262" y="288" fill="#d7f6f7" font-size="30" font-family="Arial, sans-serif">Stok real-time, checkout cepat, dan support langsung dari tim admin.</text>
+  <rect x="262" y="338" width="214" height="62" rx="18" fill="#ffffff" fill-opacity=".14" stroke="#ffffff" stroke-opacity=".18"/>
+  <text x="296" y="378" fill="#ffffff" font-size="28" font-weight="700" font-family="Arial, sans-serif">Belanja lebih tenang</text>
+  <rect x="1020" y="104" width="248" height="312" rx="28" fill="#ffffff" fill-opacity=".1" stroke="#ffffff" stroke-opacity=".14"/>
+  <path d="M1066 158h152v22h-152zm0 48h118v16h-118zm0 40h134v16h-134zm0 40h94v16h-94zm0 40h146v16h-146z" fill="#fff" fill-opacity=".85"/>
+</svg>

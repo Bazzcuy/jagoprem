@@ -1,9 +1,9 @@
-const jsonHeaders = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
+﻿const jsonHeaders = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' };
 const STORE_SCHEMA_VERSION = 13;
-const OFFICIAL_PRIVATE_DESCRIPTION = 'Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan DigiePro.';
+const OFFICIAL_PRIVATE_DESCRIPTION = 'Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan JagoPrem.';
 const CLAUDE_PRO_DESCRIPTION = 'Akun resmi Claude Pro login di claude.ai. Akun Vietnam dengan pembayaran credit card Vietnam, garansi 30 hari, dan dijamin aman dari deactive selama tidak mengubah pembayaran, info login seperti email dan password, serta tidak terlalu sering ganti device.';
 const ORDER_RESERVATION_MS = 30 * 60 * 1000;
-const DOLA_PRODUCT = { id: 91001, is_best_seller: false, title: 'DOLA AI 1 BULAN', cashback_amount: 0, cashback_type: 'amount', thumbnail: 'https://sf-sf-flow-web-cdn-nontt.ciciaicdn.com/obj/ocean-flow-web-sg/favicon/new-dola/192x192.png', price: 37000, available_stock: 8, sold: 34, total_stock: 42, has_wholesale: false, stock: 8, enabled: true, featuredRank: 5, duration: '1 bulan', warranty: 'Garansi akses', access: 'Dola AI', description: 'Dola AI adalah asisten chat AI untuk percakapan, menulis, menerjemahkan, coding, mencari inspirasi, dan membahas berbagai topik. Produk aktif 1 bulan sesuai ketentuan penggunaan DigiePro.' };
+const DOLA_PRODUCT = { id: 91001, is_best_seller: false, title: 'DOLA AI 1 BULAN', cashback_amount: 0, cashback_type: 'amount', thumbnail: 'https://sf-sf-flow-web-cdn-nontt.ciciaicdn.com/obj/ocean-flow-web-sg/favicon/new-dola/192x192.png', price: 37000, available_stock: 8, sold: 34, total_stock: 42, has_wholesale: false, stock: 8, enabled: true, featuredRank: 5, duration: '1 bulan', warranty: 'Garansi akses', access: 'Dola AI', description: 'Dola AI adalah asisten chat AI untuk percakapan, menulis, menerjemahkan, coding, mencari inspirasi, dan membahas berbagai topik. Produk aktif 1 bulan sesuai ketentuan penggunaan JagoPrem.' };
 const GPT_EDU_K12_DESCRIPTION = 'Akses GPT Edu K12 untuk kebutuhan belajar, membuat materi, merangkum, menulis, riset ringan, pendampingan tugas sekolah, dan penggunaan Codex untuk belajar coding. Produk tidak menyediakan opsi email sendiri; detail akses dan panduan penggunaan dikirim admin setelah pembayaran.';
 const GPT_EDU_K12_PRODUCT = { id: 92000, is_best_seller: true, title: 'GPT EDU K12', cashback_amount: 0, cashback_type: 'amount', thumbnail: 'https://cdn.gradual.com/images/https://d2xo500swnpgl1.cloudfront.net/uploads/oaiacademy/EDU-Content-Covers-37--16823a96-45ae-4dac-b79e-5c805bf5c7c3-1780455465231.jpeg?fit=scale-down&width=900', price: 360000, available_stock: 8, sold: 0, total_stock: 8, has_wholesale: false, stock: 8, enabled: true, featuredRank: 1, duration: '1 tahun', warranty: '3 bulan', access: 'GPT Edu K12 + Codex', description: GPT_EDU_K12_DESCRIPTION, variants: [
   { id: '1y', label: '1 Tahun', price: 360000, duration: '1 tahun', warranty: '3 bulan' },
@@ -748,7 +748,7 @@ function migrateStore(store) {
     changed = true;
   }
   store.orders ||= []; store.chats ||= []; store.reviews ||= []; store.vouchers ||= []; store.notifications ||= [];
-  store.settings ||= { maintenance: false, maintenanceMessage: 'DigiePro sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.', reviewsEnabled: true };
+  store.settings ||= { maintenance: false, maintenanceMessage: 'JagoPrem sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.', reviewsEnabled: true };
   if (typeof store.settings.reviewsEnabled !== 'boolean') { store.settings.reviewsEnabled = true; changed = true; }
   for (const product of store.products || []) if (typeof product.autoRestock !== 'boolean') product.autoRestock = false;
   const claude = store.products.find((product) => product.id === 46473);
@@ -853,7 +853,7 @@ async function ensureStore(env) {
   seed.orders = [];
   seed.chats = [];
   seed.reviews = [];
-  seed.settings ||= { maintenance: false, maintenanceMessage: 'DigiePro sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.', reviewsEnabled: true };
+  seed.settings ||= { maintenance: false, maintenanceMessage: 'JagoPrem sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.', reviewsEnabled: true };
   migrateStore(seed);
   const version = stateVersion();
   const insert = await env.DB.prepare('INSERT OR IGNORE INTO app_state (id, data, updated_at) VALUES (1, ?, ?)').bind(JSON.stringify(seed), version).run();
@@ -1096,11 +1096,11 @@ async function clearFailures(env, key) { await env.DB.prepare('DELETE FROM login
 async function createUserSession(env, userId) {
   const token = randomId(32); const now = new Date(); const expires = new Date(now.getTime() + 30 * 86400000);
   await env.DB.prepare('INSERT INTO user_sessions (token_hash, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)').bind(await sha256(token), userId, expires.toISOString(), now.toISOString()).run();
-  return `digiepro_user=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000`;
+  return `JagoPrem_user=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000`;
 }
 
 async function currentUser(request, env) {
-  const token = getCookie(request, 'digiepro_user'); if (!token) return null;
+  const token = getCookie(request, 'JagoPrem_user'); if (!token) return null;
   await ensureAuthTables(env);
   const user = await env.DB.prepare('SELECT users.id, users.name, users.email, users.blocked FROM user_sessions JOIN users ON users.id = user_sessions.user_id WHERE user_sessions.token_hash = ? AND user_sessions.expires_at > ?').bind(await sha256(token), new Date().toISOString()).first();
   return user && !Number(user.blocked) ? publicUser(user) : null;
@@ -1131,7 +1131,7 @@ async function createAdminToken(secret) {
 
 async function isAdmin(request, env) {
   if (!env.ADMIN_PASSWORD) return false;
-  const token = getCookie(request, 'digiepro_admin');
+  const token = getCookie(request, 'JagoPrem_admin');
   const [timestamp, signature] = token.split('.');
   if (!timestamp || !signature || Date.now() - Number(timestamp) > 28_800_000) return false;
   const expected = await hmac(timestamp, env.ADMIN_PASSWORD);
@@ -1181,8 +1181,8 @@ async function api(request, env, pathname) {
     return json({ user, chatId: chatId || user.id });
   }
   if (pathname === '/api/auth/logout' && request.method === 'POST') {
-    const token = getCookie(request, 'digiepro_user'); if (token) await env.DB.prepare('DELETE FROM user_sessions WHERE token_hash = ?').bind(await sha256(token)).run();
-    return json({ ok: true }, 200, { 'Set-Cookie': 'digiepro_user=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0' });
+    const token = getCookie(request, 'JagoPrem_user'); if (token) await env.DB.prepare('DELETE FROM user_sessions WHERE token_hash = ?').bind(await sha256(token)).run();
+    return json({ ok: true }, 200, { 'Set-Cookie': 'JagoPrem_user=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0' });
   }
 
   if (pathname === '/api/store' && request.method === 'GET') {
@@ -1409,10 +1409,10 @@ async function api(request, env, pathname) {
     if (body.password !== env.ADMIN_PASSWORD) { await recordFailure(env, key); return json({ error: 'Password salah.' }, 401); }
     await clearFailures(env, key);
     const token = await createAdminToken(env.ADMIN_PASSWORD);
-    return json({ ok: true }, 200, { 'Set-Cookie': `digiepro_admin=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=28800` });
+    return json({ ok: true }, 200, { 'Set-Cookie': `JagoPrem_admin=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=28800` });
   }
   if (pathname === '/api/admin/logout' && request.method === 'POST') {
-    return json({ ok: true }, 200, { 'Set-Cookie': 'digiepro_admin=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0' });
+    return json({ ok: true }, 200, { 'Set-Cookie': 'JagoPrem_admin=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0' });
   }
 
   if (pathname === '/api/admin/state' && request.method === 'GET') {
@@ -1716,7 +1716,7 @@ async function api(request, env, pathname) {
     if (!(await isAdmin(request, env))) return json({ error: 'Unauthorized' }, 401);
     const body = await readBody(request);
     return await mutateStore(env, (store) => {
-      store.settings = { ...store.settings, maintenance: Boolean(body.maintenance), reviewsEnabled: body.reviewsEnabled !== false, maintenanceMessage: String(body.maintenanceMessage || '').trim().slice(0, 240) || 'DigiePro sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.' };
+      store.settings = { ...store.settings, maintenance: Boolean(body.maintenance), reviewsEnabled: body.reviewsEnabled !== false, maintenanceMessage: String(body.maintenanceMessage || '').trim().slice(0, 240) || 'JagoPrem sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.' };
       return json(store.settings);
     });
   }
@@ -1809,26 +1809,26 @@ async function api(request, env, pathname) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (url.hostname === 'digiepro.my.id' || url.hostname === 'www.digiepro.my.id' || url.hostname === 'www.digiepro.store') {
-      url.hostname = 'digiepro.store';
+    if (url.hostname === 'jagoprem.shop' || url.hostname === 'www.jagoprem.shop' || url.hostname === 'www.jagoprem.shop') {
+      url.hostname = 'jagoprem.shop';
       url.protocol = 'https:';
       return Response.redirect(url.toString(), 301);
     }
 
     if (url.pathname === '/robots.txt') {
-      return new Response("User-agent: *\nAllow: /\n\nSitemap: https://digiepro.store/sitemap.xml", { headers: { 'Content-Type': 'text/plain' } });
+      return new Response("User-agent: *\nAllow: /\n\nSitemap: https://jagoprem.shop/sitemap.xml", { headers: { 'Content-Type': 'text/plain' } });
     }
 
     if (url.pathname === '/sitemap.xml') {
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://digiepro.store/</loc>
+    <loc>https://jagoprem.shop/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://digiepro.store/api-llm</loc>
+    <loc>https://jagoprem.shop/api-llm</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -1848,7 +1848,7 @@ export default {
         if (store.settings?.maintenance) {
           if (url.pathname.startsWith('/api/')) return json({ error: store.settings.maintenanceMessage, maintenance: true }, 503);
           const message = String(store.settings.maintenanceMessage || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
-          return new Response(`<!doctype html><html lang="id"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DigiePro Maintenance</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#eef8f6;color:#17211f;font-family:Arial,sans-serif}.box{width:min(520px,100%);background:#fff;border:1px solid #cee2dd;border-radius:8px;padding:36px;text-align:center;box-shadow:0 18px 55px #183c3420}.logo{width:52px;height:52px;margin:auto;display:grid;place-items:center;border-radius:8px;background:#17211f;color:#42d5ae;font-weight:900}.box h1{font-size:25px;margin:20px 0 10px}.box p{color:#60706c;line-height:1.7}.box button{margin-top:16px;height:42px;padding:0 20px;border:0;border-radius:5px;background:#0b9474;color:#fff;font-weight:700}</style><main class="box"><div class="logo">DP</div><h1>Sedang dalam pemeliharaan</h1><p>${message}</p><button onclick="location.reload()">Coba lagi</button></main></html>`, { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
+          return new Response(`<!doctype html><html lang="id"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JagoPrem Maintenance</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#eef8f6;color:#17211f;font-family:Arial,sans-serif}.box{width:min(520px,100%);background:#fff;border:1px solid #cee2dd;border-radius:8px;padding:36px;text-align:center;box-shadow:0 18px 55px #183c3420}.logo{width:52px;height:52px;margin:auto;display:grid;place-items:center;border-radius:8px;background:#17211f;color:#42d5ae;font-weight:900}.box h1{font-size:25px;margin:20px 0 10px}.box p{color:#60706c;line-height:1.7}.box button{margin-top:16px;height:42px;padding:0 20px;border:0;border-radius:5px;background:#0b9474;color:#fff;font-weight:700}</style><main class="box"><div class="logo">DP</div><h1>Sedang dalam pemeliharaan</h1><p>${message}</p><button onclick="location.reload()">Coba lagi</button></main></html>`, { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
         }
       }
       if (url.pathname === '/seed-store.json') return new Response('Not found', { status: 404 });
@@ -1880,4 +1880,6 @@ export default {
     }
   }
 };
+
+
 

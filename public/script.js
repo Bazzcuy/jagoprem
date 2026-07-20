@@ -4,7 +4,7 @@ const STORE_CONFIG = {
 };
 
 const CHATGPT_PLUS_DESCRIPTION = 'Akun ChatGPT Plus privat, bukan sharing, dengan dukungan Codex. Aktivasi menggunakan payment credit card pada akun privat agar akses lebih aman dan tidak bercampur dengan pengguna lain. Tersedia opsi aktivasi memakai Gmail sendiri dengan tambahan Rp5.000.';
-const OFFICIAL_PRIVATE_DESCRIPTION = 'Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan DigiePro.';
+const OFFICIAL_PRIVATE_DESCRIPTION = 'Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan JagoPrem.';
 const CLAUDE_PRO_DESCRIPTION = 'Akun resmi Claude Pro login di claude.ai. Akun Vietnam dengan pembayaran credit card Vietnam, garansi 30 hari, dan dijamin aman dari deactive selama tidak mengubah pembayaran, info login seperti email dan password, serta tidak terlalu sering ganti device.';
 const GPT_EDU_K12_DESCRIPTION = 'Akses GPT Edu K12 untuk kebutuhan belajar, membuat materi, merangkum, menulis, riset ringan, pendampingan tugas sekolah, dan penggunaan Codex untuk belajar coding. Produk tidak menyediakan opsi email sendiri; detail akses dan panduan penggunaan dikirim admin setelah pembayaran.';
 const PRODUCT_OVERRIDES = {
@@ -26,7 +26,7 @@ function applyCatalogDefaults(item, isFallback = false) {
   }
   return result;
 }
-const DOLA_PRODUCT = { id: 91001, is_best_seller: false, title: 'DOLA AI 1 BULAN', cashback_amount: 0, cashback_type: 'amount', thumbnail: 'https://sf-sf-flow-web-cdn-nontt.ciciaicdn.com/obj/ocean-flow-web-sg/favicon/new-dola/192x192.png', price: 37000, available_stock: 8, sold: 34, total_stock: 42, has_wholesale: false, stock: 8, enabled: true, featuredRank: 5, duration: '1 bulan', warranty: 'Garansi akses', access: 'Dola AI', description: 'Dola AI adalah asisten chat AI untuk percakapan, menulis, menerjemahkan, coding, mencari inspirasi, dan membahas berbagai topik. Produk aktif 1 bulan sesuai ketentuan penggunaan DigiePro.' };
+const DOLA_PRODUCT = { id: 91001, is_best_seller: false, title: 'DOLA AI 1 BULAN', cashback_amount: 0, cashback_type: 'amount', thumbnail: 'https://sf-sf-flow-web-cdn-nontt.ciciaicdn.com/obj/ocean-flow-web-sg/favicon/new-dola/192x192.png', price: 37000, available_stock: 8, sold: 34, total_stock: 42, has_wholesale: false, stock: 8, enabled: true, featuredRank: 5, duration: '1 bulan', warranty: 'Garansi akses', access: 'Dola AI', description: 'Dola AI adalah asisten chat AI untuk percakapan, menulis, menerjemahkan, coding, mencari inspirasi, dan membahas berbagai topik. Produk aktif 1 bulan sesuai ketentuan penggunaan JagoPrem.' };
 const GPT_EDU_K12_PRODUCT = { id: 92000, is_best_seller: true, title: 'GPT EDU K12', cashback_amount: 0, cashback_type: 'amount', thumbnail: 'https://cdn.gradual.com/images/https://d2xo500swnpgl1.cloudfront.net/uploads/oaiacademy/EDU-Content-Covers-37--16823a96-45ae-4dac-b79e-5c805bf5c7c3-1780455465231.jpeg?fit=scale-down&width=900', price: 360000, available_stock: 8, sold: 0, total_stock: 8, has_wholesale: false, stock: 8, enabled: true, featuredRank: 1, duration: '1 tahun', warranty: '3 bulan', access: 'GPT Edu K12 + Codex', description: GPT_EDU_K12_DESCRIPTION, variants: [
   { id: '1y', label: '1 Tahun', price: 360000, duration: '1 tahun', warranty: '3 bulan' },
   { id: '2y', label: '2 Tahun', price: 675000, duration: '2 tahun', warranty: '8 bulan' }
@@ -40,7 +40,7 @@ const fallbackCatalog = [...(window.VIOLA_PRODUCTS || []).flatMap((item) => item
 ] : [applyCatalogDefaults({ ...item, stock: Math.min(item.available_stock || 0, 49), enabled: true, featuredRank: item.id === 46473 ? 4 : 99 }, true)]), DOLA_PRODUCT];
 let products = fallbackCatalog.map((item) => ({ enabled: true, ...item }));
 let validIds = new Set(products.map((item) => item.id));
-const savedCart = JSON.parse(localStorage.getItem('digiepro_cart') || '[]');
+const savedCart = JSON.parse(localStorage.getItem('jagoprem_cart') || '[]');
 const state = {
   cart: savedCart.map((line) => typeof line === 'number' ? { id: line, quantity: 1 } : line).filter((line) => validIds.has(line.id)),
   user: null,
@@ -52,18 +52,18 @@ const state = {
   orders: [],
   reviews: [],
   reviewFilter: 'all',
-  deviceId: localStorage.getItem('digiepro_device_id') || (crypto.randomUUID ? crypto.randomUUID() : `device-${Date.now()}-${Math.random().toString(16).slice(2)}`),
-  chatId: localStorage.getItem('digiepro_chat_id') || `chat-${crypto.randomUUID ? crypto.randomUUID() : Date.now()}`
+  deviceId: localStorage.getItem('jagoprem_device_id') || (crypto.randomUUID ? crypto.randomUUID() : `device-${Date.now()}-${Math.random().toString(16).slice(2)}`),
+  chatId: localStorage.getItem('jagoprem_chat_id') || `chat-${crypto.randomUUID ? crypto.randomUUID() : Date.now()}`
 };
-localStorage.setItem('digiepro_device_id', state.deviceId);
+localStorage.setItem('jagoprem_device_id', state.deviceId);
 
 function setChatId(chatId) {
   const next = String(chatId || '').trim();
   if (!next || next === state.chatId) return;
   state.chatId = next;
-  localStorage.setItem('digiepro_chat_id', state.chatId);
+  localStorage.setItem('jagoprem_chat_id', state.chatId);
 }
-localStorage.setItem('digiepro_chat_id', state.chatId);
+localStorage.setItem('jagoprem_chat_id', state.chatId);
 
 const productGrid = document.querySelector('#productGrid');
 const cartDrawer = document.querySelector('#cartDrawer');
@@ -98,7 +98,7 @@ function regularUnitPrice(line) { const item = getProduct(line.id); const varian
 function lineUnitPrice(line) { const price = regularUnitPrice(line); return line.reseller ? Math.round(price * 0.92) : price; }
 function cartTotal() { return state.cart.reduce((total, line) => total + lineUnitPrice(line) * line.quantity, 0); }
 function cartQuantityFor(id) { return state.cart.filter((line) => line.id === id).reduce((total, line) => total + line.quantity, 0); }
-function persistCart() { localStorage.setItem('digiepro_cart', JSON.stringify(state.cart)); updateCart(); }
+function persistCart() { localStorage.setItem('jagoprem_cart', JSON.stringify(state.cart)); updateCart(); }
 
 function filteredProducts() {
   const keyword = document.querySelector('#searchInput').value.trim().toLowerCase();
@@ -149,11 +149,11 @@ function updateCart() {
   document.querySelector('#cartItems').innerHTML = items.length ? items.map((item) => {
     const minQty = item.title.includes('SALDO API') ? 5 : 1;
     const minLimit = item.reseller ? resellerMinimum(item) : minQty;
-    return `<div class="cart-item"><img src="${item.thumbnail}" alt=""><div><h3>${lineTitle(item)}</h3>${item.ownGmail ? '<small class="cart-variant">Pakai Gmail sendiri (+Rp5.000)</small>' : ''}${item.reseller ? `<small class="cart-variant reseller">Harga reseller -8% · min. ${resellerMinimum(item)}</small>` : ''}<p>${item.reseller ? `<s>${rupiah(regularUnitPrice(item) * item.quantity)}</s> ` : ''}${rupiah(lineUnitPrice(item) * item.quantity)}</p><div class="cart-quantity"><button type="button" data-cart-minus="${item.index}" ${item.quantity <= minLimit ? 'disabled' : ''}>−</button><span>${item.quantity}</span><button type="button" data-cart-plus="${item.index}" ${cartQuantityFor(item.id) >= item.stock ? 'disabled' : ''}>+</button></div></div><button class="remove-item" type="button" data-remove="${item.index}" aria-label="Hapus ${lineTitle(item)}"><i data-lucide="trash-2"></i></button></div>`;
+    return `<div class="cart-item"><img src="${item.thumbnail}" alt=""><div><h3>${lineTitle(item)}</h3>${item.ownGmail ? '<small class="cart-variant">Pakai Gmail sendiri (+Rp5.000)</small>' : ''}${item.reseller ? `<small class="cart-variant reseller">Harga reseller -8% Â· min. ${resellerMinimum(item)}</small>` : ''}<p>${item.reseller ? `<s>${rupiah(regularUnitPrice(item) * item.quantity)}</s> ` : ''}${rupiah(lineUnitPrice(item) * item.quantity)}</p><div class="cart-quantity"><button type="button" data-cart-minus="${item.index}" ${item.quantity <= minLimit ? 'disabled' : ''}>âˆ’</button><span>${item.quantity}</span><button type="button" data-cart-plus="${item.index}" ${cartQuantityFor(item.id) >= item.stock ? 'disabled' : ''}>+</button></div></div><button class="remove-item" type="button" data-remove="${item.index}" aria-label="Hapus ${lineTitle(item)}"><i data-lucide="trash-2"></i></button></div>`;
   }).join('') : '<div class="cart-empty"><i data-lucide="shopping-bag"></i><p>Keranjang masih kosong.</p></div>';
   document.querySelector('#cartTotal').textContent = rupiah(cartTotal());
   document.querySelector('#checkoutButton').disabled = !items.length;
-  localStorage.setItem('digiepro_cart', JSON.stringify(state.cart)); icons();
+  localStorage.setItem('jagoprem_cart', JSON.stringify(state.cart)); icons();
 }
 
 function openCart() { cartDrawer.classList.add('open'); cartDrawer.setAttribute('aria-hidden', 'false'); overlay.classList.add('show'); }
@@ -198,12 +198,12 @@ const PRODUCT_COPY = [
   ['SCRIBD', 'Akses Scribd Premium untuk membaca dokumen, buku, dan konten digital yang tersedia.'],
   ['VPN', 'Akses layanan VPN Premium untuk koneksi privat ke server yang tersedia pada paket.'],
   ['AKUN KOPI', 'Produk akun digital bertema kopi. Detail akses dan cara penggunaan dikirimkan admin setelah pembayaran.'],
-  ['SALDO API', 'Top-up saldo API DigieProllm untuk mengakses 100+ model AI (GPT-4o, Claude, Gemini, DeepSeek, dll) melalui endpoint yang kompatibel OpenAI. Kurs tetap Rp12.300/$1. Akun dan API Key akan dibuatkan oleh admin setelah pembayaran dikonfirmasi.']
+  ['SALDO API', 'Top-up saldo API JagoPrem LLM untuk mengakses 100+ model AI (GPT-4o, Claude, Gemini, DeepSeek, dll) melalui endpoint yang kompatibel OpenAI. Kurs tetap Rp12.300/$1. Akun dan API Key akan dibuatkan oleh admin setelah pembayaran dikonfirmasi.']
 ];
 function productProfile(item) {
   const match = PRODUCT_COPY.find(([keyword]) => item.title.includes(keyword));
   const cat = productCategory(item);
-  const description = item.description || match?.[1] || `Akses premium ${item.title} dengan detail penggunaan yang dikirimkan langsung oleh admin DigiePro.`;
+  const description = item.description || match?.[1] || `Akses premium ${item.title} dengan detail penggunaan yang dikirimkan langsung oleh admin JagoPrem.`;
   const isDevApi = cat === 'Developer API';
   return {
     description,
@@ -212,19 +212,19 @@ function productProfile(item) {
           'Akses 100+ model AI terbaik dunia: GPT-4o, Claude, Gemini 2.5, DeepSeek R1, Llama, dan masih banyak lagi.',
           'Satu API Key untuk semua model — endpoint kompatibel 100% dengan OpenAI SDK.',
           'Kurs tetap Rp12.300/$1 — tidak ada biaya berlangganan bulanan.',
-          'Saldo tidak ada expiry date selama akun DigieProllm aktif.',
-          'Admin DigieProllm akan mengaktifkan akun dan memberikan API Key ke WhatsApp kamu setelah pembayaran dikonfirmasi.'
+          'Saldo tidak ada expiry date selama akun JagoPrem LLM aktif.',
+          'Admin JagoPrem LLM akan mengaktifkan akun dan memberikan API Key ke WhatsApp kamu setelah pembayaran dikonfirmasi.'
         ]
       : [match?.[1] || description, `Jenis akses ${item.access || 'mengikuti varian produk'} dengan masa aktif ${item.duration || 'sesuai paket'}.`, `Detail login, aktivasi, dan petunjuk penggunaan dikirim admin ke WhatsApp setelah pesanan diproses.`, supportsOwnGmail(item) ? 'Opsi Gmail sendiri tersedia di halaman detail produk.' : 'Tidak tersedia opsi email sendiri untuk produk ini.', `Garansi ${item.warranty || 'mengikuti ketentuan produk'} untuk kendala akses yang memenuhi syarat.`],
     category: cat,
     delivery: isDevApi ? 'API Key via WhatsApp' : 'Dikirim melalui WhatsApp',
-    access: item.access || (isDevApi ? 'API Key DigieProllm (api.digieprollm.id)' : 'Sesuai varian yang tersedia'),
+    access: item.access || (isDevApi ? 'API Key JagoPrem LLM (api.jagoprem.shop)' : 'Sesuai varian yang tersedia'),
     duration: item.duration || (isDevApi ? 'Pay-as-you-go (tidak ada expiry)' : 'Sesuai varian'),
     warranty: item.warranty || (isDevApi ? 'Garansi saldo masuk' : 'Sesuai ketentuan produk'),
     terms: isDevApi
       ? [
           'Pastikan nomor WhatsApp yang kamu isi saat checkout sudah benar.',
-          'Admin DigieProllm akan mendaftarkan akun untukmu dan mengirim API Key via WhatsApp.',
+          'Admin JagoPrem LLM akan mendaftarkan akun untukmu dan mengirim API Key via WhatsApp.',
           'Aktivasi API Key diproses admin dalam 1–3 jam di jam aktif (08.00–21.00 WIB).',
           'Saldo bersifat non-refundable setelah API Key diaktivasi.',
           'Satu akun (satu email) berlaku untuk satu API Key. Jika butuh lebih dari satu, infokan di catatan.',
@@ -241,12 +241,12 @@ function detailModal(id) {
   const resellerMin = resellerMinimum(item); const resellerAvailable = item.stock >= resellerMin && item.enabled;
   const isSaldoApi = item.title.includes('SALDO API');
   const minQty = isSaldoApi ? 5 : 1;
-  openModal(`${modalHead('Detail produk')}<div class="modal-body product-detail-body"><div class="detail-layout"><div class="detail-media"><img class="detail-image" src="${item.thumbnail}" alt="${item.title}"><div class="detail-facts"><div><i data-lucide="clock-3"></i><span>Masa aktif<b id="detailDuration">${defaultVariant?.duration || profile.duration}</b></span></div><div><i data-lucide="shield-check"></i><span>Garansi<b id="detailWarranty">${defaultVariant?.warranty || profile.warranty}</b></span></div><div><i data-lucide="key-round"></i><span>Akses produk<b>${profile.access}</b></span></div></div></div><div class="detail-content"><h2>${item.title}</h2><div class="detail-price-row"><strong class="detail-price" id="detailPrice">${rupiah(defaultVariant?.price || item.price)}</strong><s id="detailRegularPrice" hidden></s></div><div class="detail-tags">${item.featuredRank < 5 ? '<span>Rekomendasi</span>' : item.is_best_seller ? '<span>Terlaris</span>' : ''}<span>${item.stock && item.enabled ? 'Ready stock' : 'Stok habis'}</span></div><div class="detail-info"><div><span>Kategori</span><b>${profile.category}</b></div><div><span>Pengiriman</span><b>${profile.delivery}</b></div><div><span>Stok tersedia</span><b>${item.enabled ? item.stock : 0}</b></div><div><span>Terjual</span><b>${item.sold}</b></div></div>${item.variants?.length ? `<div class="variant-picker"><span>Pilih durasi</span>${item.variants.map((variant, index) => `<label><input type="radio" name="detailVariant" value="${variant.id}" ${index === 0 ? 'checked' : ''}><b>${variant.label}</b><small>${rupiah(variant.price)} · Garansi ${variant.warranty}</small></label>`).join('')}</div>` : ''}<div class="detail-tabs"><button class="active" type="button" data-detail-tab="description">Deskripsi</button><button type="button" data-detail-tab="terms">S & K</button></div><div class="detail-tab-panel" data-detail-panel="description"><p>${profile.description}</p><ul class="product-benefits">${profile.benefits.map((benefit) => `<li><i data-lucide="check-circle-2"></i><span>${benefit}</span></li>`).join('')}</ul></div><div class="detail-tab-panel" data-detail-panel="terms" hidden><ol>${profile.terms.map((term) => `<li>${term}</li>`).join('')}</ol></div>${supportsOwnGmail(item) ? '<label class="detail-variant"><input id="detailOwnGmail" type="checkbox"><span><b>Pakai Gmail sendiri</b><small>Tambahan Rp5.000 per akun</small></span></label>' : ''}<label class="detail-variant reseller-option ${resellerAvailable ? '' : 'disabled'}"><input id="detailReseller" type="checkbox" ${resellerAvailable ? '' : 'disabled'}><span><b>Harga reseller · diskon 8%</b><small>${resellerAvailable ? `Minimal ${resellerMin} item. Harga menjadi ${rupiah(Math.round((defaultVariant?.price || item.price) * 0.92))} per item.` : `Stok belum cukup untuk minimum ${resellerMin} item.`}</small></span></label><div class="detail-quantity"><span>Jumlah pembelian<small id="quantityHint">${isSaldoApi ? 'Minimal 5 dollar' : `Maksimal ${item.stock} sesuai stok`}</small></span><div class="quantity-stepper"><button type="button" data-detail-minus disabled aria-label="Kurangi jumlah"><i data-lucide="minus"></i></button><input id="detailQuantity" type="number" inputmode="numeric" min="${minQty}" max="${item.stock}" value="${minQty}" aria-label="Jumlah pembelian" ${item.stock && item.enabled ? '' : 'disabled'}><button type="button" data-detail-plus ${item.stock > minQty && item.enabled ? '' : 'disabled'} aria-label="Tambah jumlah"><i data-lucide="plus"></i></button></div></div><div class="detail-actions"><button class="detail-buy secondary" type="button" data-add-detail="${item.id}" ${item.stock && item.enabled ? '' : 'disabled'}>Masukkan keranjang</button><button class="detail-buy" type="button" data-buy-now="${item.id}" ${item.stock && item.enabled ? '' : 'disabled'}>Beli sekarang</button></div></div></div></div>`);
+  openModal(`${modalHead('Detail produk')}<div class="modal-body product-detail-body"><div class="detail-layout"><div class="detail-media"><img class="detail-image" src="${item.thumbnail}" alt="${item.title}"><div class="detail-facts"><div><i data-lucide="clock-3"></i><span>Masa aktif<b id="detailDuration">${defaultVariant?.duration || profile.duration}</b></span></div><div><i data-lucide="shield-check"></i><span>Garansi<b id="detailWarranty">${defaultVariant?.warranty || profile.warranty}</b></span></div><div><i data-lucide="key-round"></i><span>Akses produk<b>${profile.access}</b></span></div></div></div><div class="detail-content"><h2>${item.title}</h2><div class="detail-price-row"><strong class="detail-price" id="detailPrice">${rupiah(defaultVariant?.price || item.price)}</strong><s id="detailRegularPrice" hidden></s></div><div class="detail-tags">${item.featuredRank < 5 ? '<span>Rekomendasi</span>' : item.is_best_seller ? '<span>Terlaris</span>' : ''}<span>${item.stock && item.enabled ? 'Ready stock' : 'Stok habis'}</span></div><div class="detail-info"><div><span>Kategori</span><b>${profile.category}</b></div><div><span>Pengiriman</span><b>${profile.delivery}</b></div><div><span>Stok tersedia</span><b>${item.enabled ? item.stock : 0}</b></div><div><span>Terjual</span><b>${item.sold}</b></div></div>${item.variants?.length ? `<div class="variant-picker"><span>Pilih durasi</span>${item.variants.map((variant, index) => `<label><input type="radio" name="detailVariant" value="${variant.id}" ${index === 0 ? 'checked' : ''}><b>${variant.label}</b><small>${rupiah(variant.price)} Â· Garansi ${variant.warranty}</small></label>`).join('')}</div>` : ''}<div class="detail-tabs"><button class="active" type="button" data-detail-tab="description">Deskripsi</button><button type="button" data-detail-tab="terms">S & K</button></div><div class="detail-tab-panel" data-detail-panel="description"><p>${profile.description}</p><ul class="product-benefits">${profile.benefits.map((benefit) => `<li><i data-lucide="check-circle-2"></i><span>${benefit}</span></li>`).join('')}</ul></div><div class="detail-tab-panel" data-detail-panel="terms" hidden><ol>${profile.terms.map((term) => `<li>${term}</li>`).join('')}</ol></div>${supportsOwnGmail(item) ? '<label class="detail-variant"><input id="detailOwnGmail" type="checkbox"><span><b>Pakai Gmail sendiri</b><small>Tambahan Rp5.000 per akun</small></span></label>' : ''}<label class="detail-variant reseller-option ${resellerAvailable ? '' : 'disabled'}"><input id="detailReseller" type="checkbox" ${resellerAvailable ? '' : 'disabled'}><span><b>Harga reseller Â· diskon 8%</b><small>${resellerAvailable ? `Minimal ${resellerMin} item. Harga menjadi ${rupiah(Math.round((defaultVariant?.price || item.price) * 0.92))} per item.` : `Stok belum cukup untuk minimum ${resellerMin} item.`}</small></span></label><div class="detail-quantity"><span>Jumlah pembelian<small id="quantityHint">${isSaldoApi ? 'Minimal 5 dollar' : `Maksimal ${item.stock} sesuai stok`}</small></span><div class="quantity-stepper"><button type="button" data-detail-minus disabled aria-label="Kurangi jumlah"><i data-lucide="minus"></i></button><input id="detailQuantity" type="number" inputmode="numeric" min="${minQty}" max="${item.stock}" value="${minQty}" aria-label="Jumlah pembelian" ${item.stock && item.enabled ? '' : 'disabled'}><button type="button" data-detail-plus ${item.stock > minQty && item.enabled ? '' : 'disabled'} aria-label="Tambah jumlah"><i data-lucide="plus"></i></button></div></div><div class="detail-actions"><button class="detail-buy secondary" type="button" data-add-detail="${item.id}" ${item.stock && item.enabled ? '' : 'disabled'}>Masukkan keranjang</button><button class="detail-buy" type="button" data-buy-now="${item.id}" ${item.stock && item.enabled ? '' : 'disabled'}>Beli sekarang</button></div></div></div></div>`);
 }
 
 function authModal(mode = 'login') {
   const register = mode === 'register';
-  openModal(`${modalHead('Akun DigiePro')}<div class="modal-body auth-modal-body"><div class="auth-hero"><div class="auth-hero-bg"></div><div class="auth-hero-content"><div class="auth-logo-mark"><i></i><b></b></div><h2>DigiePro</h2><p>Akun digital premium, harga terjangkau</p></div></div><div class="auth-form-section"><div class="auth-tabs"><button class="${register ? '' : 'active'}" data-auth-tab="login" type="button">Masuk</button><button class="${register ? 'active' : ''}" data-auth-tab="register" type="button">Daftar</button></div><form id="authForm" data-mode="${mode}">${register ? '<div class="form-group"><label>NAMA LENGKAP</label><div class="input-icon-wrap"><i data-lucide="user"></i><input name="name" required minlength="2" maxlength="80" autocomplete="name" placeholder="Nama kamu"></div></div>' : ''}<div class="form-group"><label>EMAIL</label><div class="input-icon-wrap"><i data-lucide="mail"></i><input name="email" type="email" required autocomplete="email" placeholder="nama@email.com"></div></div><div class="form-group"><label>PASSWORD</label><div class="input-icon-wrap"><i data-lucide="lock"></i><input name="password" type="password" minlength="8" required autocomplete="current-password" placeholder="Minimal 8 karakter"></div></div><button class="submit-button auth-submit" type="submit"><span>${register ? 'Buat akun gratis' : 'Masuk ke akun'}</span></button></form><div class="auth-divider"><span>atau</span></div><button class="google-auth-btn" id="googleAuthBtn" type="button"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Lanjutkan dengan Google</button><div id="googleAuthError" style="display:none;color:var(--error);font-size:0.85rem;margin-top:10px;justify-content:center;text-align:center"></div><p class="auth-footer-note">Akun tersimpan aman dan dapat dipakai di perangkat lain.</p></div></div>`);
+  openModal(`${modalHead('Akun JagoPrem')}<div class="modal-body auth-modal-body"><div class="auth-hero"><div class="auth-hero-bg"></div><div class="auth-hero-content"><div class="auth-logo-mark"><i></i><b></b></div><h2>JagoPrem</h2><p>Akun digital premium, harga terjangkau</p></div></div><div class="auth-form-section"><div class="auth-tabs"><button class="${register ? '' : 'active'}" data-auth-tab="login" type="button">Masuk</button><button class="${register ? 'active' : ''}" data-auth-tab="register" type="button">Daftar</button></div><form id="authForm" data-mode="${mode}">${register ? '<div class="form-group"><label>NAMA LENGKAP</label><div class="input-icon-wrap"><i data-lucide="user"></i><input name="name" required minlength="2" maxlength="80" autocomplete="name" placeholder="Nama kamu"></div></div>' : ''}<div class="form-group"><label>EMAIL</label><div class="input-icon-wrap"><i data-lucide="mail"></i><input name="email" type="email" required autocomplete="email" placeholder="nama@email.com"></div></div><div class="form-group"><label>PASSWORD</label><div class="input-icon-wrap"><i data-lucide="lock"></i><input name="password" type="password" minlength="8" required autocomplete="current-password" placeholder="Minimal 8 karakter"></div></div><button class="submit-button auth-submit" type="submit"><span>${register ? 'Buat akun gratis' : 'Masuk ke akun'}</span></button></form><div class="auth-divider"><span>atau</span></div><button class="google-auth-btn" id="googleAuthBtn" type="button"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Lanjutkan dengan Google</button><div id="googleAuthError" style="display:none;color:var(--error);font-size:0.85rem;margin-top:10px;justify-content:center;text-align:center"></div><p class="auth-footer-note">Akun tersimpan aman dan dapat dipakai di perangkat lain.</p></div></div>`);
   document.querySelector('#googleAuthBtn')?.addEventListener('click', function () {
     const btn = this;
     const isRegisterMode = document.querySelector('[data-auth-tab="register"]')?.classList.contains('active');
@@ -275,9 +275,9 @@ function checkoutModal() {
   const hasDevApi = state.cart.some((line) => productCategory(getProduct(line.id)) === 'Developer API');
   const devApiField = hasDevApi ? `
     <div class="form-group">
-      <label>EMAIL UNTUK AKUN DIGIEPROLLM <span style="color:var(--accent)">*WAJIB</span></label>
+      <label>EMAIL UNTUK AKUN JAGOPREM LLM <span style="color:var(--accent)">*WAJIB</span></label>
       <input name="llm_email" type="email" required value="${escapeHtml(state.user?.email || '')}" placeholder="Contoh: emailkamu@domain.com">
-      <p class="field-help">Email ini akan didaftarkan oleh admin sebagai identitas akun DigieProllm kamu. API Key akan dikirimkan ke WhatsApp.</p>
+      <p class="field-help">Email ini akan didaftarkan oleh admin sebagai identitas akun JagoPrem LLM kamu. API Key akan dikirimkan ke WhatsApp.</p>
     </div>
   ` : '';
   openModal(`${modalHead('Checkout')}<div class="modal-body"><div class="order-summary">${cartItemsHtml}<div><span>Biaya admin</span><b>${rupiah(99)}</b></div><div class="total" id="checkoutTotalRow"><span>Total sebelum voucher</span><b>${rupiah(cartTotal() + 99)}</b></div></div><form id="checkoutForm"><div class="form-group voucher-field"><label>KODE VOUCHER (OPSIONAL)</label><div class="voucher-input-row"><div class="voucher-input-wrap"><i data-lucide="ticket-percent"></i><input id="voucherInput" name="voucherCode" autocomplete="off" maxlength="32" placeholder="Contoh: SPESIALAI07"></div><button class="voucher-apply-btn" type="button" id="applyVoucher">Gunakan</button></div><div id="voucherFeedback" class="voucher-feedback"></div><p class="field-help" id="voucherHint">Voucher SPESIALAI07: diskon 16% untuk minimal 2 produk AI yang sama</p></div><div class="form-group"><label>NAMA PENERIMA</label><input name="name" required value="${escapeHtml(state.user?.name || '')}" placeholder="Nama kamu"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" inputmode="tel" required pattern="\\+?[0-9]{9,15}" placeholder="Contoh: 081234567890 atau +6281234567890"><p class="field-help">Nomor ini dipakai admin untuk menghubungi dan mengirim detail produk.</p></div>${devApiField}<div class="form-group"><label>CATATAN (OPSIONAL)</label><textarea name="note" placeholder="Permintaan atau informasi tambahan"></textarea></div><button class="submit-button" type="submit">Lanjut ke pembayaran</button></form></div>`);
@@ -306,7 +306,7 @@ function paymentModal(customer, order) {
     icons(); return;
   }
   if (order.status === 'cancelled') {
-    openModal(`${modalHead('Pesanan Dibatalkan')}<div class="modal-body"><div class="order-alert cancelled-alert"><div class="alert-icon"><i data-lucide="x-circle"></i></div><h3>Pesanan Kamu Gagal</h3><p>Pesanan <strong>${order.id}</strong> telah dibatalkan. Harap melakukan pemesanan ulang.</p><p class="alert-refund"><i data-lucide="wallet"></i> Pembayaran yang sudah masuk akan otomatis dikembalikan ke rekening kamu dalam <strong>1×24 jam</strong>.</p><button class="submit-button" type="button" data-close-modal>Tutup &amp; Pesan Ulang</button></div></div>`);
+    openModal(`${modalHead('Pesanan Dibatalkan')}<div class="modal-body"><div class="order-alert cancelled-alert"><div class="alert-icon"><i data-lucide="x-circle"></i></div><h3>Pesanan Kamu Gagal</h3><p>Pesanan <strong>${order.id}</strong> telah dibatalkan. Harap melakukan pemesanan ulang.</p><p class="alert-refund"><i data-lucide="wallet"></i> Pembayaran yang sudah masuk akan otomatis dikembalikan ke rekening kamu dalam <strong>1Ã—24 jam</strong>.</p><button class="submit-button" type="button" data-close-modal>Tutup &amp; Pesan Ulang</button></div></div>`);
     icons(); return;
   }
   const total = order.total; const orderId = order.id;
@@ -319,7 +319,7 @@ function paymentModal(customer, order) {
 
 function orderMessage(order) {
   const lines = order.items.map((line) => `- ${line.title || getProduct(line.id)?.title || line.id} x${line.quantity}${line.reseller ? ' (Reseller -8%)' : ''}${line.ownGmail ? ' (Gmail sendiri)' : ''} = ${rupiah(line.lineTotal || lineUnitPrice(line) * line.quantity)}`);
-  return `Konfirmasi pembayaran DigiePro\nID: ${order.id}\nWaktu pesan: ${new Date(order.createdAt).toLocaleString('id-ID')}\n\nDetail pesanan:\n${lines.join('\n')}\n\nSubtotal: ${rupiah(order.subtotal)}${order.discount ? `\nVoucher ${order.voucher?.code || ''}: -${rupiah(order.discount)}` : ''}\nBiaya admin: ${rupiah(order.adminFee)}\nTotal: ${rupiah(order.total)}\n\nSaya sudah menyelesaikan pembayaran QRIS untuk pesanan ini.`;
+  return `Konfirmasi pembayaran JagoPrem\nID: ${order.id}\nWaktu pesan: ${new Date(order.createdAt).toLocaleString('id-ID')}\n\nDetail pesanan:\n${lines.join('\n')}\n\nSubtotal: ${rupiah(order.subtotal)}${order.discount ? `\nVoucher ${order.voucher?.code || ''}: -${rupiah(order.discount)}` : ''}\nBiaya admin: ${rupiah(order.adminFee)}\nTotal: ${rupiah(order.total)}\n\nSaya sudah menyelesaikan pembayaran QRIS untuk pesanan ini.`;
 }
 
 async function historyModal() {
@@ -327,7 +327,7 @@ async function historyModal() {
   openModal(`${modalHead('Riwayat pesanan')}<div class="modal-body"><div class="history-loading">Memuat pesanan...</div></div>`);
   try {
     const response = await fetch('/api/orders/me', { cache: 'no-store' }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Riwayat gagal dimuat.'); state.orders = result.orders || []; state.reviews = result.reviews || [];
-    modalContent.innerHTML = `${modalHead('Riwayat pesanan')}<div class="modal-body order-history">${state.orders.length ? state.orders.map((order) => `<article class="history-order"><div class="history-order-head"><span><b>${order.id}</b><small>${new Date(order.createdAt).toLocaleString('id-ID')}</small></span><em class="order-status ${order.status}">${order.status}</em></div>${order.status === 'pending' && order.expiresAt ? `<p class="reservation-note">Reservasi stok berakhir ${new Date(order.expiresAt).toLocaleString('id-ID')}</p>` : ''}<div class="history-lines">${order.items.map((line) => `<div><span>${escapeHtml(line.title || getProduct(line.id)?.title || line.id)} × ${line.quantity}${line.reseller ? '<small>Reseller -8%</small>' : ''}</span><b>${rupiah(line.lineTotal || lineUnitPrice(line) * line.quantity)}</b></div>`).join('')}</div><div class="history-total"><span>Total termasuk admin</span><b>${rupiah(order.total)}</b></div><div class="history-actions">${['pending', 'paid'].includes(order.status) ? `<button type="button" data-reopen-payment="${order.id}"><i data-lucide="qr-code"></i> Lihat QR & total</button>` : ''}<button type="button" data-chat-order="${order.id}"><i data-lucide="message-circle"></i> Chat admin</button></div>${order.status === 'completed' ? `<div class="review-order-actions">${order.items.map((line) => state.reviews.some((review) => review.orderId === order.id && review.productId === line.id) ? `<span><i data-lucide="badge-check"></i> ${escapeHtml(line.title || getProduct(line.id)?.title)} sudah diulas</span>` : `<button type="button" data-review-order="${order.id}" data-review-product="${line.id}"><i data-lucide="star"></i> Ulas ${escapeHtml(line.title || getProduct(line.id)?.title)}</button>`).join('')}</div>` : ''}</article>`).join('') : '<div class="cart-empty"><i data-lucide="receipt-text"></i><p>Belum ada pesanan dari akun ini.</p></div>'}</div>`; icons();
+    modalContent.innerHTML = `${modalHead('Riwayat pesanan')}<div class="modal-body order-history">${state.orders.length ? state.orders.map((order) => `<article class="history-order"><div class="history-order-head"><span><b>${order.id}</b><small>${new Date(order.createdAt).toLocaleString('id-ID')}</small></span><em class="order-status ${order.status}">${order.status}</em></div>${order.status === 'pending' && order.expiresAt ? `<p class="reservation-note">Reservasi stok berakhir ${new Date(order.expiresAt).toLocaleString('id-ID')}</p>` : ''}<div class="history-lines">${order.items.map((line) => `<div><span>${escapeHtml(line.title || getProduct(line.id)?.title || line.id)} Ã— ${line.quantity}${line.reseller ? '<small>Reseller -8%</small>' : ''}</span><b>${rupiah(line.lineTotal || lineUnitPrice(line) * line.quantity)}</b></div>`).join('')}</div><div class="history-total"><span>Total termasuk admin</span><b>${rupiah(order.total)}</b></div><div class="history-actions">${['pending', 'paid'].includes(order.status) ? `<button type="button" data-reopen-payment="${order.id}"><i data-lucide="qr-code"></i> Lihat QR & total</button>` : ''}<button type="button" data-chat-order="${order.id}"><i data-lucide="message-circle"></i> Chat admin</button></div>${order.status === 'completed' ? `<div class="review-order-actions">${order.items.map((line) => state.reviews.some((review) => review.orderId === order.id && review.productId === line.id) ? `<span><i data-lucide="badge-check"></i> ${escapeHtml(line.title || getProduct(line.id)?.title)} sudah diulas</span>` : `<button type="button" data-review-order="${order.id}" data-review-product="${line.id}"><i data-lucide="star"></i> Ulas ${escapeHtml(line.title || getProduct(line.id)?.title)}</button>`).join('')}</div>` : ''}</article>`).join('') : '<div class="cart-empty"><i data-lucide="receipt-text"></i><p>Belum ada pesanan dari akun ini.</p></div>'}</div>`; icons();
   } catch (error) { notify(error.message); closeModal(); }
 }
 
@@ -336,7 +336,7 @@ function renderReviewsContent(reviews) {
   const average = reviews.length ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0;
   const counts = [5, 4, 3, 2, 1].reduce((result, rating) => ({ ...result, [rating]: reviews.filter((review) => review.rating === rating).length }), {});
   const visible = state.reviewFilter === 'all' ? reviews : reviews.filter((review) => review.rating === Number(state.reviewFilter));
-  return `${modalHead('Ulasan pembeli')}<div class="modal-body reviews-page"><div class="review-summary"><strong>${average.toFixed(1)}</strong>${reviewStars(Math.round(average))}<span>${reviews.length} ulasan produk</span></div><div class="review-notice"><i data-lucide="info"></i><span>Pembeli bisa memberi ulasan dari menu Riwayat setelah pesanan berstatus selesai. Setiap produk dalam pesanan hanya bisa diulas satu kali.</span></div><div class="review-filters"><button class="${state.reviewFilter === 'all' ? 'active' : ''}" type="button" data-review-filter="all">Semua</button>${[5, 4, 3, 2, 1].map((rating) => `<button class="${state.reviewFilter === String(rating) ? 'active' : ''}" type="button" data-review-filter="${rating}">${rating} bintang <span>${counts[rating]}</span></button>`).join('')}</div><div class="review-list">${visible.length ? visible.map((review) => { const product = getProduct(review.productId); return `<article class="review-card"><div class="review-card-head"><div class="review-avatar">${escapeHtml(review.customerName || 'P').charAt(0)}</div><span><b>${escapeHtml(review.customerName || 'Pembeli')}</b><small>${new Date(review.createdAt).toLocaleDateString('id-ID')} · ${escapeHtml(product?.title || 'Produk DigiePro')}</small></span></div>${reviewStars(review.rating)}<p>${escapeHtml(review.comment)}</p></article>`; }).join('') : '<div class="cart-empty"><i data-lucide="star"></i><p>Belum ada ulasan dengan rating ini.</p></div>'}</div></div>`;
+  return `${modalHead('Ulasan pembeli')}<div class="modal-body reviews-page"><div class="review-summary"><strong>${average.toFixed(1)}</strong>${reviewStars(Math.round(average))}<span>${reviews.length} ulasan produk</span></div><div class="review-notice"><i data-lucide="info"></i><span>Pembeli bisa memberi ulasan dari menu Riwayat setelah pesanan berstatus selesai. Setiap produk dalam pesanan hanya bisa diulas satu kali.</span></div><div class="review-filters"><button class="${state.reviewFilter === 'all' ? 'active' : ''}" type="button" data-review-filter="all">Semua</button>${[5, 4, 3, 2, 1].map((rating) => `<button class="${state.reviewFilter === String(rating) ? 'active' : ''}" type="button" data-review-filter="${rating}">${rating} bintang <span>${counts[rating]}</span></button>`).join('')}</div><div class="review-list">${visible.length ? visible.map((review) => { const product = getProduct(review.productId); return `<article class="review-card"><div class="review-card-head"><div class="review-avatar">${escapeHtml(review.customerName || 'P').charAt(0)}</div><span><b>${escapeHtml(review.customerName || 'Pembeli')}</b><small>${new Date(review.createdAt).toLocaleDateString('id-ID')} Â· ${escapeHtml(product?.title || 'Produk JagoPrem')}</small></span></div>${reviewStars(review.rating)}<p>${escapeHtml(review.comment)}</p></article>`; }).join('') : '<div class="cart-empty"><i data-lucide="star"></i><p>Belum ada ulasan dengan rating ini.</p></div>'}</div></div>`;
 }
 async function reviewsModal() {
   openModal(`${modalHead('Ulasan pembeli')}<div class="modal-body"><div class="history-loading">Memuat ulasan...</div></div>`);
@@ -350,7 +350,7 @@ function openChat() { chatPanel.classList.add('open'); chatPanel.setAttribute('a
 function closeChat() { chatPanel.classList.remove('open'); chatPanel.setAttribute('aria-hidden', 'true'); }
 function addMessage(text, role) { chatMessages.insertAdjacentHTML('beforeend', messageBubble(text, role)); chatMessages.scrollTop = chatMessages.scrollHeight; }
 function contactAdmin() { switchChatMode('admin'); }
-function customerIdentity() { const last = JSON.parse(localStorage.getItem('digiepro_last_order') || 'null'); return last?.customer || state.user || {}; }
+function customerIdentity() { const last = JSON.parse(localStorage.getItem('jagoprem_last_order') || 'null'); return last?.customer || state.user || {}; }
 async function loadAdminChat() {
   try {
     const response = await fetch(`/api/chat/${state.chatId}`, { cache: 'no-store' });
@@ -367,7 +367,7 @@ async function loadAdminChat() {
 function switchChatMode(mode) {
   state.chatMode = mode;
   document.querySelectorAll('[data-chat-mode]').forEach((button) => button.classList.toggle('active', button.dataset.chatMode === mode));
-  document.querySelector('#chatTitle').textContent = mode === 'admin' ? 'Admin DigiePro' : 'Asisten DigiePro';
+  document.querySelector('#chatTitle').textContent = mode === 'admin' ? 'Admin JagoPrem' : 'Asisten JagoPrem';
   if (mode === 'admin') loadAdminChat(); else chatMessages.innerHTML = chatWelcome(); resizeChatComposer();
 }
 async function sendAdminMessage(message) { const response = await fetch(`/api/chat/${state.chatId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, customer: customerIdentity() }) }); const chat = await response.json().catch(() => null); if (!response.ok) throw new Error(chat?.error || 'Pesan gagal dikirim.'); if (chat?.id) setChatId(chat.id); await loadAdminChat(); }
@@ -380,8 +380,8 @@ function localBotAnswer(question) {
   if (text.includes('kirim') || text.includes('pengiriman')) return 'Setelah pembayaran selesai, admin akan menghubungi nomor WhatsApp yang kamu isi saat checkout dan mengirimkan detail akses produk.';
   if (text.includes('bayar') || text.includes('qris')) return 'Pembayaran menggunakan QRIS. Setelah checkout, sistem membuat QR sesuai nominal total belanja termasuk biaya admin Rp99. Scan QR tersebut lalu tekan “Pembayaran sudah selesai”.';
   if (text.includes('pesan') || text.includes('telegram') || text.includes('whatsapp')) return 'Cara pesan: cari produk, buka detail, pilih varian dan jumlah, masukkan ke keranjang, isi data checkout, lalu bayar melalui QRIS. Stok web, Telegram, dan WhatsApp memakai sumber data yang sama.';
-  if (text.includes('privat') || text.includes('sharing') || text.includes('codex')) return 'Paket ChatGPT Plus DigiePro berupa akun privat, bukan akun sharing, mendukung Codex, dan diaktivasi menggunakan payment credit card.';
-  if (text.includes('admin') || text.includes('manusia')) return 'Pilih mode "Chat Admin". Pesanmu akan masuk ke dashboard admin DigiePro.';
+  if (text.includes('privat') || text.includes('sharing') || text.includes('codex')) return 'Paket ChatGPT Plus JagoPrem berupa akun privat, bukan akun sharing, mendukung Codex, dan diaktivasi menggunakan payment credit card.';
+  if (text.includes('admin') || text.includes('manusia')) return 'Pilih mode "Chat Admin". Pesanmu akan masuk ke dashboard admin JagoPrem.';
   const ignored = new Set(['berapa', 'harga', 'produk', 'paket', 'akun', 'yang', 'untuk', 'ada', 'apa']);
   const terms = text.replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter((term) => term.length > 2 && !ignored.has(term));
   const match = products.map((item) => ({ item, score: terms.filter((term) => item.title.toLowerCase().includes(term)).length })).sort((a, b) => b.score - a.score)[0];
@@ -429,7 +429,7 @@ if (carousel) {
   carousel.addEventListener('pointerup', (event) => { const distance = event.clientX - pointerStart; if (Math.abs(distance) > 45) showSlide(carouselIndex + (distance < 0 ? 1 : -1)); startCarousel(); });
   carousel.addEventListener('mouseenter', () => clearInterval(carouselTimer)); carousel.addEventListener('mouseleave', startCarousel);
   carousel.querySelectorAll('[data-search-product]').forEach((button) => button.addEventListener('click', () => { document.querySelector('#searchInput').value = button.dataset.searchProduct.toLowerCase(); renderProducts(); document.querySelector('#products').scrollIntoView(); }));
-  carousel.querySelector('[data-bot-order]').addEventListener('click', () => { openChat(); switchChatMode('bot'); chatMessages.innerHTML = '<div class="message bot">DigiePro Bot siap membantu kamu mencari produk dan memulai pesanan dari Telegram, WhatsApp, atau web.</div><div class="quick-chat"><button data-question="Pesan lewat Telegram" type="button">Telegram</button><button data-question="Pesan lewat WhatsApp" type="button">WhatsApp</button><button data-question="Cari paket ChatGPT" type="button">Cari ChatGPT</button><button data-admin type="button">Chat admin</button></div>'; });
+  carousel.querySelector('[data-bot-order]').addEventListener('click', () => { openChat(); switchChatMode('bot'); chatMessages.innerHTML = '<div class="message bot">JagoPrem Bot siap membantu kamu mencari produk dan memulai pesanan dari Telegram, WhatsApp, atau web.</div><div class="quick-chat"><button data-question="Pesan lewat Telegram" type="button">Telegram</button><button data-question="Pesan lewat WhatsApp" type="button">WhatsApp</button><button data-question="Cari paket ChatGPT" type="button">Cari ChatGPT</button><button data-admin type="button">Chat admin</button></div>'; });
   showSlide(0); startCarousel();
 }
 document.querySelector('#resetFilter').addEventListener('click', () => { state.stock = 'all'; state.best = false; state.wholesale = false; state.category = ''; document.querySelector('input[name="stock"][value="all"]').checked = true; document.querySelector('#bestFilter').checked = false; document.querySelector('#wholesaleFilter').checked = false; document.querySelector('#searchInput').value = ''; renderProducts(); });
@@ -548,18 +548,18 @@ async function loadStore() {
 }
 
 async function loadUserSession() {
-  localStorage.removeItem('digiepro_user');
-  Object.keys(localStorage).filter((key) => key.startsWith('digiepro_account_')).forEach((key) => localStorage.removeItem(key));
+  localStorage.removeItem('jagoprem_user');
+  Object.keys(localStorage).filter((key) => key.startsWith('jagoprem_account_')).forEach((key) => localStorage.removeItem(key));
   try { const response = await fetch(`/api/auth/me?chatId=${encodeURIComponent(state.chatId)}`, { cache: 'no-store' }); if (!response.ok) return; const result = await response.json(); state.user = result.user; if (result.chatId) setChatId(result.chatId); document.querySelector('#accountButton span').textContent = state.user.name.split(' ')[0]; } catch {}
 }
 
 document.querySelector('#historyButton').addEventListener('click', historyModal);
 document.querySelector('#reviewsButton').addEventListener('click', reviewsModal);
-document.querySelector('#infoButton').addEventListener('click', () => { document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('show'); openModal(`${modalHead('Informasi DigiePro')}<div class="modal-body"><div class="about-profile"><div class="about-photo"><img src="assets/afran-ronaldi-v2.png" alt="Afran Ronaldi"></div><div><small>PENGELOLA DIGIEPRO</small><h3>Afran Ronaldi</h3><p>DigiePro dibangun untuk mempermudah pembelian akun digital premium dengan katalog yang jelas, stok konsisten, dan proses transaksi yang sederhana.</p></div></div><div class="about-points"><div><i data-lucide="package-check"></i><span><b>Stok terpantau</b><small>Jumlah pembelian mengikuti stok yang tersedia.</small></span></div><div><i data-lucide="qr-code"></i><span><b>QRIS sesuai tagihan</b><small>Nominal pembayaran dibuat sesuai total checkout.</small></span></div><div><i data-lucide="message-circle"></i><span><b>Bantuan langsung</b><small>Produk dikirim dan kendala dibantu melalui WhatsApp.</small></span></div></div><button class="submit-button" type="button" data-open-admin-chat>Hubungi admin</button></div>`); });
+document.querySelector('#infoButton').addEventListener('click', () => { document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('show'); openModal(`${modalHead('Informasi JagoPrem')}<div class="modal-body"><div class="about-profile"><div class="about-photo"><img src="assets/afran-ronaldi-v2.png" alt="Afran Ronaldi"></div><div><small>PENGELOLA JAGOPREM</small><h3>Afran Ronaldi</h3><p>JagoPrem dibangun untuk mempermudah pembelian akun digital premium dengan katalog yang jelas, stok konsisten, dan proses transaksi yang sederhana.</p></div></div><div class="about-points"><div><i data-lucide="package-check"></i><span><b>Stok terpantau</b><small>Jumlah pembelian mengikuti stok yang tersedia.</small></span></div><div><i data-lucide="qr-code"></i><span><b>QRIS sesuai tagihan</b><small>Nominal pembayaran dibuat sesuai total checkout.</small></span></div><div><i data-lucide="message-circle"></i><span><b>Bantuan langsung</b><small>Produk dikirim dan kendala dibantu melalui WhatsApp.</small></span></div></div><button class="submit-button" type="button" data-open-admin-chat>Hubungi admin</button></div>`); });
 modalLayer.addEventListener('click', (event) => { if (event.target.closest('[data-open-admin-chat]')) { closeModal(); openChat(); switchChatMode('admin'); } });
 // ---- SYNC SYSTEM ----
 let lastSyncTime = new Date().toISOString();
-let notifications = JSON.parse(localStorage.getItem('digiepro_notifs') || '[]');
+let notifications = JSON.parse(localStorage.getItem('jagoprem_notifs') || '[]');
 let unreadNotifCount = 0;
 
 function updateNotifBadge() {
@@ -606,7 +606,7 @@ async function syncUser() {
     // Notification updates
     if (data.newNotifications?.length) {
       notifications.unshift(...data.newNotifications);
-      localStorage.setItem('digiepro_notifs', JSON.stringify(notifications.slice(0, 50)));
+      localStorage.setItem('jagoprem_notifs', JSON.stringify(notifications.slice(0, 50)));
       unreadNotifCount += data.newNotifications.length;
       updateNotifBadge();
       if (!shouldShowToast) {
@@ -642,7 +642,7 @@ function showPromoPopup() {
         <div class="promo-card-content">
           <div class="promo-brand">
             <span class="brand-symbol"><i></i><b></b></span>
-            <span>DigiePro</span>
+            <span>JagoPrem</span>
           </div>
           <div class="promo-header-row">
             <div class="promo-badge">TERBATAS</div>
@@ -708,3 +708,4 @@ setTimeout(() => {
     showPromoPopup();
   }
 }, 1200);
+

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dokumentasi API | DigieProllm</title>
+  <title>Dokumentasi API | JagoPrem LLM</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
@@ -171,7 +171,7 @@
 <header>
   <a href="/api-llm.html" class="brand">
     <span class="brand-symbol" style="transform:scale(0.8)"><i></i><b></b></span>
-    <span>digiepro<b>llm</b> Docs</span>
+    <span>jagoprem<b>llm</b> Docs</span>
   </a>
   <div class="header-links">
     <a href="/api-llm.html">← Kembali ke Landing</a>
@@ -203,12 +203,12 @@
       <!-- PENGENALAN -->
       <div class="section active" id="pengenalan">
         <h1>Pengenalan</h1>
-        <p>Selamat datang di dokumentasi resmi <strong>DigieProllm API</strong>. API ini dirancang untuk memberikan Anda akses instan ke 100+ model AI (seperti GPT-4o, Claude 3.5, Gemini 1.5, DeepSeek, dll) melalui <strong>satu endpoint tunggal</strong> yang 100% kompatibel dengan format <code>OpenAI API</code>.</p>
-        <p>Anda tidak perlu mengubah kode (jika sudah menggunakan OpenAI SDK), cukup ganti <strong>Base URL</strong> dan <strong>API Key</strong> Anda dengan kredensial dari DigieProllm.</p>
+        <p>Selamat datang di dokumentasi resmi <strong>JagoPrem LLM API</strong>. API ini dirancang untuk memberikan Anda akses instan ke 100+ model AI (seperti GPT-4o, Claude 3.5, Gemini 1.5, DeepSeek, dll) melalui <strong>satu endpoint tunggal</strong> yang 100% kompatibel dengan format <code>OpenAI API</code>.</p>
+        <p>Anda tidak perlu mengubah kode (jika sudah menggunakan OpenAI SDK), cukup ganti <strong>Base URL</strong> dan <strong>API Key</strong> Anda dengan kredensial dari JagoPrem LLM.</p>
         <div class="alert alert-info">
           <div>
             <strong>Info Sistem</strong><br>
-            DigieProllm menggunakan model pay-as-you-go. Saldo Anda dipotong sesuai pemakaian token per request. Tidak ada masa kadaluarsa (expired) untuk saldo.
+            JagoPrem LLM menggunakan model pay-as-you-go. Saldo Anda dipotong sesuai pemakaian token per request. Tidak ada masa kadaluarsa (expired) untuk saldo.
           </div>
         </div>
       </div>
@@ -217,11 +217,11 @@
       <div class="section" id="akun-key">
         <h1>Pembuatan Akun & API Key</h1>
         <h2>Langkah 1: Membeli Saldo API</h2>
-        <p>Pembelian saldo dilakukan langsung melalui platform <a href="/">DigiePro Store</a>. Pilih kategori <strong>API LLM</strong>, lalu pilih paket saldo yang Anda butuhkan (mulai dari $5).</p>
+        <p>Pembelian saldo dilakukan langsung melalui platform <a href="/">JagoPrem Store</a>. Pilih kategori <strong>API LLM</strong>, lalu pilih paket saldo yang Anda butuhkan (mulai dari $5).</p>
         <p>Kurs yang berlaku adalah tetap: <strong>$1 USD = Rp 12.300</strong>.</p>
         
         <h2>Langkah 2: Proses Aktivasi</h2>
-        <p>Setelah melakukan pembayaran via QRIS/e-Wallet di DigiePro Store, admin kami akan memvalidasi pesanan Anda dan mengaktifkan akun Anda secara manual demi keamanan.</p>
+        <p>Setelah melakukan pembayaran via QRIS/e-Wallet di JagoPrem Store, admin kami akan memvalidasi pesanan Anda dan mengaktifkan akun Anda secara manual demi keamanan.</p>
         
         <h2>Langkah 3: Menerima API Key</h2>
         <p>Anda akan menerima <strong>API Key</strong> yang diawali dengan <code>sk-dpe-...</code> beserta informasi login dashboard (jika diperlukan) melalui WhatsApp atau email yang terdaftar saat checkout. Simpan API Key ini baik-baik dan jangan pernah membagikannya secara publik.</p>
@@ -230,10 +230,10 @@
       <!-- API REFERENCE -->
       <div class="section" id="api-ref">
         <h1>API Reference</h1>
-        <p>DigieProllm bertindak sebagai proxy server standar yang mengutamakan kompatibilitas dengan ekosistem OpenAI.</p>
+        <p>JagoPrem LLM bertindak sebagai proxy server standar yang mengutamakan kompatibilitas dengan ekosistem OpenAI.</p>
         
         <h3>Base URL</h3>
-        <pre>https://api.digieprollm.id/v1</pre>
+        <pre>https://api.jagoprem.shop/v1</pre>
 
         <h3>Autentikasi</h3>
         <p>Gunakan API Key yang diberikan admin di header <code>Authorization</code>.</p>
@@ -250,7 +250,7 @@
         </div>
 
         <h3>Contoh Request (cURL)</h3>
-        <pre>curl https://api.digieprollm.id/v1/chat/completions \
+        <pre>curl https://api.jagoprem.shop/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-dpe-YOUR_API_KEY" \
   -d '{
@@ -281,7 +281,7 @@
           <span class="method post">POST</span>
           <span class="path">/embeddings</span>
         </div>
-        <pre>curl https://api.digieprollm.id/v1/embeddings \
+        <pre>curl https://api.jagoprem.shop/v1/embeddings \
   -H "Authorization: Bearer sk-dpe-YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -297,7 +297,7 @@
           <span class="method get">GET</span>
           <span class="path">/models</span>
         </div>
-        <pre>curl https://api.digieprollm.id/v1/models \
+        <pre>curl https://api.jagoprem.shop/v1/models \
   -H "Authorization: Bearer sk-dpe-YOUR_API_KEY"</pre>
       </div>
 
@@ -311,7 +311,7 @@
           <span class="method post">POST</span>
           <span class="path">/images/generations</span>
         </div>
-        <pre>curl https://api.digieprollm.id/v1/images/generations \
+        <pre>curl https://api.jagoprem.shop/v1/images/generations \
   -H "Authorization: Bearer sk-dpe-YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -336,13 +336,13 @@
         <h1>Contoh Integrasi Pihak Ketiga</h1>
         
         <h2>Python (OpenAI SDK)</h2>
-        <p>DigieProllm dapat digunakan secara <i>drop-in</i> dengan <i>library</i> resmi OpenAI untuk Python.</p>
+        <p>JagoPrem LLM dapat digunakan secara <i>drop-in</i> dengan <i>library</i> resmi OpenAI untuk Python.</p>
         <pre>pip install openai</pre>
         <pre>from openai import OpenAI
 
 client = OpenAI(
     api_key="sk-dpe-YOUR_API_KEY",
-    base_url="https://api.digieprollm.id/v1"
+    base_url="https://api.jagoprem.shop/v1"
 )
 
 response = client.chat.completions.create(
@@ -356,7 +356,7 @@ print(response.choices[0].message.content)</pre>
         <p>Anda dapat mengonfigurasi AI assistant seperti Cline atau Cursor di text editor Anda.</p>
         <ul>
           <li>Pilih provider API: <strong>OpenAI Compatible</strong></li>
-          <li>Base URL: <code>https://api.digieprollm.id/v1</code></li>
+          <li>Base URL: <code>https://api.jagoprem.shop/v1</code></li>
           <li>API Key: <code>sk-dpe-YOUR_API_KEY</code></li>
           <li>Model override: Ketik nama model misalnya <code>anthropic/claude-3-5-sonnet</code></li>
         </ul>
@@ -397,3 +397,4 @@ print(response.choices[0].message.content)</pre>
 </script>
 </body>
 </html>
+

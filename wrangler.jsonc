@@ -1,6 +1,6 @@
-{
+﻿{
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "digiepro",
+  "name": "JagoPrem",
   "main": "src/worker.mjs",
   "compatibility_date": "2026-06-18",
   "assets": {
@@ -12,23 +12,23 @@
   },
   "routes": [
     {
-      "pattern": "digiepro.store",
-      "zone_name": "digiepro.store",
+      "pattern": "jagoprem.shop",
+      "zone_name": "jagoprem.shop",
       "custom_domain": true
     },
     {
-      "pattern": "www.digiepro.store",
-      "zone_name": "digiepro.store",
+      "pattern": "www.jagoprem.shop",
+      "zone_name": "jagoprem.shop",
       "custom_domain": true
     },
     {
-      "pattern": "digiepro.my.id",
-      "zone_name": "digiepro.my.id",
+      "pattern": "jagoprem.shop",
+      "zone_name": "jagoprem.shop",
       "custom_domain": true
     },
     {
-      "pattern": "www.digiepro.my.id",
-      "zone_name": "digiepro.my.id",
+      "pattern": "www.jagoprem.shop",
+      "zone_name": "jagoprem.shop",
       "custom_domain": true
     }
   ],
@@ -43,8 +43,10 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "digiepro-db",
+      "database_name": "JagoPrem-db",
       "database_id": "0c239bf3-1c8e-444e-b082-0979798e232d"
     }
   ]
 }
+
+

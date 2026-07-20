@@ -1,4 +1,4 @@
-# DigiePro
+﻿# JagoPrem
 
 Toko akun digital dengan katalog produk, keranjang, checkout QRIS, chat pembeli-admin, dan dashboard admin.
 
@@ -23,7 +23,9 @@ Repository menyertakan `render.yaml` untuk deployment sebagai Render Web Service
 
 Cloudflare memakai `src/worker.mjs` untuk API, static assets dari `public`, dan database D1 melalui binding bernama `DB`.
 
-1. Buat database D1 bernama `digiepro-db`.
+1. Buat database D1 bernama `jagoprem-db`.
 2. Hubungkan D1 ke Worker dengan variable name `DB`.
 3. Tambahkan secret `ADMIN_PASSWORD`.
 4. Deploy dengan `npm run deploy:cloudflare` atau Workers Builds dari GitHub.
+
+

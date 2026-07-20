@@ -1,6 +1,6 @@
-services:
+﻿services:
   - type: web
-    name: digiepro
+    name: JagoPrem
     runtime: node
     plan: free
     buildCommand: npm install
@@ -9,3 +9,4 @@ services:
     envVars:
       - key: ADMIN_PASSWORD
         sync: false
+

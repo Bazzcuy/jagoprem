@@ -76,3 +76,4 @@
 
 @media(max-width:720px){.chat-list-head{padding:10px 12px;flex-direction:column;align-items:stretch}.chat-sort-controls{justify-content:flex-start}.chat-sort-btn{flex:1;justify-content:center}.chat-list button{padding-inline:12px}#adminReply{grid-template-columns:minmax(0,1fr) 72px}#adminReply textarea{min-height:44px}.conversation-head{gap:10px}}
 @media(max-width:420px){.chat-sort-btn{font-size:8px}}
+

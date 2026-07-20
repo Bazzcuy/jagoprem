@@ -1,5 +1,5 @@
-{
-  "schemaVersion": 10,
+﻿{
+  "schemaVersion": 13,
   "products": [
     {
       "id": 46473,
@@ -470,7 +470,7 @@
       "featuredRank": 99,
       "warranty": "30 hari",
       "access": "Akun resmi privat",
-      "description": "Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan DigiePro."
+      "description": "Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan JagoPrem."
     },
     {
       "id": 91001,
@@ -490,7 +490,7 @@
       "duration": "1 bulan",
       "warranty": "Garansi akses",
       "access": "Dola AI",
-      "description": "Dola AI adalah asisten chat AI untuk percakapan, menulis, menerjemahkan, coding, mencari inspirasi, dan membahas berbagai topik. Produk aktif 1 bulan sesuai ketentuan penggunaan DigiePro."
+      "description": "Dola AI adalah asisten chat AI untuk percakapan, menulis, menerjemahkan, coding, mencari inspirasi, dan membahas berbagai topik. Produk aktif 1 bulan sesuai ketentuan penggunaan JagoPrem."
     },
     {
       "id": 92000,
@@ -633,7 +633,7 @@
     {
       "id": 93000,
       "is_best_seller": false,
-      "title": "SALDO API DIGIEPROLLM",
+      "title": "SALDO API JagoPrem LLM",
       "cashback_amount": 0,
       "cashback_type": "amount",
       "thumbnail": "favicon.svg",
@@ -647,8 +647,8 @@
       "featuredRank": 2,
       "duration": "Pay-as-you-go",
       "warranty": "Garansi saldo masuk",
-      "access": "API Key DigieProllm",
-      "description": "Top-up saldo API DigieProllm untuk mengakses 100+ model AI (GPT-4o, Claude, Gemini, DeepSeek, dll) melalui endpoint yang kompatibel OpenAI. Kurs tetap Rp12.300/. Akun dan API Key akan dibuatkan oleh admin setelah pembayaran dikonfirmasi."
+      "access": "API Key JagoPrem LLM",
+      "description": "Top-up saldo API JagoPrem LLM untuk mengakses 100+ model AI (GPT-4o, Claude, Gemini, DeepSeek, dll) melalui endpoint yang kompatibel OpenAI. Kurs tetap Rp12.300/. Akun dan API Key akan dibuatkan oleh admin setelah pembayaran dikonfirmasi."
     }
   ],
   "orders": [],
@@ -1158,7 +1158,7 @@
   "vouchers": [
     {
       "code": "SPESIALAI07",
-      "description": "Diskon 16% untuk produk kategori AI (Min. beli 2)",
+      "description": "Diskon 16% minimal 2 produk AI yang sama",
       "type": "percent",
       "value": 16,
       "minSubtotal": 0,
@@ -1167,7 +1167,10 @@
       "enabled": true,
       "requiredCategory": "AI & produktivitas",
       "minQuantity": 2,
+      "requireSameProduct": true,
       "createdAt": "2026-07-17T13:30:51.580Z"
     }
   ]
 }
+
+
