@@ -29,11 +29,17 @@
     </aside>
 
     <div class="app-shell">
-      <header class="site-header">
+            <header class="site-header">
         <div class="site-header-left">
           <button class="menu-button" id="menuButton" type="button" aria-label="Buka menu"><i data-lucide="menu"></i></button>
-          <div class="header-branding"><strong>jagoprem.shop</strong><span>Marketplace akun digital</span></div>
+          <a class="market-brand" href="#home"><img src="assets/jagoprem-logo.svg" alt="jagoprem.shop"><strong>jagoprem</strong><span>shop</span></a>
         </div>
+        <nav class="market-nav" aria-label="Navigasi utama">
+          <a href="#products">Produk</a>
+          <a href="docs.html" target="_blank" rel="noreferrer">Blog</a>
+          <button type="button" data-open-admin-chat>Lapor Masalah</button>
+          <button type="button" data-open-admin-chat>Hubungi CS</button>
+        </nav>
         <div class="top-actions"><button id="notifButton" type="button" aria-label="Notifikasi" style="position:relative"><i data-lucide="bell"></i><b id="notifBadge" class="red-badge" style="display:none">0</b></button><button id="accountButton" type="button" aria-label="Akun"><i data-lucide="user-round"></i><span>Masuk</span></button><button class="header-cart" id="cartButton" type="button" aria-label="Buka keranjang"><i data-lucide="shopping-bag"></i><b id="cartCount">0</b></button></div>
       </header>
 
@@ -71,8 +77,8 @@
         </section>
 
         <section class="catalog-section" id="products">
-          <div class="section-title"><div><h2>Produk Sekilas</h2><span id="resultCount">0 produk</span></div></div>
-          <div class="product-toolbar"><label class="search-field"><input id="searchInput" type="search" placeholder="Cari produk..." /><i data-lucide="search"></i></label><select id="sortSelect" aria-label="Urutkan produk"><option value="default">Urutkan</option><option value="sold">Paling laris</option><option value="low">Harga terendah</option><option value="high">Harga tertinggi</option></select><button class="filter-toggle" id="filterToggle" type="button"><i data-lucide="sliders-horizontal"></i><span>Filter</span></button></div>
+          <div class="section-title"><div><h2>Semua Produk</h2><span id="resultCount">0 produk</span></div></div>
+          <div class="product-toolbar"><label class="search-field"><input id="searchInput" type="search" placeholder="Cari produk... (mis. ChatGPT, Netflix, Spotify)" /><i data-lucide="search"></i></label><select id="sortSelect" aria-label="Urutkan produk"><option value="default">Urutkan</option><option value="sold">Paling laris</option><option value="low">Harga terendah</option><option value="high">Harga tertinggi</option></select><button class="filter-toggle" id="filterToggle" type="button"><i data-lucide="sliders-horizontal"></i><span>Filter</span></button></div>
           <div class="filter-strip" id="filterStrip"><div><span>Stok</span><label><input type="radio" name="stock" value="all" checked> Semua</label><label><input type="radio" name="stock" value="ready"> Ready</label><label><input type="radio" name="stock" value="empty"> Habis</label></div><label><input id="bestFilter" type="checkbox"> Terlaris</label><label><input id="wholesaleFilter" type="checkbox"> Grosir</label><button id="resetFilter" type="button">Reset</button></div>
           <div class="active-filters" id="activeFilters"></div>
           <div class="product-grid" id="productGrid"></div>
@@ -98,5 +104,6 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="catalog.js"></script><script src="qris.js"></script><script src="script.js?v=5"></script>
   </body>
 </html>
+
 
 
