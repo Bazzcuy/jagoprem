@@ -224,7 +224,7 @@
         <p>Setelah melakukan pembayaran via QRIS/e-Wallet di JagoPrem Store, admin kami akan memvalidasi pesanan Anda dan mengaktifkan akun Anda secara manual demi keamanan.</p>
         
         <h2>Langkah 3: Menerima API Key</h2>
-        <p>Anda akan menerima <strong>API Key</strong> yang diawali dengan <code>sk-dpe-...</code> beserta informasi login dashboard (jika diperlukan) melalui WhatsApp atau email yang terdaftar saat checkout. Simpan API Key ini baik-baik dan jangan pernah membagikannya secara publik.</p>
+        <p>Anda akan menerima <strong>API Key</strong> yang diawali dengan <code>sk-jgp-...</code> beserta informasi login dashboard (jika diperlukan) melalui WhatsApp atau email yang terdaftar saat checkout. Simpan API Key ini baik-baik dan jangan pernah membagikannya secara publik.</p>
       </div>
 
       <!-- API REFERENCE -->
@@ -237,7 +237,7 @@
 
         <h3>Autentikasi</h3>
         <p>Gunakan API Key yang diberikan admin di header <code>Authorization</code>.</p>
-        <pre>Authorization: Bearer sk-dpe-YOUR_API_KEY</pre>
+        <pre>Authorization: Bearer sk-jgp-YOUR_API_KEY</pre>
         
         <hr style="border:0; border-top:1px solid var(--border2); margin: 40px 0;">
 
@@ -252,7 +252,7 @@
         <h3>Contoh Request (cURL)</h3>
         <pre>curl https://api.jagoprem.shop/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-dpe-YOUR_API_KEY" \
+  -H "Authorization: Bearer sk-jgp-YOUR_API_KEY" \
   -d '{
     "model": "openai/gpt-4o-mini",
     "messages": [
@@ -282,7 +282,7 @@
           <span class="path">/embeddings</span>
         </div>
         <pre>curl https://api.jagoprem.shop/v1/embeddings \
-  -H "Authorization: Bearer sk-dpe-YOUR_API_KEY" \
+  -H "Authorization: Bearer sk-jgp-YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "openai/text-embedding-3-small",
@@ -298,7 +298,7 @@
           <span class="path">/models</span>
         </div>
         <pre>curl https://api.jagoprem.shop/v1/models \
-  -H "Authorization: Bearer sk-dpe-YOUR_API_KEY"</pre>
+  -H "Authorization: Bearer sk-jgp-YOUR_API_KEY"</pre>
       </div>
 
       <!-- IMAGES & AUDIO -->
@@ -312,7 +312,7 @@
           <span class="path">/images/generations</span>
         </div>
         <pre>curl https://api.jagoprem.shop/v1/images/generations \
-  -H "Authorization: Bearer sk-dpe-YOUR_API_KEY" \
+  -H "Authorization: Bearer sk-jgp-YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "openai/dall-e-3",
@@ -341,7 +341,7 @@
         <pre>from openai import OpenAI
 
 client = OpenAI(
-    api_key="sk-dpe-YOUR_API_KEY",
+    api_key="sk-jgp-YOUR_API_KEY",
     base_url="https://api.jagoprem.shop/v1"
 )
 
@@ -357,7 +357,7 @@ print(response.choices[0].message.content)</pre>
         <ul>
           <li>Pilih provider API: <strong>OpenAI Compatible</strong></li>
           <li>Base URL: <code>https://api.jagoprem.shop/v1</code></li>
-          <li>API Key: <code>sk-dpe-YOUR_API_KEY</code></li>
+          <li>API Key: <code>sk-jgp-YOUR_API_KEY</code></li>
           <li>Model override: Ketik nama model misalnya <code>anthropic/claude-3-5-sonnet</code></li>
         </ul>
         

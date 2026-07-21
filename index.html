@@ -1,109 +1,145 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="id">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#e7fbfb" />
-    <meta name="description" content="jagoprem.shop adalah toko akun digital premium dengan stok real-time, pembayaran QRIS, voucher aktif, dan bantuan chat cepat." />
-    <title>jagoprem.shop - Akun Digital Premium</title>
-    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <aside class="sidebar" id="sidebar">
-      <a class="brand" href="#home"><img class="brand-symbol" src="assets/jagoprem-logo.svg" alt="jagoprem.shop"><span class="brand-word">Jago<span>Prem</span><small>jagoprem.shop</small></span></a>
-      <p class="nav-label">Navigasi</p>
-      <nav class="side-nav">
-        <a class="nav-item active" href="#home"><i data-lucide="house"></i><span>Home</span></a>
-        <a class="nav-item" href="#products"><i data-lucide="shopping-bag"></i><span>Product</span></a>
-        <a class="nav-item" href="api-llm.html" target="_blank"><i data-lucide="terminal"></i><span>API LLM</span></a>
-        <button class="nav-item" id="historyButton" type="button"><i data-lucide="arrow-right-left"></i><span>Riwayat</span></button>
-        <button class="nav-item" id="reviewsButton" type="button"><i data-lucide="star"></i><span>Ulasan</span></button>
-        <button class="nav-item" id="sideAccount" type="button"><i data-lucide="user"></i><span>Akun</span></button>
-        <button class="nav-item" id="infoButton" type="button"><i data-lucide="info"></i><span>Informasi</span></button>
-        <button class="nav-item" id="openChatSide" type="button" style="position:relative"><i data-lucide="message-circle"></i><span>Contact</span><b id="sideChatBadge" class="red-badge" style="display:none">0</b></button>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="JagoPrem adalah marketplace akun premium murah, bergaransi, dengan dukungan pelanggan setiap hari.">
+  <title>Marketplace Akun Premium Murah | JagoPrem</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="freemium-layout">
+  <header class="reference-header">
+    <div class="reference-nav">
+      <a class="jp-brand" href="#home" aria-label="Beranda JagoPrem"><img src="assets/jagoprem-brand.png" alt="JagoPrem"></a>
+      <nav aria-label="Navigasi utama">
+        <a href="#products">Produk</a>
+        <a href="docs.html">Blog</a>
+        <button type="button" data-open-admin-chat>Lapor Masalah</button>
+        <button type="button" data-open-admin-chat>Hubungi CS</button>
       </nav>
-    </aside>
-
-    <div class="app-shell">
-            <header class="site-header">
-        <div class="site-header-left">
-          <button class="menu-button" id="menuButton" type="button" aria-label="Buka menu"><i data-lucide="menu"></i></button>
-          <a class="market-brand" href="#home"><img src="assets/jagoprem-logo.svg" alt="jagoprem.shop"><strong>jagoprem</strong><span>shop</span></a>
-        </div>
-        <nav class="market-nav" aria-label="Navigasi utama">
-          <a href="#products">Produk</a>
-          <a href="docs.html" target="_blank" rel="noreferrer">Blog</a>
-          <button type="button" data-open-admin-chat>Lapor Masalah</button>
-          <button type="button" data-open-admin-chat>Hubungi CS</button>
-        </nav>
-        <div class="top-actions"><button id="notifButton" type="button" aria-label="Notifikasi" style="position:relative"><i data-lucide="bell"></i><b id="notifBadge" class="red-badge" style="display:none">0</b></button><button id="accountButton" type="button" aria-label="Akun"><i data-lucide="user-round"></i><span>Masuk</span></button><button class="header-cart" id="cartButton" type="button" aria-label="Buka keranjang"><i data-lucide="shopping-bag"></i><b id="cartCount">0</b></button></div>
-      </header>
-
-      <main class="main-content">
-        <section class="home-hero" id="home" aria-label="Beranda JagoPrem">
-          <div class="hero-grid">
-            <section class="promo-carousel" aria-label="Promo JagoPrem">
-              <div class="promo-track">
-                <article class="promo-banner new-model-banner"><img src="assets/jagoprem-banner-llm.svg" alt="Layanan API JagoPrem"><div><span>JAGOPREM LLM API</span><h2>Akses model AI<br><b>dalam satu pintu</b></h2><p>Paket API yang rapi, cepat dipakai, dan dibuat untuk alur kerja harian yang ringan.</p><a href="/api-llm">Lihat model</a></div></article>
-                <article class="promo-banner"><img src="assets/jagoprem-banner-main.svg" alt="Promo akun digital jagoprem.shop"><div><span>AKUN DIGITAL PREMIUM</span><h2><b>JAGO PREM</b><br>lebih cepat, lebih jelas.</h2><p>Stok terpantau, pembayaran QRIS, dan tampilan yang nyaman dibaca di HP.</p><a href="#products">Belanja sekarang</a></div></article>
-                <article class="promo-banner restock-banner"><img src="assets/jagoprem-banner-restock.svg" alt="Promo restock jagoprem.shop"><div><span>PROMO & RESTOCK</span><h2>Voucher aktif<br><b>siap dipakai</b></h2><p>Minimal 2 pembelian AI yang sama untuk promo spesial. Cek detail sebelum checkout.</p><button type="button" data-search-product="CHATGPT">Lihat paket</button></div></article>
-                <article class="promo-banner bot-banner"><img src="assets/jagoprem-banner-bot.svg" alt="Pesan produk jagoprem.shop melalui bot"><div><span>CARA BARU BELANJA</span><h2>Chat dan beli<br><b>lebih simpel</b></h2><p>Mulai dari pengunjung, lanjut akun, lalu riwayat chat tetap nyambung.</p><button type="button" data-bot-order>Coba JagoPrem Bot</button></div></article>
-              </div>
-              <button class="carousel-arrow prev" type="button" data-carousel-prev aria-label="Promo sebelumnya"><i data-lucide="chevron-left"></i></button><button class="carousel-arrow next" type="button" data-carousel-next aria-label="Promo berikutnya"><i data-lucide="chevron-right"></i></button><div class="carousel-dots" aria-label="Pilih promo"><button class="active" type="button" data-carousel-dot="0" aria-label="Promo 1"></button><button type="button" data-carousel-dot="1" aria-label="Promo 2"></button><button type="button" data-carousel-dot="2" aria-label="Promo 3"></button><button type="button" data-carousel-dot="3" aria-label="Promo 4"></button></div>
-            </section>
-            <aside class="hero-panel">
-              <article class="hero-card hero-card-main">
-                <span class="hero-kicker">jagoprem.shop</span>
-                <h2>Marketplace akun digital yang lebih terang dan bersih.</h2>
-                <p>Struktur dibuat ringan, cepat discan, dan nyaman dipakai di HP tanpa mempertahankan bentuk lama yang padat.</p>
-                <div class="hero-actions"><a class="hero-primary" href="#products">Lihat produk</a><button class="hero-secondary" type="button" data-open-admin-chat>Chat admin</button></div>
-              </article>
-              <div class="hero-stack">
-                <article class="hero-card hero-stat"><i data-lucide="badge-check"></i><div><b>Stok real-time</b><span>Update singkat saat transaksi masuk.</span></div></article>
-                <article class="hero-card hero-stat"><i data-lucide="message-square-more"></i><div><b>Chat nyambung</b><span>Guest dan akun tetap nyatu.</span></div></article>
-                <article class="hero-card hero-stat"><i data-lucide="ticket-percent"></i><div><b>Voucher aktif</b><span>Minimal 2 pembelian AI yang sama.</span></div></article>
-              </div>
-            </aside>
-          </div>
-        </section>
-
-        <section class="category-section">
-          <div class="section-title"><div><h2>Kategori pilihan</h2><span>Geser untuk melihat kategori lainnya</span></div></div>
-          <div class="category-row"><button type="button" data-category="" data-quick-cat="all"><img src="https://s3.xoftware.id/f/23843_ChatGpt_997_1780629550891.png" alt=""><span>Semua</span></button><button type="button" data-category="AI &amp; produktivitas"><img src="https://s3.xoftware.id/f/46473_claude1b_997_1780858031695.png" alt=""><span>AI Tools</span></button><button type="button" data-category="Developer API"><img src="favicon.svg" alt="" style="background:#17211f;padding:4px;border-radius:10px;"><span>API LLM</span></button><button type="button" data-category="Hiburan premium"><img src="https://s3.xoftware.id/f/23935_SPOTIFY_997_1780539764912.png" alt=""><span>Hiburan</span></button><button type="button" data-category="Aplikasi premium"><img src="https://s3.xoftware.id/f/23725_capcut_997_1780479509203.png" alt=""><span>Aplikasi</span></button><button type="button" data-quick="ready"><img src="https://s3.xoftware.id/f/23930_YOUTUBE_997_1780650520058.png" alt=""><span>Ready</span></button><button type="button" data-quick="best"><img src="https://s3.xoftware.id/f/25754_grok_997_1780655477114.png" alt=""><span>Terlaris</span></button><button type="button" data-quick="wholesale"><img src="https://s3.xoftware.id/f/31181_canva_997_1780480154301.png" alt=""><span>Grosir</span></button><button type="button" id="categoryHelp"><img src="https://s3.xoftware.id/f/35843_vpn_997_1780652340100.png" alt=""><span>Bantuan</span></button></div>
-        </section>
-
-        <section class="catalog-section" id="products">
-          <div class="section-title"><div><h2>Semua Produk</h2><span id="resultCount">0 produk</span></div></div>
-          <div class="product-toolbar"><label class="search-field"><input id="searchInput" type="search" placeholder="Cari produk... (mis. ChatGPT, Netflix, Spotify)" /><i data-lucide="search"></i></label><select id="sortSelect" aria-label="Urutkan produk"><option value="default">Urutkan</option><option value="sold">Paling laris</option><option value="low">Harga terendah</option><option value="high">Harga tertinggi</option></select><button class="filter-toggle" id="filterToggle" type="button"><i data-lucide="sliders-horizontal"></i><span>Filter</span></button></div>
-          <div class="filter-strip" id="filterStrip"><div><span>Stok</span><label><input type="radio" name="stock" value="all" checked> Semua</label><label><input type="radio" name="stock" value="ready"> Ready</label><label><input type="radio" name="stock" value="empty"> Habis</label></div><label><input id="bestFilter" type="checkbox"> Terlaris</label><label><input id="wholesaleFilter" type="checkbox"> Grosir</label><button id="resetFilter" type="button">Reset</button></div>
-          <div class="active-filters" id="activeFilters"></div>
-          <div class="product-grid" id="productGrid"></div>
-        </section>
-
-        <section class="faq-section" aria-label="Pertanyaan umum">
-          <div class="section-title"><div><h2>Pertanyaan umum</h2><span>Info singkat sebelum checkout</span></div></div>
-          <div class="faq-list">
-            <details><summary>Chat lama tetap ikut setelah login?</summary><p>Iya. Guest dan akun dijembatani supaya konteks chat tidak pecah saat logout, daftar, atau masuk lagi.</p></details>
-            <details><summary>Voucher promo AI berlaku kapan?</summary><p>Promo aktif untuk minimal 2 pembelian produk AI yang sama, jadi syaratnya mengikuti jumlah item yang serupa.</p></details>
-            <details><summary>Database harus dipindah?</summary><p>Tidak wajib. Situs ini tetap bisa jalan dengan backend PHP dan file store di Hostinger. Pindah ke database formal hanya kalau nanti skala datanya memang butuh.</p></details>
-            <details><summary>Kenapa layout ini terasa lebih ringan?</summary><p>Karena kontennya dipadatkan ke blok-blok yang jelas, jarak antar elemen lebih lega, dan kartu dibuat lebih mudah discan di layar kecil.</p></details>
-          </div>
-        </section>
-      </main>
+      <div class="reference-actions">
+        <button id="notifButton" class="theme-button" type="button" aria-label="Notifikasi"><i data-lucide="sun"></i><b id="notifBadge" class="red-badge" style="display:none">0</b></button>
+        <button id="accountButton" class="login-button" type="button">Masuk <i data-lucide="arrow-right"></i></button>
+        <button id="cartButton" class="compact-cart" type="button" aria-label="Keranjang"><i data-lucide="shopping-bag"></i><b id="cartCount">0</b></button>
       </div>
-      <div class="sidebar-overlay" id="sidebarOverlay"></div>
-    <aside class="cart-drawer" id="cartDrawer" aria-hidden="true"><div class="drawer-head"><div><small>KERANJANG</small><h2>Pesanan kamu</h2></div><button class="icon-button" data-close-cart type="button" aria-label="Tutup keranjang"><i data-lucide="x"></i></button></div><div class="cart-items" id="cartItems"></div><div class="cart-footer"><div><span>Total</span><strong id="cartTotal">Rp0</strong></div><button class="checkout-button" id="checkoutButton" type="button">Lanjut checkout <i data-lucide="arrow-right"></i></button></div></aside><div class="overlay" id="overlay"></div>
+      <button class="mobile-menu" id="menuButton" type="button" aria-label="Buka menu"><i data-lucide="menu"></i></button>
+    </div>
+  </header>
 
-    <section class="chat-panel" id="chatPanel" aria-hidden="true"><div class="chat-head"><div class="bot-avatar"><i data-lucide="message-circle"></i></div><div><strong id="chatTitle">Asisten JagoPrem</strong><span><i></i> Siap membantu</span></div><button id="closeChat" type="button" aria-label="Tutup chat"><i data-lucide="x"></i></button></div><div class="chat-modes"><button class="active" data-chat-mode="bot" type="button">Asisten</button><button data-chat-mode="admin" type="button">Chat Admin</button></div><div class="chat-messages" id="chatMessages"><div class="message bot">Hai! Saya bisa bantu cek stok, harga, varian, garansi, pembayaran, dan cara pemesanan.</div><div class="quick-chat"><button data-question="Produk apa yang ready?" type="button">Cek stok</button><button data-question="Tampilkan paket ChatGPT" type="button">Paket ChatGPT</button><button data-question="Bagaimana cara pesan?" type="button">Cara pesan</button><button data-question="Bagaimana pembayaran QRIS?" type="button">Pembayaran</button><button data-question="Bagaimana garansi produk?" type="button">Garansi</button><button data-question="Apa itu Gmail sendiri?" type="button">Gmail sendiri</button><button data-question="Bagaimana produk dikirim?" type="button">Pengiriman</button><button data-admin type="button">Chat admin</button></div></div><form class="chat-form" id="chatForm"><textarea id="chatInput" rows="1" placeholder="Tulis pesan..." autocomplete="off" aria-label="Tulis pesan"></textarea><button type="submit" aria-label="Kirim pesan"><i data-lucide="send"></i></button></form></section>
-    <button class="chat-bubble" id="chatBubble" type="button" aria-label="Buka asisten chat"><i data-lucide="message-circle"></i><span>Tanya kami</span><b id="chatBadge" class="red-badge" style="display:none">0</b></button>
-    <div class="modal-layer" id="modalLayer" aria-hidden="true"><section class="modal" id="modalContent" role="dialog" aria-modal="true"></section></div><div class="toast" id="toast" role="status"></div>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="catalog.js"></script><script src="qris.js"></script><script src="script.js?v=5"></script>
-  </body>
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="#home"><img src="assets/jagoprem-brand.png" alt="JagoPrem"></a>
+    <nav class="side-nav">
+      <a class="nav-item active" href="#home"><i data-lucide="house"></i><span>Beranda</span></a>
+      <a class="nav-item" href="#products"><i data-lucide="shopping-bag"></i><span>Produk</span></a>
+      <a class="nav-item" href="docs.html"><i data-lucide="book-open"></i><span>Blog</span></a>
+      <a class="nav-item" href="api-llm.html"><i data-lucide="terminal"></i><span>API LLM</span></a>
+      <button class="nav-item" id="historyButton" type="button"><i data-lucide="receipt-text"></i><span>Pesanan</span></button>
+      <button class="nav-item" id="reviewsButton" type="button"><i data-lucide="star"></i><span>Ulasan</span></button>
+      <button class="nav-item" id="sideAccount" type="button"><i data-lucide="user"></i><span>Akun</span></button>
+      <button class="nav-item" id="infoButton" type="button"><i data-lucide="info"></i><span>Informasi</span></button>
+      <button class="nav-item" id="openChatSide" type="button"><i data-lucide="message-circle"></i><span>Hubungi CS</span><b id="sideChatBadge" class="red-badge" style="display:none">0</b></button>
+    </nav>
+  </aside>
+
+  <main>
+    <section class="reference-hero" id="home">
+      <div class="hero-decoration hero-chatgpt">◎</div>
+      <div class="hero-decoration hero-music">♪</div>
+      <div class="hero-copy">
+        <h1>Marketplace Akun<br>Premium Murah,<br>Bergaransi <span>&amp; CS 24 Jam</span></h1>
+        <p>Nikmati berbagai akun premium favorit seperti ChatGPT Plus, Spotify, YouTube Premium, dan lainnya dalam satu tempat.</p>
+        <div class="reference-cta">
+          <a href="#products"><i data-lucide="shopping-bag"></i> Lihat Akun Premium</a>
+          <a class="secondary" href="#benefits">Manfaat JagoPrem</a>
+        </div>
+      </div>
+      <div class="featured-window"><div class="featured-rail" id="featuredRail"></div></div>
+    </section>
+
+    <section class="social-proof section-shell">
+      <span class="eyebrow">Social Proof</span>
+      <h2>Dipercaya 10.000+ Pelanggan</h2>
+      <p>Digunakan oleh pelajar, mahasiswa, profesional, kreator digital, dan pengguna dari berbagai lingkungan pendidikan di Indonesia.</p>
+      <small>Beberapa pelanggan kami berasal dari:</small>
+      <div class="proof-logos">
+        <div><b>UNIVERSITAS</b><span>INDONESIA</span></div>
+        <div><b>WINNER</b><span>School</span></div>
+        <div class="assist"><i data-lucide="shield-check"></i><b>Assist.id</b></div>
+        <div><b>SMAN</b><span>Indonesia</span></div>
+        <div><b>KAMPUS</b><span>Nusantara</span></div>
+      </div>
+    </section>
+
+    <section class="benefits-section" id="benefits">
+      <div class="section-shell">
+        <h2>Manfaat Belanja Akun Premium di JagoPrem</h2>
+        <p class="section-lead">Dapatkan akses akun premium favorit dengan proses yang mudah, harga lebih hemat, dan bantuan pelanggan setiap saat.</p>
+        <div class="benefit-grid">
+          <article><i data-lucide="badge-dollar-sign"></i><h3>Harga Lebih Hemat</h3><p>Nikmati berbagai akun premium favorit dengan harga yang lebih terjangkau dibandingkan berlangganan langsung secara resmi.</p></article>
+          <article><i data-lucide="shield-check"></i><h3>Semua Produk Bergaransi</h3><p>Setiap pembelian dilengkapi garansi selama masa aktif produk. Jika ada kendala, tim kami akan membantu pengecekan dan solusi.</p></article>
+          <article><i data-lucide="package-open"></i><h3>Banyak Pilihan Produk</h3><p>Tersedia berbagai akun premium seperti ChatGPT Plus, Spotify, YouTube Premium, aplikasi produktivitas, dan lainnya.</p></article>
+          <article><i data-lucide="shopping-cart"></i><h3>Proses Pembelian Mudah</h3><p>Pilih produk, tentukan paket, lakukan pembayaran, lalu ikuti instruksi pengiriman akun dari tim JagoPrem.</p></article>
+          <article><i data-lucide="headphones"></i><h3>CS 24 Jam</h3><p>Jika ada pertanyaan atau kendala, customer service JagoPrem siap membantu melalui chat setiap hari.</p></article>
+          <article><i data-lucide="circle-check-big"></i><h3>Akun Dicek Sebelum Dikirim</h3><p>Setiap akun akan dicek terlebih dahulu sebelum dikirim agar pelanggan bisa menggunakan layanan dengan lebih tenang.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="catalog-section section-shell" id="products">
+      <div class="catalog-heading"><div><span class="eyebrow">Produk JagoPrem</span><h2>Pilih akun premium favoritmu</h2><p>Harga hemat, stok terpantau, dan proses pemesanan mudah.</p></div><span id="resultCount">0 produk</span></div>
+      <div class="product-toolbar"><label class="search-field"><input id="searchInput" type="search" placeholder="Cari produk premium..."><i data-lucide="search"></i></label><select id="sortSelect" aria-label="Urutkan produk"><option value="default">Urutkan</option><option value="sold">Paling laris</option><option value="low">Harga terendah</option><option value="high">Harga tertinggi</option></select><button class="filter-toggle" id="filterToggle" type="button"><i data-lucide="sliders-horizontal"></i><span>Filter</span></button></div>
+      <div class="category-pills"><button class="active-cat" type="button" data-category="">Semua</button><button type="button" data-category="AI &amp; produktivitas">AI &amp; Produktivitas</button><button type="button" data-category="Hiburan premium">Hiburan</button><button type="button" data-category="Aplikasi premium">Aplikasi</button><button type="button" data-category="Developer API">Developer API</button></div>
+      <div class="filter-strip" id="filterStrip"><div><span>Stok</span><label><input type="radio" name="stock" value="all" checked> Semua</label><label><input type="radio" name="stock" value="ready"> Ready</label><label><input type="radio" name="stock" value="empty"> Habis</label></div><label><input id="bestFilter" type="checkbox"> Terlaris</label><label><input id="wholesaleFilter" type="checkbox"> Grosir</label><button id="resetFilter" type="button">Reset</button></div>
+      <div class="active-filters" id="activeFilters"></div>
+      <div class="product-grid" id="productGrid"></div>
+    </section>
+
+    <section class="reviews-section section-shell">
+      <div class="reviews-heading"><div><h2>Dipercaya Banyak Pelanggan,<br>Tetap Lebih Hemat</h2><p>Bergabung dengan pelanggan puas yang mendapatkan akun premium dengan harga lebih efisien.</p></div><div><span>10rb+ Pesanan</span><span class="success">99,8% Berhasil</span></div></div>
+      <div class="review-cards">
+        <article><div class="stars">★★★★★</div><p>“mantabbs”</p><footer><b>HC</b><span><strong>Heru Cp</strong><small>ChatGPT Plus</small></span></footer></article>
+        <article><div class="stars">★★★★★</div><p>“Prosesnya cepat dan aman.”</p><footer><b>IB</b><span><strong>Indra Bendito</strong><small>Spotify Premium</small></span></footer></article>
+        <article><div class="stars">★★★★★</div><p>“CS ramah, produknya langsung aktif.”</p><footer><b>AR</b><span><strong>Ari Ramadhan</strong><small>YouTube Premium</small></span></footer></article>
+      </div>
+    </section>
+
+    <section class="faq-section section-shell">
+      <h2>Pertanyaan yang Sering Ditanyakan</h2>
+      <div class="faq-list">
+        <details><summary>Apa itu JagoPrem?<i data-lucide="chevron-down"></i></summary><p>JagoPrem adalah marketplace akun premium dengan pilihan produk digital, harga hemat, garansi, dan dukungan pelanggan.</p></details>
+        <details><summary>Apakah JagoPrem aman?<i data-lucide="chevron-down"></i></summary><p>Setiap pesanan tercatat di akun pelanggan dan produk diperiksa sebelum dikirim. Bantuan tersedia melalui chat jika terjadi kendala.</p></details>
+        <details><summary>Produk apa saja yang tersedia di JagoPrem?<i data-lucide="chevron-down"></i></summary><p>Produk mencakup AI, hiburan, aplikasi produktivitas, serta layanan API. Daftar dan stok terbaru tersedia pada bagian produk.</p></details>
+        <details><summary>Bagaimana cara membeli produk?<i data-lucide="chevron-down"></i></summary><p>Pilih produk dan varian, masukkan ke keranjang, masuk ke akun, isi data checkout, lalu selesaikan pembayaran QRIS.</p></details>
+        <details><summary>Metode pembayaran apa yang tersedia?<i data-lucide="chevron-down"></i></summary><p>Saat ini pembayaran dilakukan menggunakan QRIS sesuai nominal pesanan.</p></details>
+        <details><summary>Apakah produk bergaransi?<i data-lucide="chevron-down"></i></summary><p>Ya. Ketentuan dan masa garansi mengikuti informasi pada setiap produk dan varian.</p></details>
+        <details><summary>Akun dikirim lewat mana?<i data-lucide="chevron-down"></i></summary><p>Detail pesanan dan proses pengiriman ditangani melalui riwayat pesanan serta chat dengan admin JagoPrem.</p></details>
+        <details><summary>Bagaimana jika akun bermasalah?<i data-lucide="chevron-down"></i></summary><p>Buka chat bantuan, sertakan nomor pesanan dan detail kendala agar tim dapat melakukan pengecekan.</p></details>
+        <details><summary>Apakah CS JagoPrem tersedia 24 jam?<i data-lucide="chevron-down"></i></summary><p>Pesan dapat dikirim kapan saja dan akan ditangani sesuai antrean layanan.</p></details>
+        <details><summary>Bagaimana cara klaim garansi?<i data-lucide="chevron-down"></i></summary><p>Hubungi admin melalui chat, pilih pesanan terkait, lalu jelaskan kendala secara lengkap.</p></details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="reference-footer">
+    <div class="section-shell footer-grid">
+      <div class="footer-about"><div class="footer-logo"><span>J</span><strong>JagoPrem</strong></div><p>Marketplace akun premium murah dan bergaransi untuk berbagai layanan digital favorit. Belanja mudah, hemat, dan didukung bantuan pelanggan.</p><div class="social-icons"><i data-lucide="twitter"></i><i data-lucide="instagram"></i><i data-lucide="facebook"></i></div></div>
+      <div><h3>Produk</h3><a href="#products">ChatGPT Plus</a><a href="#products">Spotify</a><a href="#products">YouTube Premium</a><a href="#products">Aplikasi Premium</a></div>
+      <div><h3>Layanan</h3><a href="api-llm.html">API LLM</a><a href="#products">AI Tools</a><a href="#products">Hiburan</a><a href="#products">Produktivitas</a></div>
+      <div><h3>Bantuan</h3><button type="button" data-open-admin-chat>Tentang Kami</button><button type="button" data-open-admin-chat>Hubungi Kami</button><button type="button" data-open-admin-chat>Lapor Masalah</button><a href="docs.html">Syarat Layanan</a></div>
+    </div>
+    <div class="section-shell footer-bottom"><span>© 2026 JagoPrem. Seluruh hak cipta dilindungi.</span><span><i data-lucide="lock-keyhole"></i> Pembayaran Aman &nbsp; Indonesia • Global</span></div>
+  </footer>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="cart-drawer" id="cartDrawer" aria-hidden="true"><div class="drawer-head"><div><small>KERANJANG</small><h2>Pesanan kamu</h2></div><button class="icon-button" data-close-cart type="button" aria-label="Tutup keranjang"><i data-lucide="x"></i></button></div><div class="cart-items" id="cartItems"></div><div class="cart-footer"><div><span>Total</span><strong id="cartTotal">Rp0</strong></div><button class="checkout-button" id="checkoutButton" type="button">Lanjut checkout <i data-lucide="arrow-right"></i></button></div></aside><div class="overlay" id="overlay"></div>
+  <section class="chat-panel" id="chatPanel" aria-hidden="true"><div class="chat-head"><div class="bot-avatar"><i data-lucide="message-circle"></i></div><div><strong id="chatTitle">Asisten JagoPrem</strong><span><i></i> Siap membantu</span></div><button id="closeChat" type="button" aria-label="Tutup chat"><i data-lucide="x"></i></button></div><div class="chat-modes"><button class="active" data-chat-mode="bot" type="button">Asisten</button><button data-chat-mode="admin" type="button">Chat Admin</button></div><div class="chat-messages" id="chatMessages"><div class="message bot">Hai! Saya bisa bantu cek stok, harga, varian, garansi, pembayaran, dan cara pemesanan.</div><div class="quick-chat"><button data-question="Produk apa yang ready?" type="button">Cek stok</button><button data-question="Tampilkan paket ChatGPT" type="button">Paket ChatGPT</button><button data-question="Bagaimana cara pesan?" type="button">Cara pesan</button><button data-question="Bagaimana pembayaran QRIS?" type="button">Pembayaran</button><button data-question="Bagaimana garansi produk?" type="button">Garansi</button><button data-admin type="button">Chat admin</button></div></div><form class="chat-form" id="chatForm"><textarea id="chatInput" rows="1" placeholder="Tulis pesan..." autocomplete="off" aria-label="Tulis pesan"></textarea><button type="submit" aria-label="Kirim pesan"><i data-lucide="send"></i></button></form></section>
+  <button class="chat-bubble" id="chatBubble" type="button" aria-label="Buka chat"><i data-lucide="message-circle"></i><span>CS 24/7</span><b id="chatBadge" class="red-badge" style="display:none">0</b></button>
+  <div class="modal-layer" id="modalLayer" aria-hidden="true"><section class="modal" id="modalContent" role="dialog" aria-modal="true"></section></div><div class="toast" id="toast" role="status"></div>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="catalog.js"></script><script src="qris.js"></script><script src="script.js?v=6"></script>
+</body>
 </html>
-
-
-
