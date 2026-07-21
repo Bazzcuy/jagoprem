@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dokumentasi API | JagoPrem LLM</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060e0d;
+      --surface: #0c1a18;
+      --surface2: #122320;
+      --border: rgba(16,185,129,.18);
+      --border2: rgba(255,255,255,.07);
+      --green: #10b981;
+      --green-dim: #0a7a62;
+      --text: #e8f5f1;
+      --text-dim: #7fa89e;
+      --text-muted: #4d6b64;
+      --radius: 12px;
+      --sidebar-width: 280px;
+      --header-height: 64px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Manrope', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    a { color: var(--green); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Header */
+    header {
+      height: var(--header-height);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+    .brand-symbol{position:relative;width:34px;height:34px;background:#17211f;border-radius:7px;display:block;overflow:hidden;transform:rotate(-4deg)}
+    .brand-symbol i,.brand-symbol b{position:absolute;border:4px solid white;border-left:0}
+    .brand-symbol i{width:15px;height:21px;left:6px;top:6px;border-radius:0 12px 12px 0}
+    .brand-symbol b{width:10px;height:14px;left:17px;top:10px;border-color:#f5755c;border-radius:0 9px 9px 0}
+    .brand span { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
+    .brand span b { color: var(--green); font-weight: 800; }
+    .header-links a { color: var(--text-dim); font-size: 14px; font-weight: 600; text-decoration: none; transition: .2s; }
+    .header-links a:hover { color: var(--text); }
+
+    /* Layout */
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--bg);
+      border-right: 1px solid var(--border2);
+      padding: 24px 16px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .nav-group { margin-bottom: 24px; }
+    .nav-group-title { font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; padding: 0 12px; letter-spacing: 1px; }
+    .nav-link {
+      display: block;
+      padding: 8px 12px;
+      color: var(--text-dim);
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: .15s;
+      cursor: pointer;
+    }
+    .nav-link:hover { background: var(--surface2); color: var(--text); text-decoration: none; }
+    .nav-link.active { background: rgba(16,185,129,.1); color: var(--green); font-weight: 600; }
+    
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 48px;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+    .content-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      padding-bottom: 100px;
+    }
+    .section { display: none; animation: fadeIn 0.3s ease; }
+    .section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Typography inside content */
+    h1 { font-size: 36px; font-weight: 900; margin-bottom: 24px; color: var(--text); line-height: 1.2; }
+    h2 { font-size: 24px; font-weight: 800; margin: 40px 0 16px; color: var(--text); border-bottom: 1px solid var(--border2); padding-bottom: 12px; }
+    h3 { font-size: 18px; font-weight: 700; margin: 32px 0 12px; color: var(--text); }
+    p { margin-bottom: 16px; color: var(--text-dim); }
+    ul { margin: 0 0 16px 24px; color: var(--text-dim); }
+    li { margin-bottom: 8px; }
+    strong { color: var(--text); }
+    
+    /* Code Blocks */
+    pre {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 24px;
+      color: #e8f5f1;
+    }
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--surface2);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: var(--green);
+    }
+    pre code { background: transparent; padding: 0; color: inherit; }
+
+    /* API Endpoint Badges */
+    .endpoint { display: inline-flex; align-items: center; gap: 12px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; padding: 8px 16px; margin-bottom: 24px; width: 100%; }
+    .method { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 800; padding: 4px 8px; border-radius: 4px; }
+    .method.get { background: rgba(59,130,246,.15); color: #60a5fa; }
+    .method.post { background: rgba(16,185,129,.15); color: #34d399; }
+    .method.delete { background: rgba(248,113,113,.15); color: #f87171; }
+    .path { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: var(--text); }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 14px; }
+    th, td { border: 1px solid var(--border2); padding: 12px 16px; text-align: left; }
+    th { background: var(--surface2); font-weight: 700; color: var(--text); }
+    td { color: var(--text-dim); }
+
+    /* Alerts */
+    .alert { padding: 16px; border-radius: 8px; margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-start; }
+    .alert-info { background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.2); color: #bfdbfe; }
+    .alert-warning { background: rgba(245,117,92,.1); border: 1px solid rgba(245,117,92,.2); color: #fecaca; }
+    
+    @media (max-width: 768px) {
+      .layout { flex-direction: column; }
+      .sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border2); padding: 16px; display: flex; overflow-x: auto; flex-wrap: nowrap; gap: 8px; }
+      .nav-group-title { display: none; }
+      .nav-link { white-space: nowrap; }
+      .main-content { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/api-llm.html" class="brand">
+    <span class="brand-symbol" style="transform:scale(0.8)"><i></i><b></b></span>
+    <span>jagoprem<b>llm</b> Docs</span>
+  </a>
+  <div class="header-links">
+    <a href="/api-llm.html">← Kembali ke Landing</a>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="nav-group">
+      <div class="nav-group-title">Mulai</div>
+      <a class="nav-link active" data-target="pengenalan">Pengenalan</a>
+      <a class="nav-link" data-target="akun-key">Pembuatan Akun & Key</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">API Reference</div>
+      <a class="nav-link" data-target="api-ref">Endpoints & Chat</a>
+      <a class="nav-link" data-target="embeddings">Embeddings & Models</a>
+      <a class="nav-link" data-target="images-audio">Images & Audio</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-title">Panduan Lanjutan</div>
+      <a class="nav-link" data-target="integrasi">Contoh Integrasi</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="content-inner" id="content">
+      
+      <!-- PENGENALAN -->
+      <div class="section active" id="pengenalan">
+        <h1>Pengenalan</h1>
+        <p>Selamat datang di dokumentasi resmi <strong>JagoPrem LLM API</strong>. API ini dirancang untuk memberikan Anda akses instan ke 100+ model AI (seperti GPT-4o, Claude 3.5, Gemini 1.5, DeepSeek, dll) melalui <strong>satu endpoint tunggal</strong> yang 100% kompatibel dengan format <code>OpenAI API</code>.</p>
+        <p>Anda tidak perlu mengubah kode (jika sudah menggunakan OpenAI SDK), cukup ganti <strong>Base URL</strong> dan <strong>API Key</strong> Anda dengan kredensial dari JagoPrem LLM.</p>
+        <div class="alert alert-info">
+          <div>
+            <strong>Info Sistem</strong><br>
+            JagoPrem LLM menggunakan model pay-as-you-go. Saldo Anda dipotong sesuai pemakaian token per request. Tidak ada masa kadaluarsa (expired) untuk saldo.
+          </div>
+        </div>
+      </div>
+
+      <!-- AKUN & KEY -->
+      <div class="section" id="akun-key">
+        <h1>Pembuatan Akun & API Key</h1>
+        <h2>Langkah 1: Membeli Saldo API</h2>
+        <p>Pembelian saldo dilakukan langsung melalui platform <a href="/">JagoPrem Store</a>. Pilih kategori <strong>API LLM</strong>, lalu pilih paket saldo yang Anda butuhkan (mulai dari $5).</p>
+        <p>Kurs yang berlaku adalah tetap: <strong>$1 USD = Rp 12.300</strong>.</p>
+        
+        <h2>Langkah 2: Proses Aktivasi</h2>
+        <p>Setelah melakukan pembayaran via QRIS/e-Wallet di JagoPrem Store, admin kami akan memvalidasi pesanan Anda dan mengaktifkan akun Anda secara manual demi keamanan.</p>
+        
+        <h2>Langkah 3: Menerima API Key</h2>
+        <p>Anda akan menerima <strong>API Key</strong> yang diawali dengan <code>sk-dpe-...</code> beserta informasi login dashboard (jika diperlukan) melalui WhatsApp atau email yang terdaftar saat checkout. Simpan API Key ini baik-baik dan jangan pernah membagikannya secara publik.</p>
+      </div>
+
+      <!-- API REFERENCE -->
+      <div class="section" id="api-ref">
+        <h1>API Reference</h1>
+        <p>JagoPrem LLM bertindak sebagai proxy server standar yang mengutamakan kompatibilitas dengan ekosistem OpenAI.</p>
+        
+        <h3>Base URL</h3>
+        <pre>https://api.jagoprem.shop/v1</pre>
+
+        <h3>Autentikasi</h3>
+        <p>Gunakan API Key yang diberikan admin di header <code>Authorization</code>.</p>
+        <pre>Authorization: Bearer sk-dpe-YOUR_API_KEY</pre>
+        
+        <hr style="border:0; border-top:1px solid var(--border2); margin: 40px 0;">
+
+        <h2>Chat Completions</h2>
+        <p>Endpoint utama untuk percakapan dengan model teks AI.</p>
+        
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <span class="path">/chat/completions</span>
+        </div>
+
+        <h3>Contoh Request (cURL)</h3>
+        <pre>curl https://api.jagoprem.shop/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-dpe-YOUR_API_KEY" \
+  -d '{
+    "model": "openai/gpt-4o-mini",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Anda adalah asisten virtual yang sangat membantu."
+      },
+      {
+        "role": "user",
+        "content": "Halo! Siapa Anda?"
+      }
+    ]
+  }'</pre>
+
+        <h3>Format Parameter Model</h3>
+        <p>Karena kami mendukung berbagai provider, disarankan untuk menyertakan prefix provider di depan nama model (misal: <code>openai/</code>, <code>anthropic/</code>, <code>google/</code>).</p>
+      </div>
+
+      <!-- EMBEDDINGS & MODELS -->
+      <div class="section" id="embeddings">
+        <h1>Embeddings & Models</h1>
+        
+        <h2>Embeddings</h2>
+        <p>Ubah teks menjadi vektor representasi numerik untuk keperluan semantic search atau RAG.</p>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <span class="path">/embeddings</span>
+        </div>
+        <pre>curl https://api.jagoprem.shop/v1/embeddings \
+  -H "Authorization: Bearer sk-dpe-YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/text-embedding-3-small",
+    "input": "Kalimat yang ingin diubah menjadi vektor"
+  }'</pre>
+
+        <hr style="border:0; border-top:1px solid var(--border2); margin: 40px 0;">
+
+        <h2>Daftar Model (Models API)</h2>
+        <p>Melihat daftar model yang tersedia dan memiliki akses.</p>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <span class="path">/models</span>
+        </div>
+        <pre>curl https://api.jagoprem.shop/v1/models \
+  -H "Authorization: Bearer sk-dpe-YOUR_API_KEY"</pre>
+      </div>
+
+      <!-- IMAGES & AUDIO -->
+      <div class="section" id="images-audio">
+        <h1>Images & Audio</h1>
+
+        <h2>Image Generation</h2>
+        <p>Endpoint untuk membuat gambar baru dari teks (contohnya menggunakan DALL-E 3 atau Stable Diffusion).</p>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <span class="path">/images/generations</span>
+        </div>
+        <pre>curl https://api.jagoprem.shop/v1/images/generations \
+  -H "Authorization: Bearer sk-dpe-YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "openai/dall-e-3",
+    "prompt": "Sebuah kota futuristik yang melayang di atas awan saat matahari terbenam",
+    "n": 1,
+    "size": "1024x1024"
+  }'</pre>
+
+        <hr style="border:0; border-top:1px solid var(--border2); margin: 40px 0;">
+
+        <h2>Audio Transcriptions (Speech-to-Text)</h2>
+        <p>Mengubah audio MP3/WAV menjadi teks menggunakan Whisper.</p>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <span class="path">/audio/transcriptions</span>
+        </div>
+      </div>
+
+      <!-- INTEGRASI -->
+      <div class="section" id="integrasi">
+        <h1>Contoh Integrasi Pihak Ketiga</h1>
+        
+        <h2>Python (OpenAI SDK)</h2>
+        <p>JagoPrem LLM dapat digunakan secara <i>drop-in</i> dengan <i>library</i> resmi OpenAI untuk Python.</p>
+        <pre>pip install openai</pre>
+        <pre>from openai import OpenAI
+
+client = OpenAI(
+    api_key="sk-dpe-YOUR_API_KEY",
+    base_url="https://api.jagoprem.shop/v1"
+)
+
+response = client.chat.completions.create(
+    model="anthropic/claude-3-5-sonnet",
+    messages=[{"role": "user", "content": "Tuliskan puisi pendek."}]
+)
+
+print(response.choices[0].message.content)</pre>
+
+        <h2>VS Code (Cline)</h2>
+        <p>Anda dapat mengonfigurasi AI assistant seperti Cline atau Cursor di text editor Anda.</p>
+        <ul>
+          <li>Pilih provider API: <strong>OpenAI Compatible</strong></li>
+          <li>Base URL: <code>https://api.jagoprem.shop/v1</code></li>
+          <li>API Key: <code>sk-dpe-YOUR_API_KEY</code></li>
+          <li>Model override: Ketik nama model misalnya <code>anthropic/claude-3-5-sonnet</code></li>
+        </ul>
+        
+        <div class="alert alert-warning">
+          <div>
+            <strong>Perhatian:</strong> Pastikan jaringan internet Anda stabil jika request AI dari IDE karena timeout dapat menyebabkan koneksi terputus ke proxy server.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  const links = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('.section');
+  const mainContent = document.querySelector('.main-content');
+
+  links.forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetId = link.getAttribute('data-target');
+      
+      // Update links state
+      links.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      
+      // Update sections state
+      sections.forEach(sec => sec.classList.remove('active'));
+      document.getElementById(targetId).classList.add('active');
+      
+      // Scroll to top of content
+      mainContent.scrollTo(0, 0);
+    });
+  });
+</script>
+</body>
+</html>
+

@@ -1,31 +1,27 @@
-﻿# JagoPrem
+# JagoPrem
 
-Toko akun digital dengan katalog produk, keranjang, checkout QRIS, chat pembeli-admin, dan dashboard admin.
+Toko akun digital berbasis PHP, HTML, CSS, dan JavaScript untuk shared hosting Hostinger.
 
-## Menjalankan lokal
+## Kebutuhan hosting
 
-```bash
-npm start
+- PHP 8.1 atau lebih baru dengan ekstensi `mbstring`
+- Apache dengan `mod_rewrite`
+- Izin tulis PHP pada `data/store.json`
+
+Tidak ada proses Node.js, build step, atau package manager yang diperlukan saat runtime.
+
+## Konfigurasi
+
+Buat file `.env` di root hosting:
+
+```env
+ADMIN_PASSWORD=ganti-dengan-password-yang-kuat
 ```
 
-Buka `http://127.0.0.1:8000`. Dashboard admin tersedia melalui `/bolehdong`.
+File `.env` diabaikan oleh Git dan diblokir oleh `.htaccess`, sehingga kredensial tidak ikut masuk repository.
 
-## Environment
+## Deployment Hostinger dari GitHub
 
-- `PORT`: port server, otomatis disediakan oleh hosting.
-- `ADMIN_PASSWORD`: password dashboard admin. Wajib diatur saat deployment.
+Hubungkan repository ke Git deployment Hostinger, gunakan branch `main`, dan arahkan deployment ke root website (`public_html`). File entrypoint utama adalah `index.html`; request `/api/*` diteruskan oleh Apache ke `api.php`.
 
-## Deployment
-
-Repository menyertakan `render.yaml` untuk deployment sebagai Render Web Service.
-
-## Cloudflare Workers
-
-Cloudflare memakai `src/worker.mjs` untuk API, static assets dari `public`, dan database D1 melalui binding bernama `DB`.
-
-1. Buat database D1 bernama `jagoprem-db`.
-2. Hubungkan D1 ke Worker dengan variable name `DB`.
-3. Tambahkan secret `ADMIN_PASSWORD`.
-4. Deploy dengan `npm run deploy:cloudflare` atau Workers Builds dari GitHub.
-
-
+Setelah deployment, pastikan `data/store.json` tetap dapat ditulis oleh PHP. Dashboard admin tersedia di `/bolehdong`.
