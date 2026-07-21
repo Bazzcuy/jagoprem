@@ -1,32 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 560" role="img" aria-label="JagoPrem bot banner">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#eefcff"/>
-      <stop offset="1" stop-color="#f7fffd"/>
-    </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#0f95a6"/>
-      <stop offset="1" stop-color="#12c7c2"/>
-    </linearGradient>
-  </defs>
-  <rect width="1400" height="560" fill="url(#bg)"/>
-  <rect x="122" y="92" width="540" height="376" rx="34" fill="#0f95a6"/>
-  <rect x="164" y="132" width="196" height="42" rx="21" fill="#fff" opacity=".14"/>
-  <text x="190" y="159" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#dffcff">Telegram / WhatsApp</text>
-  <text x="164" y="244" font-family="Arial, sans-serif" font-size="52" font-weight="900" fill="#fff">Pesan lewat</text>
-  <text x="164" y="304" font-family="Arial, sans-serif" font-size="52" font-weight="900" fill="#fff">JagoPrem Bot</text>
-  <text x="164" y="358" font-family="Arial, sans-serif" font-size="22" font-weight="600" fill="#dffcff">Cari produk, cek stok, dan lanjutkan chat.</text>
-  <rect x="164" y="388" width="190" height="50" rx="16" fill="#fff"/>
-  <text x="193" y="420" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#0f95a6">Coba Bot</text>
-  <rect x="760" y="84" width="540" height="392" rx="34" fill="#fff" stroke="#d5eaed" stroke-width="2"/>
-  <rect x="802" y="124" width="456" height="72" rx="22" fill="#e8fbfd"/>
-  <rect x="802" y="208" width="456" height="72" rx="22" fill="#e8fbfd"/>
-  <rect x="802" y="292" width="456" height="72" rx="22" fill="#e8fbfd"/>
-  <text x="838" y="168" font-family="Arial, sans-serif" font-size="20" font-weight="800" fill="#11262b">Respon cepat</text>
-  <text x="838" y="252" font-family="Arial, sans-serif" font-size="20" font-weight="800" fill="#11262b">Riwayat tetap utuh</text>
-  <text x="838" y="336" font-family="Arial, sans-serif" font-size="20" font-weight="800" fill="#11262b">Aman untuk guest dan akun</text>
-  <circle cx="1222" cy="155" r="20" fill="url(#accent)"/>
-  <circle cx="1222" cy="239" r="20" fill="url(#accent)"/>
-  <circle cx="1222" cy="323" r="20" fill="url(#accent)"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 560" role="img" aria-label="JagoPrem banner bot">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eefcff"/><stop offset="1" stop-color="#f7fffd"/></linearGradient><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f95a6"/><stop offset="1" stop-color="#12c7c2"/></linearGradient></defs>
+  <rect width="1400" height="560" fill="url(#g)"/>
+  <rect x="122" y="92" width="536" height="376" rx="34" fill="#0f95a6"/><circle cx="244" cy="256" r="76" fill="#fff" opacity=".16"/><circle cx="244" cy="256" r="42" fill="#fff" opacity=".26"/>
+  <rect x="340" y="206" width="246" height="28" rx="14" fill="#fff" opacity=".18"/><rect x="340" y="246" width="190" height="18" rx="9" fill="#fff" opacity=".18"/><rect x="340" y="286" width="256" height="28" rx="14" fill="#fff" opacity=".18"/>
+  <rect x="758" y="84" width="556" height="392" rx="34" fill="#fff" stroke="#d5eaed"/><rect x="802" y="126" width="452" height="72" rx="20" fill="#e8fbfd"/><rect x="802" y="210" width="452" height="72" rx="20" fill="#f3fbfc" stroke="#dbecef"/><rect x="802" y="294" width="452" height="72" rx="20" fill="#e8fbfd"/>
+  <circle cx="860" cy="162" r="18" fill="url(#a)"/><circle cx="860" cy="246" r="18" fill="url(#a)"/><circle cx="860" cy="330" r="18" fill="url(#a)"/>
 </svg>
