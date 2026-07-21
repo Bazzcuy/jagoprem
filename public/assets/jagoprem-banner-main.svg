@@ -1,30 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 520">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 560" role="img" aria-label="JagoPrem marketplace banner">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1400" y2="520" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#0a2440"/>
-      <stop offset="0.52" stop-color="#0a6f84"/>
-      <stop offset="1" stop-color="#1ee6ef"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#effcff"/>
+      <stop offset=".55" stop-color="#d9f7fa"/>
+      <stop offset="1" stop-color="#f5fffb"/>
     </linearGradient>
-    <linearGradient id="glow" x1="190" y1="70" x2="1000" y2="430" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#ffffff" stop-opacity=".2"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f95a6"/>
+      <stop offset="1" stop-color="#12c7c2"/>
     </linearGradient>
   </defs>
-  <rect width="1400" height="520" fill="url(#bg)"/>
-  <circle cx="1210" cy="110" r="170" fill="#ffffff" fill-opacity=".08"/>
-  <circle cx="1060" cy="430" r="220" fill="#ffffff" fill-opacity=".06"/>
-  <path d="M0 390c190-78 324-48 520 28 148 58 310 80 515 18 175-53 260-30 365 26v78H0z" fill="#062532" fill-opacity=".35"/>
-  <g transform="translate(88 86)">
-    <rect width="132" height="132" rx="34" fill="#ffffff" fill-opacity=".12"/>
-    <rect x="22" y="22" width="88" height="88" rx="24" fill="#ffffff" fill-opacity=".9"/>
-    <path d="M44 40h20c20 0 34 10 34 27S84 94 64 94H44V40Zm20 16h-4v22h4c11 0 18-4 18-11s-7-11-18-11Z" fill="#0a6f84"/>
-    <path d="M68 51h9c10 0 16 3 16 9s-6 9-16 9h-9v-6h11c3 0 5-1 5-3s-2-3-5-3H68v-6Z" fill="#062532"/>
-  </g>
-  <text x="262" y="160" fill="#ffffff" font-size="48" font-weight="800" font-family="Arial, sans-serif">JagoPrem</text>
-  <text x="262" y="228" fill="#d9ffff" font-size="86" font-weight="900" font-family="Arial, sans-serif">AKUN DIGITAL PREMIUM</text>
-  <text x="262" y="288" fill="#d7f6f7" font-size="30" font-family="Arial, sans-serif">Stok real-time, checkout cepat, dan support langsung dari tim admin.</text>
-  <rect x="262" y="338" width="214" height="62" rx="18" fill="#ffffff" fill-opacity=".14" stroke="#ffffff" stroke-opacity=".18"/>
-  <text x="296" y="378" fill="#ffffff" font-size="28" font-weight="700" font-family="Arial, sans-serif">Belanja lebih tenang</text>
-  <rect x="1020" y="104" width="248" height="312" rx="28" fill="#ffffff" fill-opacity=".1" stroke="#ffffff" stroke-opacity=".14"/>
-  <path d="M1066 158h152v22h-152zm0 48h118v16h-118zm0 40h134v16h-134zm0 40h94v16h-94zm0 40h146v16h-146z" fill="#fff" fill-opacity=".85"/>
+  <rect width="1400" height="560" fill="url(#bg)"/>
+  <circle cx="1160" cy="110" r="250" fill="#dff9fb"/>
+  <circle cx="1220" cy="150" r="160" fill="#c8f4f7"/>
+  <rect x="90" y="110" width="560" height="340" rx="36" fill="#ffffff" stroke="#d5eaed" stroke-width="2"/>
+  <rect x="126" y="146" width="152" height="42" rx="21" fill="#e7fbfd"/>
+  <text x="150" y="174" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#0d8ea0">jagoprem.shop</text>
+  <text x="126" y="246" font-family="Arial, sans-serif" font-size="58" font-weight="900" fill="#11262b">Akun digital</text>
+  <text x="126" y="314" font-family="Arial, sans-serif" font-size="58" font-weight="900" fill="#11262b">premium</text>
+  <text x="126" y="366" font-family="Arial, sans-serif" font-size="22" font-weight="600" fill="#5f757b">Stok real-time, QRIS, voucher aktif, dan chat yang tetap nyambung.</text>
+  <rect x="126" y="396" width="182" height="48" rx="16" fill="url(#accent)"/>
+  <text x="155" y="426" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#fff">Belanja Sekarang</text>
+  <rect x="338" y="396" width="182" height="48" rx="16" fill="#f4fbfc" stroke="#cfe5e9"/>
+  <text x="370" y="426" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#0d8ea0">Lihat Produk</text>
+  <rect x="820" y="92" width="420" height="376" rx="34" fill="#0f95a6" opacity=".95"/>
+  <rect x="852" y="122" width="356" height="86" rx="22" fill="#ffffff" opacity=".18"/>
+  <rect x="852" y="222" width="356" height="86" rx="22" fill="#ffffff" opacity=".18"/>
+  <rect x="852" y="322" width="356" height="86" rx="22" fill="#ffffff" opacity=".18"/>
+  <circle cx="916" cy="165" r="28" fill="#ffffff"/>
+  <circle cx="916" cy="265" r="28" fill="#ffffff"/>
+  <circle cx="916" cy="365" r="28" fill="#ffffff"/>
+  <text x="966" y="156" font-family="Arial, sans-serif" font-size="24" font-weight="800" fill="#fff">QRIS cepat</text>
+  <text x="966" y="188" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#dffcff">Checkout rapi dan jelas</text>
+  <text x="966" y="256" font-family="Arial, sans-serif" font-size="24" font-weight="800" fill="#fff">Chat nyambung</text>
+  <text x="966" y="288" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#dffcff">Guest tetap bisa lanjut akun</text>
+  <text x="966" y="356" font-family="Arial, sans-serif" font-size="24" font-weight="800" fill="#fff">Voucher aktif</text>
+  <text x="966" y="388" font-family="Arial, sans-serif" font-size="18" font-weight="600" fill="#dffcff">Minimal 2 produk AI yang sama</text>
 </svg>

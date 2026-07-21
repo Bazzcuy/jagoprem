@@ -1,27 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 520">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 560" role="img" aria-label="JagoPrem LLM banner">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1400" y2="520" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#071b2f"/>
-      <stop offset="0.55" stop-color="#0a5f7a"/>
-      <stop offset="1" stop-color="#25d8df"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eafcff"/>
+      <stop offset="1" stop-color="#f7fffd"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f95a6"/>
+      <stop offset="1" stop-color="#12c7c2"/>
     </linearGradient>
   </defs>
-  <rect width="1400" height="520" fill="url(#bg)"/>
-  <circle cx="1180" cy="110" r="150" fill="#fff" fill-opacity=".06"/>
-  <circle cx="1010" cy="420" r="200" fill="#fff" fill-opacity=".05"/>
-  <g transform="translate(88 90)">
-    <rect width="126" height="126" rx="30" fill="#ffffff" fill-opacity=".12"/>
-    <circle cx="63" cy="63" r="34" fill="#21e4ef" fill-opacity=".22"/>
-    <path d="M45 37h21c15 0 27 8 27 22s-12 22-27 22H45V37Zm21 13h-4v18h4c7 0 12-3 12-9s-5-9-12-9Z" fill="#f7ffff"/>
-    <path d="M67 46h7c8 0 13 3 13 8s-5 8-13 8h-7v-5h8c3 0 4-1 4-3s-1-3-4-3h-8v-5Z" fill="#083b4a"/>
-  </g>
-  <text x="254" y="155" fill="#ffffff" font-size="46" font-weight="800" font-family="Arial, sans-serif">JagoPrem LLM</text>
-  <text x="254" y="228" fill="#dbffff" font-size="82" font-weight="900" font-family="Arial, sans-serif">100+ MODEL AI</text>
-  <text x="254" y="286" fill="#dcf7f8" font-size="30" font-family="Arial, sans-serif">OpenAI-compatible, saldo fleksibel, dan aktivasi cepat via admin.</text>
-  <rect x="254" y="338" width="250" height="62" rx="18" fill="#ffffff" fill-opacity=".14" stroke="#ffffff" stroke-opacity=".18"/>
-  <text x="292" y="378" fill="#ffffff" font-size="28" font-weight="700" font-family="Arial, sans-serif">Base URL baru</text>
-  <g transform="translate(1004 108)">
-    <rect width="250" height="304" rx="28" fill="#ffffff" fill-opacity=".1" stroke="#ffffff" stroke-opacity=".16"/>
-    <path d="M44 82h162v20H44zm0 40h122v14H44zm0 36h148v14H44zm0 36h88v14H44zm0 36h138v14H44z" fill="#fff" fill-opacity=".88"/>
-  </g>
+  <rect width="1400" height="560" fill="url(#bg)"/>
+  <path d="M860 80h330c42 0 76 34 76 76v248c0 42-34 76-76 76H860c-42 0-76-34-76-76V156c0-42 34-76 76-76Z" fill="#fff" stroke="#d5eaed" stroke-width="2"/>
+  <rect x="124" y="104" width="600" height="352" rx="36" fill="#0f95a6"/>
+  <rect x="158" y="138" width="220" height="34" rx="17" fill="#ffffff" opacity=".16"/>
+  <text x="184" y="162" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#dffcff">jagoprem.shop LLM API</text>
+  <text x="160" y="238" font-family="Arial, sans-serif" font-size="54" font-weight="900" fill="#fff">Model AI</text>
+  <text x="160" y="300" font-family="Arial, sans-serif" font-size="54" font-weight="900" fill="#fff">terbaru</text>
+  <text x="160" y="354" font-family="Arial, sans-serif" font-size="22" font-weight="600" fill="#dbfbff">Akses beberapa model dalam satu pintu.</text>
+  <rect x="160" y="386" width="184" height="50" rx="16" fill="#fff"/>
+  <text x="194" y="418" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#0f95a6">Lihat Model</text>
+  <rect x="884" y="124" width="252" height="68" rx="22" fill="#eafcff"/>
+  <rect x="884" y="208" width="252" height="68" rx="22" fill="#eafcff"/>
+  <rect x="884" y="292" width="252" height="68" rx="22" fill="#eafcff"/>
+  <circle cx="939" cy="158" r="18" fill="url(#accent)"/>
+  <circle cx="939" cy="242" r="18" fill="url(#accent)"/>
+  <circle cx="939" cy="326" r="18" fill="url(#accent)"/>
+  <text x="977" y="153" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#11262b">Claude Fable</text>
+  <text x="977" y="237" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#11262b">GPT 5.6 Sol</text>
+  <text x="977" y="321" font-family="Arial, sans-serif" font-size="18" font-weight="800" fill="#11262b">Luna & Terra</text>
 </svg>
