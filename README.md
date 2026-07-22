@@ -16,9 +16,15 @@ Buat file `.env` di root hosting:
 
 ```env
 ADMIN_PASSWORD=ganti-dengan-password-yang-kuat
+AI_API_KEY=isi-api-key-premzone-di-hostinger
+AI_BASE_URL=https://api.premzone.co/v1
+AI_MODEL=gpt-5.4-mini
+WA_BOT_WEBHOOK=https://alamat-webhook-bot-whatsapp-kamu
 ```
 
 File `.env` diabaikan oleh Git dan diblokir oleh `.htaccess`, sehingga kredensial tidak ikut masuk repository.
+
+AI chat dipanggil hanya dari backend PHP. Frontend tidak pernah menerima API key. Endpoint membatasi panjang pesan, jumlah permintaan per sesi, waktu respons, dan output model untuk mencegah penyalahgunaan saldo.
 
 ## Deployment Hostinger dari GitHub
 

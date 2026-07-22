@@ -1,5 +1,5 @@
-﻿const STORE_CONFIG = {
-  grokProxyUrl: '', // Isi URL backend proxy Grok nanti. Jangan taruh API key produksi di frontend.
+const STORE_CONFIG = {
+  grokProxyUrl: '/api/ai/chat',
   staticQris: '00020101021126570011ID.DANA.WWW011893600915303270621302090327062130303UMI51440014ID.CO.QRIS.WWW0215ID10265345984810303UMI5204481453033605802ID5914Webtokoku plus6014Kota Palembang61053026663040D38'
 };
 
@@ -126,7 +126,7 @@ function renderProducts() {
     const originalPrice = item.price > 0 ? Math.max(item.price + 10000, Math.round(item.price * 1.4)) : 0;
     const discount = originalPrice > item.price && item.price > 0 ? Math.round((1 - (item.price / originalPrice)) * 100) : 0;
     const readyTag = item.stock && item.enabled ? 'Ready' : 'Habis';
-    const extraTag = item.has_wholesale ? '+1' : 'Instan';
+    const extraTag = productCategory(item) === 'AI & produktivitas' ? 'Private' : (item.has_wholesale ? '+1' : 'Instan');
     return `
       <article class="product-card" data-detail="${item.id}" tabindex="0">
         <div class="product-card-media">
@@ -249,7 +249,7 @@ function productProfile(item) {
       : [match?.[1] || description, `Jenis akses ${item.access || 'mengikuti varian produk'} dengan masa aktif ${item.duration || 'sesuai paket'}.`, `Detail login, aktivasi, dan petunjuk penggunaan dikirim admin ke WhatsApp setelah pesanan diproses.`, supportsOwnGmail(item) ? 'Opsi Gmail sendiri tersedia di halaman detail produk.' : 'Tidak tersedia opsi email sendiri untuk produk ini.', `Garansi ${item.warranty || 'mengikuti ketentuan produk'} untuk kendala akses yang memenuhi syarat.`],
     category: cat,
     delivery: isDevApi ? 'API Key via WhatsApp' : 'Dikirim melalui WhatsApp',
-    access: item.access || (isDevApi ? 'API Key JagoPrem LLM (api.jagoprem.shop)' : 'Sesuai varian yang tersedia'),
+    access: category === 'AI & produktivitas' ? 'Akun private (bukan sharing)' : (item.access || (isDevApi ? 'API Key JagoPrem LLM (api.jagoprem.shop)' : 'Sesuai varian yang tersedia')),
     duration: item.duration || (isDevApi ? 'Pay-as-you-go (tidak ada expiry)' : 'Sesuai varian'),
     warranty: item.warranty || (isDevApi ? 'Garansi saldo masuk' : 'Sesuai ketentuan produk'),
     terms: isDevApi
@@ -280,7 +280,9 @@ function detailModal(id) {
 }
 function authModal(mode = 'login') {
   const register = mode === 'register';
-  openModal(`${modalHead('Akun jagoprem.shop')}<div class="modal-body auth-modal-body"><div class="auth-hero"><div class="auth-hero-bg"></div><div class="auth-hero-content"><div class="auth-logo-mark"><i></i><b></b></div><h2>JagoPrem</h2><p>Akun digital premium, harga terjangkau</p></div></div><div class="auth-form-section"><div class="auth-tabs"><button class="${register ? '' : 'active'}" data-auth-tab="login" type="button">Masuk</button><button class="${register ? 'active' : ''}" data-auth-tab="register" type="button">Daftar</button></div><form id="authForm" data-mode="${mode}">${register ? '<div class="form-group"><label>NAMA LENGKAP</label><div class="input-icon-wrap"><i data-lucide="user"></i><input name="name" required minlength="2" maxlength="80" autocomplete="name" placeholder="Nama kamu"></div></div>' : ''}<div class="form-group"><label>EMAIL</label><div class="input-icon-wrap"><i data-lucide="mail"></i><input name="email" type="email" required autocomplete="email" placeholder="nama@email.com"></div></div><div class="form-group"><label>PASSWORD</label><div class="input-icon-wrap"><i data-lucide="lock"></i><input name="password" type="password" minlength="8" required autocomplete="current-password" placeholder="Minimal 8 karakter"></div></div><button class="submit-button auth-submit" type="submit"><span>${register ? 'Buat akun gratis' : 'Masuk ke akun'}</span></button></form><div class="auth-divider"><span>atau</span></div><button class="google-auth-btn" id="googleAuthBtn" type="button"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Lanjutkan dengan Google</button><div id="googleAuthError" style="display:none;color:var(--error);font-size:0.85rem;margin-top:10px;justify-content:center;text-align:center"></div><p class="auth-footer-note">Akun tersimpan aman dan dapat dipakai di perangkat lain.</p></div></div>`);
+  openModal(`${modalHead('Akun jagoprem.shop')}<div class="modal-body auth-modal-body"><div class="auth-hero"><div class="auth-hero-bg"></div><div class="auth-hero-content"><div class="auth-logo-mark"><i></i><b></b></div><h2>JagoPrem</h2><p>Akun digital premium, harga terjangkau</p></div></div><div class="auth-form-section"><div class="auth-tabs"><button class="${register ? '' : 'active'}" data-auth-tab="login" type="button">Masuk</button><button class="${register ? 'active' : ''}" data-auth-tab="register" type="button">Daftar</button></div><form id="authForm" data-mode="${mode}">${register ? '<div class="form-group"><label>NAMA LENGKAP</label><div class="input-icon-wrap"><i data-lucide="user"></i><input name="name" required minlength="2" maxlength="80" autocomplete="name" placeholder="Nama kamu"></div></div><div class="form-group"><label>KODE REFERRAL (OPSIONAL)</label><div class="input-icon-wrap"><i data-lucide="gift"></i><input name="referral" maxlength="20" autocomplete="off" placeholder="Contoh: JAGOABC123"></div><p class="field-help">Dapatkan 500 poin ketika kode referral valid.</p></div>' : ''}<div class="form-group"><label>EMAIL</label><div class="input-icon-wrap"><i data-lucide="mail"></i><input name="email" type="email" required autocomplete="email" placeholder="nama@email.com"></div></div><div class="form-group"><label>PASSWORD</label><div class="input-icon-wrap"><i data-lucide="lock"></i><input name="password" type="password" minlength="8" required autocomplete="current-password" placeholder="Minimal 8 karakter"></div></div><button class="submit-button auth-submit" type="submit"><span>${register ? 'Buat akun gratis' : 'Masuk ke akun'}</span></button></form><div class="auth-divider"><span>atau</span></div><button class="google-auth-btn" id="googleAuthBtn" type="button"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Lanjutkan dengan Google</button><div id="googleAuthError" style="display:none;color:var(--error);font-size:0.85rem;margin-top:10px;justify-content:center;text-align:center"></div><p class="auth-footer-note">Akun tersimpan aman dan dapat dipakai di perangkat lain.</p></div></div>`);
+  const referralFromUrl = new URLSearchParams(location.search).get('ref');
+  if (register && referralFromUrl && document.querySelector('input[name="referral"]')) document.querySelector('input[name="referral"]').value = referralFromUrl;
   document.querySelector('#googleAuthBtn')?.addEventListener('click', function () {
     const btn = this;
     const isRegisterMode = document.querySelector('[data-auth-tab="register"]')?.classList.contains('active');
@@ -299,7 +301,8 @@ function authModal(mode = 'login') {
 
 function accountModal() {
   if (!state.user) return authModal();
-  openModal(`${modalHead('Akun saya')}<div class="modal-body"><div class="account-card"><strong>${escapeHtml(state.user.name)}</strong><span>${escapeHtml(state.user.email)}</span></div><button class="logout-button" id="logoutButton" type="button">Keluar dari akun</button></div>`);
+  const referralUrl = `${location.origin}${location.pathname}?ref=${encodeURIComponent(state.user.referralCode || '')}`;
+  openModal(`${modalHead('Akun saya')}<div class="modal-body"><div class="account-card"><strong>${escapeHtml(state.user.name)}</strong><span>${escapeHtml(state.user.email)}</span></div><div class="rewards-card"><div><span>JagoPoin</span><strong>${new Intl.NumberFormat('id-ID').format(state.user.points || 0)}</strong><small>Bertambah dari referral dan pesanan yang selesai</small></div><i data-lucide="coins"></i></div><div class="referral-card"><span>KODE REFERRAL KAMU</span><div><strong>${escapeHtml(state.user.referralCode || '-')}</strong><button type="button" data-copy-referral="${escapeHtml(referralUrl)}"><i data-lucide="copy"></i> Salin link</button></div><p>Ajak teman: kamu mendapat 1.000 poin dan temanmu mendapat 500 poin setelah mendaftar.</p><small>${state.user.referralCount || 0} teman berhasil diajak</small></div><button class="logout-button" id="logoutButton" type="button">Keluar dari akun</button></div>`);
 }
 
 function checkoutModal() {
@@ -314,7 +317,7 @@ function checkoutModal() {
       <p class="field-help">Email ini akan didaftarkan oleh admin sebagai identitas akun JagoPrem LLM kamu. API Key akan dikirimkan ke WhatsApp.</p>
     </div>
   ` : '';
-  openModal(`${modalHead('Checkout')}<div class="modal-body"><div class="order-summary">${cartItemsHtml}<div><span>Biaya admin</span><b>${rupiah(99)}</b></div><div class="total" id="checkoutTotalRow"><span>Total sebelum voucher</span><b>${rupiah(cartTotal() + 99)}</b></div></div><form id="checkoutForm"><div class="form-group voucher-field"><label>KODE VOUCHER (OPSIONAL)</label><div class="voucher-input-row"><div class="voucher-input-wrap"><i data-lucide="ticket-percent"></i><input id="voucherInput" name="voucherCode" autocomplete="off" maxlength="32" placeholder="Contoh: SPESIALAI07"></div><button class="voucher-apply-btn" type="button" id="applyVoucher">Gunakan</button></div><div id="voucherFeedback" class="voucher-feedback"></div><p class="field-help" id="voucherHint">Voucher SPESIALAI07: diskon 16% untuk minimal 2 produk AI yang sama</p></div><div class="form-group"><label>NAMA PENERIMA</label><input name="name" required value="${escapeHtml(state.user?.name || '')}" placeholder="Nama kamu"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" inputmode="tel" required pattern="\\+?[0-9]{9,15}" placeholder="Contoh: 081234567890 atau +6281234567890"><p class="field-help">Nomor ini dipakai admin untuk menghubungi dan mengirim detail produk.</p></div>${devApiField}<div class="form-group"><label>CATATAN (OPSIONAL)</label><textarea name="note" placeholder="Permintaan atau informasi tambahan"></textarea></div><button class="submit-button" type="submit">Lanjut ke pembayaran</button></form></div>`);
+  openModal(`${modalHead('Checkout')}<div class="modal-body"><div class="order-summary">${cartItemsHtml}<div><span>Biaya admin</span><b>${rupiah(99)}</b></div><div class="total" id="checkoutTotalRow"><span>Total sebelum voucher</span><b>${rupiah(cartTotal() + 99)}</b></div></div><form id="checkoutForm"><div class="form-group voucher-field"><label>KODE VOUCHER (OPSIONAL)</label><div class="voucher-input-row"><div class="voucher-input-wrap"><i data-lucide="ticket-percent"></i><input id="voucherInput" name="voucherCode" autocomplete="off" maxlength="32" placeholder="Contoh: SPESIALAI07"></div><button class="voucher-apply-btn" type="button" id="applyVoucher">Gunakan</button></div><div id="voucherFeedback" class="voucher-feedback"></div><p class="field-help" id="voucherHint">Coba: JAGOBARU10, HEMAT5000, atau AIHEMAT20</p></div><div class="form-group"><label>NAMA PENERIMA</label><input name="name" required value="${escapeHtml(state.user?.name || '')}" placeholder="Nama kamu"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" inputmode="tel" required pattern="\\+?[0-9]{9,15}" placeholder="Contoh: 081234567890 atau +6281234567890"><p class="field-help">Nomor ini dipakai admin untuk menghubungi dan mengirim detail produk.</p></div>${devApiField}<div class="form-group"><label>CATATAN (OPSIONAL)</label><textarea name="note" placeholder="Permintaan atau informasi tambahan"></textarea></div><button class="submit-button" type="submit">Lanjut ke pembayaran</button></form></div>`);
   // Voucher apply button handler
   document.querySelector('#applyVoucher')?.addEventListener('click', async () => {
     const code = document.querySelector('#voucherInput')?.value.trim();
@@ -346,8 +349,8 @@ function paymentModal(customer, order) {
   const total = order.total; const orderId = order.id;
   const payload = QrisTools.dynamic(STORE_CONFIG.staticQris, total);
   state.orders = [order, ...state.orders.filter((item) => item.id !== order.id)];
-  openModal(`${modalHead('Pembayaran QRIS')}<div class="modal-body payment"><span class="payment-status">${order.status === 'pending' ? 'MENUNGGU PEMBAYARAN' : order.status.toUpperCase()}</span><h2>Selesaikan pembayaran</h2><p>ID Pesanan: ${orderId}</p>${order.status === 'pending' && order.expiresAt ? `<div class="payment-expiry"><i data-lucide="timer"></i> Stok ditahan sampai ${new Date(order.expiresAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</div>` : ''}<div class="payment-card"><div class="qr-box" id="dynamicQr"></div><div class="payment-breakdown"><div><span>Subtotal</span><b>${rupiah(order.subtotal)}</b></div>${order.discount ? `<div class="discount-line"><span>Voucher ${escapeHtml(order.voucher?.code || '')}</span><b>- ${rupiah(order.discount)}</b></div>` : ''}<div><span>Biaya admin</span><b>${rupiah(order.adminFee)}</b></div><div class="grand-total"><span>Total pembayaran</span><b>${rupiah(total)}</b></div></div><div class="payment-assurance"><i data-lucide="message-circle-check"></i><span>Setelah pembayaran selesai, Anda akan dihubungi langsung oleh admin melalui WhatsApp.</span></div></div><button class="confirm-button" id="confirmPayment" data-order-id="${order.id}" type="button">Pembayaran sudah selesai</button></div>`);
-  new QRCode(document.querySelector('#dynamicQr'), { text: payload, width: 238, height: 238, correctLevel: QRCode.CorrectLevel.M });
+  openModal(`${modalHead('Payment Gateway JagoPrem')}<div class="modal-body payment gateway-payment"><span class="payment-status">${order.status === 'pending' ? 'MENUNGGU PEMBAYARAN' : order.status.toUpperCase()}</span><h2>Pilih metode pembayaran</h2><p>ID Pesanan: ${orderId}</p><div class="payment-methods"><button class="payment-method active" type="button"><i data-lucide="qr-code"></i><span><b>QRIS</b><small>Aktif • Semua e-wallet & mobile banking</small></span><em>Dipilih</em></button><button class="payment-method unavailable" type="button" data-payment-unavailable><i data-lucide="landmark"></i><span><b>Virtual Account</b><small>BCA, BRI, BNI, Mandiri</small></span><em>Gangguan</em></button><button class="payment-method unavailable" type="button" data-payment-unavailable><i data-lucide="wallet-cards"></i><span><b>E-Wallet</b><small>DANA, GoPay, OVO, ShopeePay</small></span><em>Gangguan</em></button><button class="payment-method unavailable" type="button" data-payment-unavailable><i data-lucide="store"></i><span><b>Gerai Retail</b><small>Alfamart & Indomaret</small></span><em>Gangguan</em></button></div>${order.status === 'pending' && order.expiresAt ? `<div class="payment-expiry"><i data-lucide="timer"></i> Stok ditahan sampai ${new Date(order.expiresAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</div>` : ''}<div class="payment-card"><div class="gateway-brand"><strong>QRIS Dinamis</strong><span>PT Jago Premium Data</span></div><div class="qr-box" id="dynamicQr"><img class="qris-fallback" src="assets/qris-jagoprem-source.png" alt="QRIS JagoPrem"></div><p class="dynamic-amount-note"><i data-lucide="scan-line"></i> Nominal <strong>${rupiah(total)}</strong> sudah tertanam otomatis di QR. Jangan ubah nominal saat membayar.</p><div class="payment-breakdown"><div><span>Subtotal</span><b>${rupiah(order.subtotal)}</b></div>${order.discount ? `<div class="discount-line"><span>Voucher ${escapeHtml(order.voucher?.code || '')}</span><b>- ${rupiah(order.discount)}</b></div>` : ''}<div><span>Biaya layanan</span><b>${rupiah(order.adminFee)}</b></div><div class="grand-total"><span>Total pembayaran</span><b>${rupiah(total)}</b></div></div><div class="payment-assurance"><i data-lucide="bot"></i><span>Setelah pembayaran dikonfirmasi, bot WhatsApp JagoPrem akan mengirim detail produk otomatis ke <strong>${escapeHtml(customer.whatsapp || '')}</strong>. Pastikan nomornya benar.</span></div></div><button class="confirm-button" id="confirmPayment" data-order-id="${order.id}" type="button"><i data-lucide="badge-check"></i> Saya sudah membayar</button><p class="payment-help">Butuh bantuan? jagopremofficial01@gmail.com • Telegram @jagopremofficial</p></div>`);
+  const qrTarget = document.querySelector('#dynamicQr'); qrTarget.innerHTML = ''; new QRCode(qrTarget, { text: payload, width: 238, height: 238, correctLevel: QRCode.CorrectLevel.M });
   icons();
 }
 
@@ -427,12 +430,15 @@ ChatGPT Plus berupa akun privat, bukan sharing, dan mendukung Codex.`; }
   return 'Saya belum memahami pertanyaan itu. Coba tulis nama produk, ?cek stok?, ?cara pesan?, ?garansi?, ?Gmail sendiri?, ?pengiriman?, atau pilih Chat Admin.';
 }
 async function askBot(question) {
+  if (/stok|ready|chatgpt|gmail|garansi|kirim|pengiriman|bayar|qris|cara pesan|privat|sharing|codex|admin|manusia/i.test(question)) return localBotAnswer(question);
   if (!STORE_CONFIG.grokProxyUrl) return localBotAnswer(question);
   try {
-    const response = await fetch(STORE_CONFIG.grokProxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: question, products }) });
-    if (!response.ok) throw new Error('Chat service error');
-    const data = await response.json(); return data.answer || data.message || localBotAnswer(question);
-  } catch { return `${localBotAnswer(question)}\n\nChat AI sedang tidak tersedia, tapi kamu tetap bisa menghubungi admin.`; }
+    const response = await fetch(STORE_CONFIG.grokProxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: question }) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok && !data.answer) throw new Error('Chat service error');
+    const answer = data.answer || localBotAnswer(question);
+    return data.escalate ? `${answer}\n\nKlik “Chat Admin” supaya percakapan ini diteruskan ke tim operasional.\n[ARAHKAN_KE_ADMIN]` : answer;
+  } catch { return `${localBotAnswer(question)}\n\nAsisten AI sedang mengalami gangguan. Klik “Chat Admin” untuk diteruskan ke tim operasional.\n[ARAHKAN_KE_ADMIN]`; }
 }
 
 document.querySelector('#searchInput').addEventListener('input', renderProducts);
@@ -482,11 +488,12 @@ document.querySelector('#menuButton').addEventListener('click', () => { document
 document.querySelector('#sidebarOverlay').addEventListener('click', () => { document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('show'); });
 document.querySelectorAll('.side-nav a').forEach((link) => link.addEventListener('click', () => { document.querySelectorAll('.side-nav a').forEach((item) => item.classList.remove('active')); link.classList.add('active'); document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('show'); }));
 document.querySelector('#chatBubble').addEventListener('click', openChat); document.querySelector('#openChatSide').addEventListener('click', openChat); document.querySelector('#closeChat').addEventListener('click', closeChat);
+document.querySelectorAll('[data-social-pending]').forEach((button) => button.addEventListener('click', () => notify('Akun media sosial sedang mengalami gangguan. Hubungi Telegram @jagopremofficial.')));
 chatInput?.addEventListener('input', resizeChatComposer);
 chatInput?.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.querySelector('#chatForm').requestSubmit(); } });
 document.querySelectorAll('[data-chat-mode]').forEach((button) => button.addEventListener('click', () => switchChatMode(button.dataset.chatMode)));
 chatMessages.addEventListener('click', (event) => { const question = event.target.closest('[data-question]'); if (question) { chatInput.value = question.dataset.question; resizeChatComposer(); document.querySelector('#chatForm').requestSubmit(); } if (event.target.closest('[data-admin]')) contactAdmin(); });
-document.querySelector('#chatForm').addEventListener('submit', async (event) => { event.preventDefault(); const input = chatInput; const question = input.value.trim(); if (!question) return; input.value = ''; resizeChatComposer(); if (state.chatMode === 'admin') { try { await sendAdminMessage(question); } catch (error) { notify(error.message); } return; } addMessage(question, 'user'); const answer = await askBot(question); addMessage(answer, 'bot'); });
+document.querySelector('#chatForm').addEventListener('submit', async (event) => { event.preventDefault(); const input = chatInput; const question = input.value.trim(); if (!question) return; input.value = ''; resizeChatComposer(); if (state.chatMode === 'admin') { try { await sendAdminMessage(question); } catch (error) { notify(error.message); } return; } addMessage(question, 'user'); const answer = await askBot(question); const escalate = answer.includes('[ARAHKAN_KE_ADMIN]'); addMessage(answer.replace('[ARAHKAN_KE_ADMIN]', '').trim(), 'bot'); if (escalate) { chatMessages.insertAdjacentHTML('beforeend','<div class="quick-chat escalation-action"><button data-admin type="button">Teruskan ke tim operasional</button></div>'); chatMessages.scrollTop=chatMessages.scrollHeight; } });
 
 function setDetailQuantity(value) {
   const input = document.querySelector('#detailQuantity'); if (!input) return;
@@ -509,6 +516,8 @@ function updateDetailPricing() {
 
 modalLayer.addEventListener('click', async (event) => {
   if (event.target === modalLayer || event.target.closest('[data-close-modal]')) closeModal();
+  const referralCopy = event.target.closest('[data-copy-referral]'); if (referralCopy) { navigator.clipboard?.writeText(referralCopy.dataset.copyReferral).catch(() => {}); notify('Link referral berhasil disalin.'); }
+  if (event.target.closest('[data-payment-unavailable]')) notify('Metode ini sedang mengalami gangguan. Gunakan QRIS untuk sementara.');
   if (event.target.closest('[data-detail-minus]')) setDetailQuantity(Number(document.querySelector('#detailQuantity').value) - 1);
   if (event.target.closest('[data-detail-plus]')) setDetailQuantity(Number(document.querySelector('#detailQuantity').value) + 1);
   const detailTab = event.target.closest('[data-detail-tab]'); if (detailTab) { document.querySelectorAll('[data-detail-tab]').forEach((button) => button.classList.toggle('active', button === detailTab)); document.querySelectorAll('[data-detail-panel]').forEach((panel) => { panel.hidden = panel.dataset.detailPanel !== detailTab.dataset.detailTab; }); }
@@ -516,7 +525,7 @@ modalLayer.addEventListener('click', async (event) => {
   const addDetail = event.target.closest('[data-add-detail]'); if (addDetail) { const product = getProduct(addDetail.dataset.addDetail); const quantity = Number(document.querySelector('#detailQuantity').value); addToCart(Number(addDetail.dataset.addDetail), quantity, Boolean(document.querySelector('#detailOwnGmail')?.checked), Boolean(document.querySelector('#detailReseller')?.checked), selectedDetailVariant(product)?.id || ''); closeModal(); openCart(); }
   const buyNow = event.target.closest('[data-buy-now]'); if (buyNow) { const id = Number(buyNow.dataset.buyNow); const product = getProduct(id); const reseller = Boolean(document.querySelector('#detailReseller')?.checked); const minimum = reseller ? resellerMinimum(product) : 1; const quantity = Math.max(minimum, Math.min(Number(document.querySelector('#detailQuantity').value) || minimum, product.stock)); state.cart = [{ id, quantity, ownGmail: Boolean(document.querySelector('#detailOwnGmail')?.checked), reseller, variantId: selectedDetailVariant(product)?.id || '' }]; persistCart(); closeModal(); checkoutModal(); }
   if (event.target.closest('#logoutButton')) { await fetch('/api/auth/logout', { method: 'POST' }); state.user = null; document.querySelector('#accountButton span').textContent = 'Masuk'; closeModal(); notify('Kamu sudah keluar'); }
-  if (event.target.closest('#confirmPayment')) { const button = event.target.closest('#confirmPayment'); const order = state.orders.find((item) => item.id === button.dataset.orderId); if (!order) return notify('Detail pesanan tidak ditemukan.'); button.disabled = true; button.textContent = 'Mengirim konfirmasi...'; await sendAdminMessage(orderMessage(order)).catch(() => {}); closeModal(); openChat(); switchChatMode('admin'); notify('Detail pembayaran dikirim ke admin.'); }
+  if (event.target.closest('#confirmPayment')) { const button = event.target.closest('#confirmPayment'); const order = state.orders.find((item) => item.id === button.dataset.orderId); if (!order) return notify('Detail pesanan tidak ditemukan.'); button.disabled = true; button.textContent = 'Memverifikasi pembayaran...'; let confirmation={}; try { const response=await fetch(`/api/orders/${encodeURIComponent(order.id)}/confirm`,{method:'POST'}); confirmation=await response.json(); if(!response.ok) throw new Error(confirmation.error||'Konfirmasi gagal.'); } catch(error){ button.disabled=false; button.textContent='Saya sudah membayar'; return notify(error.message); } await sendAdminMessage(orderMessage(order)).catch(() => {}); closeModal(); openChat(); switchChatMode('admin'); notify(confirmation.message || 'Pembayaran masuk antrean verifikasi.'); }
   const reopen = event.target.closest('[data-reopen-payment]'); if (reopen) { const order = state.orders.find((item) => item.id === reopen.dataset.reopenPayment); if (order) paymentModal(order.customer, order); }
   const chatOrder = event.target.closest('[data-chat-order]'); if (chatOrder) { const order = state.orders.find((item) => item.id === chatOrder.dataset.chatOrder); closeModal(); openChat(); switchChatMode('admin'); if (order) sendAdminMessage(`Saya ingin menanyakan pesanan ${order.id}, dibuat ${new Date(order.createdAt).toLocaleString('id-ID')}.`).catch(() => {}); }
   const reviewOrder = event.target.closest('[data-review-order]'); if (reviewOrder) reviewForm(reviewOrder.dataset.reviewOrder, Number(reviewOrder.dataset.reviewProduct));
@@ -672,58 +681,10 @@ document.addEventListener('keydown', (event) => { if (event.key === 'Escape') { 
 loadStore(); loadUserSession(); icons();
 
 function showPromoPopup() {
-  openModal(`${modalHead('<i data-lucide="ticket-percent" style="vertical-align:middle;margin-right:8px;color:#10b981;"></i>Promo Eksklusif')}
-    <div class="modal-body promo-popup">
-      <div class="promo-popup-card">
-        <div class="promo-anime-bg">
-          <img src="https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=600&q=80&fit=crop" alt="" class="promo-bg-img" onerror="this.style.display='none'">
-          <div class="promo-anime-overlay"></div>
-        </div>
-        <div class="promo-card-content">
-          <div class="promo-brand">
-            <span class="brand-symbol"><i></i><b></b></span>
-            <span>JagoPrem</span>
-          </div>
-          <div class="promo-header-row">
-            <div class="promo-badge">TERBATAS</div>
-            <div class="promo-badge secondary-badge">Juli 2026</div>
-          </div>
-          <h3 class="promo-title">DISKON <span>16%</span></h3>
-          <p class="promo-subtitle">Khusus Produk <strong>AI &amp; Produktivitas</strong></p>
-
-          <div class="promo-desc-block">
-            <div class="promo-desc-item"><i data-lucide="zap"></i><span>Berlaku untuk ChatGPT, Claude, Grok, GPT Edu, Dola AI, dll.</span></div>
-            <div class="promo-desc-item"><i data-lucide="shopping-cart"></i><span>Minimal beli <strong>2 produk AI yang sama</strong> dalam 1 transaksi</span></div>
-            <div class="promo-desc-item"><i data-lucide="tag"></i><span>Masukkan kode saat checkout, diskon langsung terpotong</span></div>
-          </div>
-
-          <div class="promo-collage">
-            <img src="https://s3.xoftware.id/f/23843_ChatGpt_997_1780629550891.png" alt="ChatGPT">
-            <img src="https://s3.xoftware.id/f/46473_claude1b_997_1780858031695.png" alt="Claude">
-            <img src="https://s3.xoftware.id/f/25754_grok_997_1780655477114.png" alt="Grok">
-            <img src="https://cdn.gradual.com/images/https://d2xo500swnpgl1.cloudfront.net/uploads/oaiacademy/EDU-Content-Covers-37--16823a96-45ae-4dac-b79e-5c805bf5c7c3-1780455465231.jpeg?fit=scale-down&width=900" alt="GPT Edu">
-          </div>
-
-          <div class="promo-code-box">
-            <span class="promo-label">Kode Voucher Eksklusif</span>
-            <div class="promo-code-row">
-              <div class="promo-code" id="promoCodeText">SPESIALAI07</div>
-              <button class="promo-copy-btn" type="button" id="promoCodeCopy"><i data-lucide="copy"></i> Salin</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <button class="confirm-button" type="button" data-close-modal id="promoShopNow"><i data-lucide="shopping-bag" style="width:16px;height:16px;margin-right:6px;vertical-align:middle;"></i>Belanja Sekarang</button>
-    </div>
-  `);
-  document.querySelector('#promoCodeCopy')?.addEventListener('click', () => {
-    navigator.clipboard?.writeText('SPESIALAI07').catch(() => {});
-    const btn = document.querySelector('#promoCodeCopy');
-    if (btn) { btn.innerHTML = '<i data-lucide="check"></i> Disalin!'; icons(); setTimeout(() => { if (btn) { btn.innerHTML = '<i data-lucide="copy"></i> Salin'; icons(); } }, 2000); }
-  });
-  icons();
+  openModal(`${modalHead('Promo JagoPrem')}<div class="modal-body campaign-popup"><div class="campaign-hero"><span>JAGOPREM DEALS</span><h2>Lebih hemat untuk akun premium private.</h2><p>Pilih kode yang paling sesuai dengan pesananmu.</p></div><div class="campaign-vouchers"><button type="button" data-copy-voucher="JAGOBARU10"><span>PELANGGAN BARU</span><strong>JAGOBARU10</strong><small>Diskon 10% • minimal Rp25.000</small><i data-lucide="copy"></i></button><button type="button" data-copy-voucher="HEMAT5000"><span>HEMAT LANGSUNG</span><strong>HEMAT5000</strong><small>Potongan Rp5.000 • minimal Rp50.000</small><i data-lucide="copy"></i></button><button type="button" data-copy-voucher="AIHEMAT20"><span>AKUN AI PRIVATE</span><strong>AIHEMAT20</strong><small>Diskon 20% • minimal 2 akun AI yang sama</small><i data-lucide="copy"></i></button></div><div class="campaign-note"><i data-lucide="bot"></i><span>Bayar lewat QRIS dinamis, lalu detail produk dikirim oleh bot WhatsApp.</span></div><button class="confirm-button" type="button" data-close-modal>Mulai belanja</button></div>`);
+  document.querySelectorAll('[data-copy-voucher]').forEach((button)=>button.addEventListener('click',()=>{navigator.clipboard?.writeText(button.dataset.copyVoucher).catch(()=>{});notify(`Kode ${button.dataset.copyVoucher} disalin.`);}));
+  sessionStorage.setItem('jagoprem_campaign_seen','1'); icons();
 }
-
 // Show the promo popup on page load
 setTimeout(() => {
   const params = new URLSearchParams(window.location.search);
@@ -745,7 +706,7 @@ setTimeout(() => {
       checkoutModal();
     }
   } else {
-    // showPromoPopup();
+    if (!sessionStorage.getItem('jagoprem_campaign_seen')) showPromoPopup();
   }
 }, 1200);
 
