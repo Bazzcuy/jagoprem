@@ -11,6 +11,40 @@ const PRODUCT_OVERRIDES = {
   46473: { price: 83000, stock: 13, available_stock: 13, duration: '1 bulan', warranty: '30 hari', access: 'Akun resmi Claude Pro di claude.ai', description: CLAUDE_PRO_DESCRIPTION },
   23915: { stock: 3, available_stock: 3, warranty: '30 hari', access: 'Akun resmi privat', description: OFFICIAL_PRIVATE_DESCRIPTION }
 };
+function isAiProduct(item) { return /(^|\s)AI(?:\s|$)|GPT EDU|CHATGPT|CLAUDE|GROK|GEMINI|PERPLEXITY|KIRO|LEONARDO|KLING|DOLA AI/i.test(item.title || ''); }
+function isSharingProduct(item) {
+  const explicit = [item.title, item.access, item.thumbnail].filter(Boolean).join(' ');
+  const context = [item.title, item.access, item.description].filter(Boolean).join(' ');
+  return /sharing/i.test(explicit) && !/(bukan|non[- ]?)\s*sharing|private|privat/i.test(context);
+}
+function fallbackPrice(price, salt) {
+  const amount = Number(price) || 0;
+  if (amount <= 0) return amount;
+  if (amount < 30000) return amount + (salt % 2 === 0 ? 3200 : 3600);
+  if (amount <= 80000) return amount + (salt % 2 === 0 ? 5700 : 6100);
+  return amount + 8300;
+}
+function applyCommercePolicy(item, adjustFallbackPrice = false) {
+  const result = { ...item };
+  if (Number(result.id) === 92000) {
+    result.price = 72200;
+    result.duration = '1 tahun';
+    result.warranty = '1 bulan';
+    result.access = 'Akun private GPT Edu K12 + Codex (bukan sharing)';
+    result.variants = [{ id: '1y', label: '1 Tahun', price: 72200, duration: '1 tahun', warranty: '1 bulan' }];
+  } else if (adjustFallbackPrice) {
+    result.price = fallbackPrice(result.price, Number(result.id));
+    if (Array.isArray(result.variants)) result.variants = result.variants.map((variant, index) => ({ ...variant, price: fallbackPrice(variant.price, Number(result.id) + index) }));
+  }
+  if (isAiProduct(result)) result.access = Number(result.id) === 92000 ? result.access : 'Akun private (bukan sharing)';
+  if (isSharingProduct(result)) {
+    result.stock = 0;
+    result.available_stock = 0;
+    result.total_stock = 0;
+    result.autoRestock = false;
+  }
+  return result;
+}
 function applyCatalogDefaults(item, isFallback = false) {
   const override = PRODUCT_OVERRIDES[item.id];
   if (!override) return item;
@@ -27,9 +61,8 @@ function applyCatalogDefaults(item, isFallback = false) {
   return result;
 }
 const DOLA_PRODUCT = { id: 91001, is_best_seller: false, title: 'DOLA AI 1 BULAN', cashback_amount: 0, cashback_type: 'amount', thumbnail: 'https://sf-sf-flow-web-cdn-nontt.ciciaicdn.com/obj/ocean-flow-web-sg/favicon/new-dola/192x192.png', price: 37000, available_stock: 8, sold: 34, total_stock: 42, has_wholesale: false, stock: 8, enabled: true, featuredRank: 5, duration: '1 bulan', warranty: 'Garansi akses', access: 'Dola AI', description: 'Dola AI adalah asisten chat AI untuk percakapan, menulis, menerjemahkan, coding, mencari inspirasi, dan membahas berbagai topik. Produk aktif 1 bulan sesuai ketentuan penggunaan JagoPrem.' };
-const GPT_EDU_K12_PRODUCT = { id: 92000, is_best_seller: true, title: 'GPT EDU K12', cashback_amount: 0, cashback_type: 'amount', thumbnail: 'https://cdn.gradual.com/images/https://d2xo500swnpgl1.cloudfront.net/uploads/oaiacademy/EDU-Content-Covers-37--16823a96-45ae-4dac-b79e-5c805bf5c7c3-1780455465231.jpeg?fit=scale-down&width=900', price: 360000, available_stock: 8, sold: 0, total_stock: 8, has_wholesale: false, stock: 8, enabled: true, featuredRank: 1, duration: '1 tahun', warranty: '3 bulan', access: 'GPT Edu K12 + Codex', description: GPT_EDU_K12_DESCRIPTION, variants: [
-  { id: '1y', label: '1 Tahun', price: 360000, duration: '1 tahun', warranty: '3 bulan' },
-  { id: '2y', label: '2 Tahun', price: 675000, duration: '2 tahun', warranty: '8 bulan' }
+const GPT_EDU_K12_PRODUCT = { id: 92000, is_best_seller: true, title: 'GPT EDU K12', cashback_amount: 0, cashback_type: 'amount', thumbnail: 'https://cdn.gradual.com/images/https://d2xo500swnpgl1.cloudfront.net/uploads/oaiacademy/EDU-Content-Covers-37--16823a96-45ae-4dac-b79e-5c805bf5c7c3-1780455465231.jpeg?fit=scale-down&width=900', price: 72200, available_stock: 8, sold: 0, total_stock: 8, has_wholesale: false, stock: 8, enabled: true, featuredRank: 1, duration: '1 tahun', warranty: '1 bulan', access: 'Akun private GPT Edu K12 + Codex (bukan sharing)', description: GPT_EDU_K12_DESCRIPTION, variants: [
+  { id: '1y', label: '1 Tahun', price: 72200, duration: '1 tahun', warranty: '1 bulan' }
 ] };
 
 const fallbackCatalog = [...(window.VIOLA_PRODUCTS || []).flatMap((item) => item.id === 23843 ? [
@@ -37,7 +70,7 @@ const fallbackCatalog = [...(window.VIOLA_PRODUCTS || []).flatMap((item) => item
   { ...item, title: 'CHATGPT GO 3 BULAN', price: 25000, stock: 6, available_stock: 6, has_wholesale: false, featuredRank: 1, duration: '3 bulan', warranty: 'Garansi penuh', access: 'ChatGPT Go', description: 'Akses ChatGPT Go selama 3 bulan untuk chat AI, menulis, belajar, merangkum, dan membantu pekerjaan harian. Produk mendapat garansi penuh selama masa aktif dengan mengikuti ketentuan penggunaan.' },
   { ...item, id: 90001, title: 'CHATGPT PLUS 1 BULAN - GARANSI 2 HARI', price: 30000, stock: 5, available_stock: 5, sold: 86, has_wholesale: false, featuredRank: 2, duration: '1 bulan', warranty: '2 hari', access: 'Akun privat + Codex', description: CHATGPT_PLUS_DESCRIPTION },
   { ...item, id: 90002, title: 'CHATGPT PLUS 1 BULAN - GARANSI 20 HARI', price: 56000, stock: 7, available_stock: 7, sold: 151, has_wholesale: false, featuredRank: 3, duration: '1 bulan', warranty: '20 hari', access: 'Akun privat + Codex', description: CHATGPT_PLUS_DESCRIPTION }
-] : [applyCatalogDefaults({ ...item, stock: Math.min(item.available_stock || 0, 49), enabled: true, featuredRank: item.id === 46473 ? 4 : 99 }, true)]), DOLA_PRODUCT];
+] : [applyCatalogDefaults({ ...item, stock: Math.min(item.available_stock || 0, 49), enabled: true, featuredRank: item.id === 46473 ? 4 : 99 }, true)]), DOLA_PRODUCT].map((item) => applyCommercePolicy(item, true));
 let products = fallbackCatalog.map((item) => ({ enabled: true, ...item }));
 let validIds = new Set(products.map((item) => item.id));
 const savedCart = JSON.parse(localStorage.getItem('jagoprem_cart') || '[]');
@@ -128,7 +161,7 @@ function renderProducts() {
     const readyTag = item.stock && item.enabled ? 'Ready' : 'Habis';
     const extraTag = productCategory(item) === 'AI & produktivitas' ? 'Private' : (item.has_wholesale ? '+1' : 'Instan');
     return `
-      <article class="product-card" data-detail="${item.id}" tabindex="0">
+      <article class="product-card ${item.stock && item.enabled ? '' : 'unavailable'}" data-detail="${item.id}" tabindex="0" role="button" aria-disabled="${item.stock && item.enabled ? 'false' : 'true'}">
         <div class="product-card-media">
           <img class="product-icon" src="${item.thumbnail}" alt="${item.title}" loading="lazy">
           <span class="product-status ${item.stock && item.enabled ? 'ready' : 'empty'}">${readyTag}</span>
@@ -249,7 +282,7 @@ function productProfile(item) {
       : [match?.[1] || description, `Jenis akses ${item.access || 'mengikuti varian produk'} dengan masa aktif ${item.duration || 'sesuai paket'}.`, `Detail login, aktivasi, dan petunjuk penggunaan dikirim admin ke WhatsApp setelah pesanan diproses.`, supportsOwnGmail(item) ? 'Opsi Gmail sendiri tersedia di halaman detail produk.' : 'Tidak tersedia opsi email sendiri untuk produk ini.', `Garansi ${item.warranty || 'mengikuti ketentuan produk'} untuk kendala akses yang memenuhi syarat.`],
     category: cat,
     delivery: isDevApi ? 'API Key via WhatsApp' : 'Dikirim melalui WhatsApp',
-    access: category === 'AI & produktivitas' ? 'Akun private (bukan sharing)' : (item.access || (isDevApi ? 'API Key JagoPrem LLM (api.jagoprem.shop)' : 'Sesuai varian yang tersedia')),
+    access: cat === 'AI & produktivitas' ? 'Akun private (bukan sharing)' : (item.access || (isDevApi ? 'API Key JagoPrem LLM (api.jagoprem.shop)' : 'Sesuai varian yang tersedia')),
     duration: item.duration || (isDevApi ? 'Pay-as-you-go (tidak ada expiry)' : 'Sesuai varian'),
     warranty: item.warranty || (isDevApi ? 'Garansi saldo masuk' : 'Sesuai ketentuan produk'),
     terms: isDevApi
@@ -267,6 +300,7 @@ function productProfile(item) {
 
 function detailModal(id) {
   const item = getProduct(id); if (!item) return;
+  if (!item.enabled || item.stock <= 0) { notify('Produk ini sedang habis dan belum bisa dipilih.'); return; }
   const profile = productProfile(item);
   const defaultVariant = productVariant(item);
   const resellerMin = resellerMinimum(item); const resellerAvailable = item.stock >= resellerMin && item.enabled;
@@ -382,9 +416,9 @@ async function reviewsModal() {
 
 function reviewForm(orderId, productId) { const product = getProduct(productId); openModal(`${modalHead('Tulis ulasan')}<div class="modal-body"><div class="review-product"><img src="${product.thumbnail}" alt=""><span><small>PRODUK YANG DIULAS</small><b>${escapeHtml(product.title)}</b></span></div><form id="reviewForm" data-order-id="${orderId}" data-product-id="${productId}"><fieldset class="rating-field"><legend>BERI BINTANG</legend>${[5,4,3,2,1].map((rating) => `<label><input type="radio" name="rating" value="${rating}" required><span>${rating}<i data-lucide="star"></i></span></label>`).join('')}</fieldset><div class="form-group"><label>KOMENTAR</label><textarea name="comment" minlength="8" maxlength="600" required placeholder="Ceritakan pengalamanmu menggunakan produk ini..."></textarea></div><button class="submit-button" type="submit">Kirim ulasan</button></form></div>`); }
 
-function chatWelcome() { return '<div class="message bot">Hai! Saya bisa bantu cek stok, harga, varian, garansi, pembayaran, dan cara pemesanan.</div><div class="quick-chat"><button data-question="Produk apa yang ready?" type="button">Cek stok</button><button data-question="Tampilkan paket ChatGPT" type="button">Paket ChatGPT</button><button data-question="Bagaimana cara pesan?" type="button">Cara pesan</button><button data-question="Bagaimana pembayaran QRIS?" type="button">Pembayaran</button><button data-question="Bagaimana garansi produk?" type="button">Garansi</button><button data-question="Apa itu Gmail sendiri?" type="button">Gmail sendiri</button><button data-question="Bagaimana produk dikirim?" type="button">Pengiriman</button><button data-admin type="button">Chat admin</button></div>'; }
-function openChat() { chatPanel.classList.add('open'); chatPanel.setAttribute('aria-hidden', 'false'); requestAnimationFrame(() => { chatInput?.focus(); resizeChatComposer(); }); chatMessages.scrollTop = chatMessages.scrollHeight; }
-function closeChat() { chatPanel.classList.remove('open'); chatPanel.setAttribute('aria-hidden', 'true'); }
+function chatWelcome() { return '<div class="chat-welcome"><span>JAGOPREM ASSISTANT</span><strong>Ada yang bisa dibantu?</strong><small>Tanyakan stok, harga, garansi, pembayaran, atau cara pemesanan.</small></div><div class="message bot">Hai! Saya siap bantu kebutuhan akun premium kamu.</div><div class="quick-chat"><button data-question="Produk apa yang ready?" type="button">Cek stok</button><button data-question="Tampilkan paket ChatGPT" type="button">Paket ChatGPT</button><button data-question="Bagaimana cara pesan?" type="button">Cara pesan</button><button data-question="Bagaimana pembayaran QRIS?" type="button">Pembayaran QRIS</button><button data-question="Bagaimana garansi produk?" type="button">Info garansi</button><button data-question="Bagaimana produk dikirim?" type="button">Pengiriman</button><button data-admin type="button">Hubungi tim operasional</button></div>'; }
+function openChat() { chatPanel.classList.add('open'); chatPanel.style.opacity = '1'; chatPanel.style.transform = 'none'; chatPanel.style.pointerEvents = 'auto'; chatPanel.setAttribute('aria-hidden', 'false'); requestAnimationFrame(() => { chatInput?.focus(); resizeChatComposer(); }); chatMessages.scrollTop = chatMessages.scrollHeight; }
+function closeChat() { chatPanel.classList.remove('open'); chatPanel.style.removeProperty('opacity'); chatPanel.style.removeProperty('transform'); chatPanel.style.removeProperty('pointer-events'); chatPanel.setAttribute('aria-hidden', 'true'); }
 function addMessage(text, role) { chatMessages.insertAdjacentHTML('beforeend', messageBubble(text, role)); chatMessages.scrollTop = chatMessages.scrollHeight; }
 function contactAdmin() { switchChatMode('admin'); }
 function customerIdentity() { const last = JSON.parse(localStorage.getItem('jagoprem_last_order') || 'null'); return last?.customer || state.user || {}; }
@@ -404,7 +438,7 @@ async function loadAdminChat() {
 function switchChatMode(mode) {
   state.chatMode = mode;
   document.querySelectorAll('[data-chat-mode]').forEach((button) => button.classList.toggle('active', button.dataset.chatMode === mode));
-  document.querySelector('#chatTitle').textContent = mode === 'admin' ? 'Admin JagoPrem' : 'Asisten JagoPrem';
+  document.querySelector('#chatTitle').textContent = mode === 'admin' ? 'Tim Operasional JagoPrem' : 'JagoPrem Assistant';
   if (mode === 'admin') loadAdminChat(); else chatMessages.innerHTML = chatWelcome(); resizeChatComposer();
 }
 async function sendAdminMessage(message) { const response = await fetch(`/api/chat/${state.chatId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, customer: customerIdentity() }) }); const chat = await response.json().catch(() => null); if (!response.ok) throw new Error(chat?.error || 'Pesan gagal dikirim.'); if (chat?.id) setChatId(chat.id); await loadAdminChat(); }
@@ -477,10 +511,20 @@ if (carousel) {
   showSlide(0);
 }
 document.querySelector('#resetFilter').addEventListener('click', () => { state.stock = 'all'; state.best = false; state.wholesale = false; state.category = ''; document.querySelector('input[name="stock"][value="all"]').checked = true; document.querySelector('#bestFilter').checked = false; document.querySelector('#wholesaleFilter').checked = false; document.querySelector('#searchInput').value = ''; renderProducts(); });
-productGrid.addEventListener('click', (event) => { const add = event.target.closest('[data-add]'); if (add) { event.stopPropagation(); addToCart(Number(add.dataset.add), 1); return; } const card = event.target.closest('[data-detail]'); if (card) detailModal(card.dataset.detail); });
-productGrid.addEventListener('keydown', (event) => { const card = event.target.closest('[data-detail]'); if (card && (event.key === 'Enter' || event.key === ' ')) detailModal(card.dataset.detail); });
-document.querySelector('#featuredRail')?.addEventListener('click', (event) => { const card = event.target.closest('[data-detail]'); if (card) detailModal(card.dataset.detail); });
-document.querySelector('#featuredRail')?.addEventListener('keydown', (event) => { const card = event.target.closest('[data-detail]'); if (card && (event.key === 'Enter' || event.key === ' ')) detailModal(card.dataset.detail); });
+function openProductCard(card) {
+  if (!card) return;
+  const product = getProduct(card.dataset.detail);
+  if (!product || !product.enabled || product.stock <= 0) { notify('Produk ini sedang habis dan belum bisa dipilih.'); return; }
+  detailModal(product.id);
+}
+document.addEventListener('click', (event) => {
+  const card = event.target.closest('.product-card[data-detail]');
+  if (card) { event.preventDefault(); openProductCard(card); }
+});
+document.addEventListener('keydown', (event) => {
+  const card = event.target.closest('.product-card[data-detail]');
+  if (card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openProductCard(card); }
+});
 document.querySelector('#cartItems').addEventListener('click', (event) => { const remove = event.target.closest('[data-remove]'); const plus = event.target.closest('[data-cart-plus]'); const minus = event.target.closest('[data-cart-minus]'); if (remove) state.cart.splice(Number(remove.dataset.remove), 1); if (plus) { const line = state.cart[Number(plus.dataset.cartPlus)]; if (cartQuantityFor(line.id) < getProduct(line.id).stock) line.quantity += 1; } if (minus) { const line = state.cart[Number(minus.dataset.cartMinus)]; const minimum = line.reseller ? resellerMinimum(getProduct(line.id)) : 1; if (line.quantity > minimum) line.quantity -= 1; } if (remove || plus || minus) persistCart(); });
 document.querySelector('#cartButton').addEventListener('click', openCart); document.querySelectorAll('[data-close-cart]').forEach((button) => button.addEventListener('click', closeCart)); overlay.addEventListener('click', closeCart); document.querySelector('#checkoutButton').addEventListener('click', checkoutModal); document.querySelector('#accountButton').addEventListener('click', accountModal);
 document.querySelector('#sideAccount').addEventListener('click', accountModal);
@@ -598,7 +642,7 @@ async function loadStore() {
     if (!Array.isArray(data.products) || data.products.length === 0) throw new Error('Katalog server kosong');
     products = data.products.map((item) => {
       const base = supportsOwnGmail(item) ? { ...item, access: 'Akun privat + Codex', description: CHATGPT_PLUS_DESCRIPTION } : item;
-      return applyCatalogDefaults(base, false);
+      return applyCommercePolicy(applyCatalogDefaults(base, false), false);
     });
     validIds = new Set(products.map((item) => item.id));
   } catch {
@@ -617,7 +661,7 @@ async function loadUserSession() {
 
 document.querySelector('#historyButton').addEventListener('click', historyModal);
 document.querySelector('#reviewsButton').addEventListener('click', reviewsModal);
-document.querySelector('#infoButton').addEventListener('click', () => { document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('show'); openModal(`${modalHead('Informasi jagoprem.shop')}<div class="modal-body"><div class="about-profile"><div class="about-photo"><img src="assets/afran-ronaldi-v2.png" alt="Afran Ronaldi"></div><div><small>PENGELOLA JAGOPREM</small><h3>Afran Ronaldi</h3><p>jagoprem.shop dibangun untuk mempermudah pembelian akun digital premium dengan katalog yang jelas, stok konsisten, dan proses transaksi yang sederhana.</p></div></div><div class="about-points"><div><i data-lucide="package-check"></i><span><b>Stok terpantau</b><small>Jumlah pembelian mengikuti stok yang tersedia.</small></span></div><div><i data-lucide="qr-code"></i><span><b>QRIS sesuai tagihan</b><small>Nominal pembayaran dibuat sesuai total checkout.</small></span></div><div><i data-lucide="message-circle"></i><span><b>Bantuan langsung</b><small>Produk dikirim dan kendala dibantu melalui WhatsApp.</small></span></div></div><button class="submit-button" type="button" data-open-admin-chat>Hubungi admin</button></div>`); });
+document.querySelector('#infoButton').addEventListener('click', () => { document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('show'); openModal(`${modalHead('Informasi jagoprem.shop')}<div class="modal-body"><div class="about-points"><div><i data-lucide="building-2"></i><span><b>PT Jago Premium Data</b><small>Layanan akun premium private dengan informasi produk yang transparan.</small></span></div><div><i data-lucide="package-check"></i><span><b>Stok terpantau</b><small>Katalog toko dan dashboard admin menggunakan data yang sama.</small></span></div><div><i data-lucide="qr-code"></i><span><b>QRIS sesuai tagihan</b><small>Nominal pembayaran dibuat sesuai total checkout.</small></span></div><div><i data-lucide="message-circle"></i><span><b>Bantuan langsung</b><small>Produk dikirim dan kendala dibantu melalui WhatsApp.</small></span></div></div><button class="submit-button" type="button" data-open-admin-chat>Hubungi tim operasional</button></div>`); });
 modalLayer.addEventListener('click', (event) => { if (event.target.closest('[data-open-admin-chat]')) { closeModal(); openChat(); switchChatMode('admin'); } });
 // ---- SYNC SYSTEM ----
 let lastSyncTime = new Date().toISOString();

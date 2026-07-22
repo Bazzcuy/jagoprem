@@ -166,3 +166,4 @@ body{background:linear-gradient(180deg,#f7fcfd 0%,#eef8fa 44%,#f7fbfc 100%);colo
 .admin-app>aside nav button.active,.admin-app>aside nav button:hover{background:rgba(76,152,255,.2)}
 .admin-login button,.save-product,.voucher-form button,.llm-btn-save,.llm-add-btn,.llm-copy-btn,.chat-user-btn,.variant-form-row button,.admin-conversation button[type=submit]{background:linear-gradient(135deg,#176fe0,#2f8cff)}
 .stat,.panel,.chat-list,.admin-conversation{border-color:#dbe4f2;box-shadow:0 12px 30px rgba(15,48,100,.07)}
+.product-name{display:inline-flex!important;flex-direction:column;align-items:flex-start;gap:4px}.product-policy{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:9px!important;line-height:1;font-weight:800}.product-policy.private{background:#eaf3ff;color:#176fe0}.product-policy.sharing{background:#fff0f0;color:#d64444}.table-input:disabled,.toggle:disabled{cursor:not-allowed;opacity:.55;background:#f1f3f6}
