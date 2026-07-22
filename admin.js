@@ -219,6 +219,13 @@ function accountTable() {
   return `${pointControls}<div class="account-workspace"><div class="panel account-list"><div class="panel-head"><div><h2>Akun pembeli</h2><span class="panel-meta">${users.length} akun terdaftar</span></div><input id="accountSearch" type="search" placeholder="Cari nama atau email..."></div><div class="table-wrap"><table><thead><tr><th>PEMBELI</th><th>BERGABUNG</th><th>PESANAN</th><th>POIN</th><th>TOTAL</th><th>STATUS</th><th></th></tr></thead><tbody>${users.map((user) => `<tr data-account-row="${escapeHtml(user.id)}"><td><b>${escapeHtml(user.name)}</b><br><small>${escapeHtml(user.email)}</small></td><td>${formatDateTime(user.createdAt)}</td><td>${Number(user.orderCount || 0)}</td><td>${Number(user.points || 0)}</td><td>${money(user.totalSpent)}</td><td><span class="account-status ${user.blocked ? 'blocked' : 'active'}">${user.blocked ? 'Diblokir' : 'Aktif'}</span></td><td><button class="account-detail-button" data-account-detail="${escapeHtml(user.id)}">Detail</button></td></tr>`).join('')}</tbody></table></div></div>${selected ? accountDetail(selected) : ''}</div>`;
 }
 
+const accountTableBase = accountTable;
+function rewardAdminPanel() {
+  const rewards = adminState.redemptionRewards || [];
+  return `<section class="panel reward-admin"><div class="panel-head"><div><h2>Katalog Penukaran Poin</h2><span class="panel-meta">Hadiah belum tampil ke pembeli sampai opsi Publikasikan dicentang</span></div></div><form id="rewardForm" class="reward-form"><label>NAMA HADIAH<input name="name" required maxlength="100" placeholder="Contoh: Voucher Rp10.000"></label><label>HARGA POIN<input name="pointsCost" required type="number" min="1" placeholder="1000"></label><label>STOK<input name="stock" required type="number" min="0" value="0"></label><label class="wide">DESKRIPSI<input name="description" maxlength="300" placeholder="Keterangan hadiah"></label><label class="reward-publish"><input name="published" type="checkbox"> Publikasikan</label><button class="save-product" type="submit">Tambah hadiah</button></form><div class="reward-admin-list">${rewards.length ? rewards.map((reward)=>`<article><span><b>${escapeHtml(reward.name)}</b><small>${Number(reward.pointsCost).toLocaleString('id-ID')} poin · stok ${Number(reward.stock || 0)} · ${reward.published ? 'publik' : 'draft'}</small></span><button type="button" data-delete-reward="${escapeHtml(reward.id)}">Hapus</button></article>`).join('') : '<div class="empty-admin">Katalog hadiah masih kosong.</div>'}</div></section>`;
+}
+accountTable = function accountTableWithRewards() { return `${accountTableBase()}${rewardAdminPanel()}`; };
+
 function llmUserDetail(user) {
   return `<div class="llm-user-detail-wrap">
     <div class="llm-user-detail-header">
@@ -404,6 +411,14 @@ document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListe
 document.querySelector('#adminLogout').addEventListener('click', async () => { await api('/api/admin/logout', { method: 'POST' }); location.reload(); });
 
 content.addEventListener('click', async (event) => {
+  const deleteReward = event.target.closest('[data-delete-reward]');
+  if (deleteReward) {
+    const reward = (adminState.redemptionRewards || []).find((item) => item.id === deleteReward.dataset.deleteReward);
+    const confirmed = await openAdminDialog({ kind: 'confirm', title: 'Hapus hadiah penukaran?', description: reward?.name || 'Hadiah akan dihapus dari katalog.', confirmLabel: 'Hapus hadiah', destructive: true, eyebrow: 'JAGOPOIN' });
+    if (!confirmed) return;
+    try { await api(`/api/admin/point-rewards/${encodeURIComponent(deleteReward.dataset.deleteReward)}`, { method: 'DELETE' }); adminState.redemptionRewards = (adminState.redemptionRewards || []).filter((item) => item.id !== deleteReward.dataset.deleteReward); render(); toast('Hadiah dihapus.'); } catch (error) { toast(error.message); }
+    return;
+  }
   const sortButton = event.target.closest('[data-chat-sort]');
   if (sortButton) {
     chatSortMode = sortButton.dataset.chatSort === 'newest' ? 'newest' : 'unread';
@@ -717,6 +732,12 @@ content.addEventListener('keydown', (event) => {
 });
 
 content.addEventListener('submit', async (event) => {
+  if (event.target.id === 'rewardForm') {
+    event.preventDefault();
+    const button = event.target.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Menambahkan...';
+    try { const form = Object.fromEntries(new FormData(event.target)); form.pointsCost = Number(form.pointsCost); form.stock = Number(form.stock); form.published = event.target.elements.published.checked; const reward = await api('/api/admin/point-rewards', { method: 'POST', body: JSON.stringify(form) }); adminState.redemptionRewards = [reward, ...(adminState.redemptionRewards || [])]; render(); toast('Hadiah penukaran ditambahkan.'); } catch (error) { button.disabled = false; button.textContent = 'Tambah hadiah'; toast(error.message); }
+    return;
+  }
   if (event.target.id === 'pointAdjustForm') {
     event.preventDefault();
     const button = event.target.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Menyimpan...';
