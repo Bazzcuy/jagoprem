@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 17,
+  "schemaVersion": 18,
   "products": [
     {
       "id": 46473,
@@ -674,11 +674,11 @@
     {
       "id": 93000,
       "is_best_seller": false,
-      "title": "SALDO API JagoPrem LLM",
+      "title": "PAKET TOKEN JAGOPREM API LLM",
       "cashback_amount": 0,
       "cashback_type": "amount",
       "thumbnail": "assets/jagoprem-mark.png",
-      "price": 15500,
+      "price": 28500,
       "available_stock": 999,
       "sold": 0,
       "total_stock": 999,
@@ -689,40 +689,33 @@
       "duration": "Pay-as-you-go",
       "warranty": "Garansi saldo masuk",
       "access": "API Key JagoPrem LLM",
-      "description": "Top-up saldo API JagoPrem LLM untuk mengakses 100+ model AI (GPT-4o, Claude, Gemini, DeepSeek, dll) melalui endpoint yang kompatibel OpenAI. Kurs tetap Rp12.300/. Akun dan API Key akan dibuatkan oleh admin setelah pembayaran dikonfirmasi.",
+      "description": "Paket token JagoPrem API untuk mengakses 100+ model AI melalui endpoint kompatibel OpenAI. Harga Rp28.500 per 1 juta token. API Key dikirim setelah pembayaran dikonfirmasi.",
       "variants": [
         {
-          "id": "5usd",
-          "label": "Saldo $5 USD",
-          "price": 67200,
+          "id": "1m",
+          "label": "1 Juta Token",
+          "price": 28500,
           "duration": "Pay-as-you-go",
           "warranty": "Garansi saldo masuk"
         },
         {
-          "id": "10usd",
-          "label": "Saldo $10 USD",
-          "price": 131300,
+          "id": "5m",
+          "label": "5 Juta Token",
+          "price": 142500,
           "duration": "Pay-as-you-go",
           "warranty": "Garansi saldo masuk"
         },
         {
-          "id": "25usd",
-          "label": "Saldo $25 USD",
-          "price": 315800,
+          "id": "10m",
+          "label": "10 Juta Token",
+          "price": 285000,
           "duration": "Pay-as-you-go",
           "warranty": "Garansi saldo masuk"
         },
         {
-          "id": "50usd",
-          "label": "Saldo $50 USD",
-          "price": 623300,
-          "duration": "Pay-as-you-go",
-          "warranty": "Garansi saldo masuk"
-        },
-        {
-          "id": "100usd",
-          "label": "Saldo $100 USD",
-          "price": 1238300,
+          "id": "25m",
+          "label": "25 Juta Token",
+          "price": 712500,
           "duration": "Pay-as-you-go",
           "warranty": "Garansi saldo masuk"
         }

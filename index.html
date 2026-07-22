@@ -11,16 +11,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=11">
+  <link rel="stylesheet" href="styles.css?v=12">
 </head>
 <body class="jagoprem-layout">
   <header class="reference-header">
     <div class="reference-nav">
-      <a class="jp-brand" href="#home" aria-label="Beranda JagoPrem"><img src="assets/jagoprem-brand.png" alt="JagoPrem"></a>
+      <a class="jp-brand" href="#home" aria-label="Beranda JagoPrem"><img src="assets/jagoprem-mark.png" alt=""><strong>Jago<span>prem</span></strong></a>
       <nav aria-label="Navigasi utama">
         <a href="#products">Produk</a>
-        <a href="docs.html">Blog</a>
-        <button type="button" data-open-admin-chat>Lapor Masalah</button>
+        <a href="api-llm.html">API LLM</a>
+        <button type="button" data-open-report>Lapor Masalah</button>
         <button type="button" data-open-admin-chat>Hubungi CS</button>
       </nav>
       <div class="reference-actions">
@@ -33,12 +33,12 @@
   </header>
 
   <aside class="sidebar" id="sidebar">
-    <a class="brand" href="#home"><img src="assets/jagoprem-brand.png" alt="JagoPrem"></a>
+    <a class="brand" href="#home"><img src="assets/jagoprem-mark.png" alt=""><strong>Jago<span>prem</span></strong></a>
     <nav class="side-nav">
       <a class="nav-item active" href="#home"><i data-lucide="house"></i><span>Beranda</span></a>
       <a class="nav-item" href="#products"><i data-lucide="shopping-bag"></i><span>Produk</span></a>
-      <a class="nav-item" href="docs.html"><i data-lucide="book-open"></i><span>Blog</span></a>
       <a class="nav-item" href="api-llm.html"><i data-lucide="terminal"></i><span>API LLM</span></a>
+      <button class="nav-item" type="button" data-open-report><i data-lucide="triangle-alert"></i><span>Lapor Masalah</span></button>
       <button class="nav-item" id="historyButton" type="button"><i data-lucide="receipt-text"></i><span>Pesanan</span></button>
       <button class="nav-item" id="reviewsButton" type="button"><i data-lucide="star"></i><span>Ulasan</span></button>
       <button class="nav-item" id="sideAccount" type="button"><i data-lucide="user"></i><span>Akun</span></button>
@@ -58,20 +58,6 @@
         </div>
       </div>
       <div class="featured-window"><div class="featured-rail" id="featuredRail"></div></div>
-    </section>
-
-    <section class="social-proof section-shell">
-      <span class="eyebrow">Social Proof</span>
-      <h2>Dipercaya 10.000+ Pelanggan</h2>
-      <p>Digunakan oleh pelajar, mahasiswa, profesional, kreator digital, dan pengguna dari berbagai lingkungan pendidikan di Indonesia.</p>
-      <small>Beberapa pelanggan kami berasal dari:</small>
-      <div class="proof-logos">
-        <div><b>UNIVERSITAS</b><span>INDONESIA</span></div>
-        <div><b>WINNER</b><span>School</span></div>
-        <div class="assist"><i data-lucide="shield-check"></i><b>Assist.id</b></div>
-        <div><b>SMAN</b><span>Indonesia</span></div>
-        <div><b>KAMPUS</b><span>Nusantara</span></div>
-      </div>
     </section>
 
     <section class="benefits-section" id="benefits">
@@ -133,7 +119,7 @@
       <div class="footer-about"><div class="footer-logo"><img src="assets/jagoprem-mark.png" alt=""><strong>JagoPrem</strong></div><p>Marketplace akun premium private dan bergaransi milik PT Jago Premium Data. Belanja mudah, hemat, dan didukung bantuan pelanggan.</p><div class="social-icons"><button type="button" data-social-pending aria-label="Twitter"><i data-lucide="twitter"></i></button><button type="button" data-social-pending aria-label="Instagram"><i data-lucide="instagram"></i></button><button type="button" data-social-pending aria-label="Facebook"><i data-lucide="facebook"></i></button></div><a class="footer-contact" href="mailto:jagopremofficial01@gmail.com">jagopremofficial01@gmail.com</a><a class="footer-contact" href="https://t.me/jagopremofficial" target="_blank" rel="noreferrer">Telegram @jagopremofficial</a></div>
       <div><h3>Produk</h3><a href="#products">ChatGPT Plus</a><a href="#products">Spotify</a><a href="#products">YouTube Premium</a><a href="#products">Aplikasi Premium</a></div>
       <div><h3>Layanan</h3><a href="api-llm.html">API LLM</a><a href="#products">AI Tools</a><a href="#products">Hiburan</a><a href="#products">Produktivitas</a></div>
-      <div><h3>Bantuan</h3><button type="button" data-open-admin-chat>Tentang Kami</button><button type="button" data-open-admin-chat>Hubungi Kami</button><button type="button" data-open-admin-chat>Lapor Masalah</button><a href="docs.html">Syarat Layanan</a></div>
+      <div><h3>Bantuan</h3><button type="button" id="infoButtonFooter">Tentang Kami</button><button type="button" data-open-admin-chat>Hubungi Kami</button><button type="button" data-open-report>Lapor Masalah</button><a href="docs.html">Syarat Layanan</a></div>
     </div>
     <div class="section-shell footer-bottom"><span>© 2026 JagoPrem. Seluruh hak cipta dilindungi.</span><span><i data-lucide="lock-keyhole"></i> Pembayaran Aman &nbsp; Indonesia • Global</span></div>
   </footer>
@@ -143,6 +129,6 @@
   <section class="chat-panel" id="chatPanel" aria-hidden="true"><div class="chat-head"><div class="bot-avatar"><img src="assets/jagoprem-mark.png" alt=""></div><div><strong id="chatTitle">JagoPrem Care</strong><span><i></i> AI &amp; Tim Operasional</span></div><button id="closeChat" type="button" aria-label="Tutup chat"><i data-lucide="x"></i></button></div><div class="chat-messages" id="chatMessages" aria-live="polite"></div><form class="chat-form" id="chatForm"><textarea id="chatInput" rows="1" placeholder="Tulis pesan kamu..." autocomplete="off" aria-label="Tulis pesan"></textarea><button type="submit" aria-label="Kirim pesan"><i data-lucide="send"></i></button></form><div class="chat-powered"><i data-lucide="shield-check"></i> Satu percakapan bersama AI &amp; tim JagoPrem</div></section>
   <button class="chat-bubble" id="chatBubble" type="button" aria-label="Buka chat"><i data-lucide="message-circle"></i><span>CS 24/7</span><b id="chatBadge" class="red-badge" style="display:none">0</b></button>
   <div class="modal-layer" id="modalLayer" aria-hidden="true"><section class="modal" id="modalContent" role="dialog" aria-modal="true"></section></div><div class="toast" id="toast" role="status"></div>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="catalog.js?v=11"></script><script src="qris.js?v=11"></script><script src="script.js?v=11"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="catalog.js?v=12"></script><script src="qris.js?v=12"></script><script src="script.js?v=12"></script>
 </body>
 </html>

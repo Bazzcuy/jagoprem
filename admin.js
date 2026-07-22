@@ -230,7 +230,7 @@ function llmUserDetail(user) {
     </div>
     <div class="llm-user-stats">
       <div class="llm-stat-box"><span>Terdaftar</span><strong>${formatDateTime(user.createdAt || user.created_at)}</strong></div>
-      <div class="llm-stat-box"><span>Saldo (USD)</span><strong>$${Number(user.balance_usd || 0).toFixed(2)}</strong></div>
+      <div class="llm-stat-box"><span>Sisa Token</span><strong>${Number(user.balance_tokens || 0).toLocaleString('id-ID')}</strong></div>
       <div class="llm-stat-box"><span>Total Requests</span><strong>${Number(user.total_requests || 0).toLocaleString()}</strong></div>
       <div class="llm-stat-box"><span>Failed Requests</span><strong>${Number(user.failed_requests || 0).toLocaleString()}</strong></div>
       <div class="llm-stat-box"><span>Total Tokens</span><strong>${escapeHtml(String(user.total_tokens || '0'))}</strong></div>
@@ -246,7 +246,7 @@ function llmUserDetail(user) {
       <div class="llm-edit-grid">
         <label class="llm-edit-field">Nama<input name="name" required maxlength="80" value="${escapeHtml(user.name)}" /></label>
         <label class="llm-edit-field">Email<input name="email" type="email" required value="${escapeHtml(user.email)}" /></label>
-        <label class="llm-edit-field">Saldo (USD)<input name="balance_usd" type="number" step="0.01" min="0" value="${Number(user.balance_usd || 0)}" /></label>
+        <label class="llm-edit-field">Sisa Token<input name="balance_tokens" type="number" step="1" min="0" value="${Number(user.balance_tokens || 0)}" /></label>
         <label class="llm-edit-field">Total Requests<input name="total_requests" type="number" min="0" value="${Number(user.total_requests || 0)}" /></label>
         <label class="llm-edit-field">Failed Requests<input name="failed_requests" type="number" min="0" value="${Number(user.failed_requests || 0)}" /></label>
         <label class="llm-edit-field">Total Tokens (misal: 182.4k)<input name="total_tokens" maxlength="30" value="${escapeHtml(String(user.total_tokens || '0'))}" /></label>
@@ -294,7 +294,7 @@ function llmUserTable() {
             <span>${escapeHtml(u.email)}</span>
             <span class="llm-status-chip ${u.activated ? 'active' : 'pending'}">${u.activated ? 'Aktif' : 'Tertunda'}</span>
           </div>
-          <div class="llm-card-balance">$${Number(u.balance_usd || 0).toFixed(2)}</div>
+          <div class="llm-card-balance">${Number(u.balance_tokens || 0).toLocaleString('id-ID')} token</div>
         </div>`).join('') : '<p class="llm-empty">Belum ada akun LLM. Klik Tambah Akun untuk mulai.</p>'}
       </div>
       <div class="llm-detail-panel">

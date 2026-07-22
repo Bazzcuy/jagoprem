@@ -541,10 +541,10 @@
         <div class="metrics-row">
           <div class="metric-card">
             <div class="metric-card-label">
-              Remaining Balance
+              Sisa Token
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
-            <div class="metric-card-value" id="metBalance">$0.0000</div>
+            <div class="metric-card-value" id="metBalance">0 token</div>
             <div class="metric-card-sub" id="metStatus">Status: —</div>
           </div>
           <div class="metric-card">
@@ -579,13 +579,13 @@
             <div class="bar-chart-wrap" id="barChart"></div>
           </div>
           <div class="card">
-            <div class="card-title">Top Virtual Keys</div>
+          <div class="card-title">Ringkasan API Key</div>
             <table>
-              <thead><tr><th>Key Alias</th><th>Spend</th></tr></thead>
+              <thead><tr><th>Key Alias</th><th>Sisa Token</th></tr></thead>
               <tbody>
                 <tr>
                   <td><span class="badge purple" id="keyAliasBadge">default</span></td>
-                  <td id="keyAliasSpend">$0.0000</td>
+                  <td id="keyAliasSpend">0 token</td>
                 </tr>
               </tbody>
             </table>
@@ -606,12 +606,12 @@
             <button class="key-action" onclick="copyKey()">Copy</button>
           </div>
           <table>
-            <thead><tr><th>Key Name</th><th>Spend</th><th>Budget</th><th>Status</th><th>Created</th></tr></thead>
+            <thead><tr><th>Key Name</th><th>Pemakaian</th><th>Sisa Token</th><th>Status</th><th>Dibuat</th></tr></thead>
             <tbody>
               <tr>
                 <td>JagoPrem API Key</td>
                 <td>N/A</td>
-                <td id="vkBudget">$0.0000</td>
+                <td id="vkBudget">0 token</td>
                 <td><span class="badge green" id="vkStatus">Active</span></td>
                 <td id="vkCreated">—</td>
               </tr>
@@ -831,20 +831,20 @@
 
 <script>
 const MODELS = [
-  { id: 'openai/gpt-4o', info: 'gpt-4o', provider: 'openai', endpoint: '/v1/chat/completions', cost: 'In: $5.00\nOut: $15.00' },
-  { id: 'openai/gpt-4o-mini', info: 'gpt-4o-mini', provider: 'openai', endpoint: '/v1/chat/completions', cost: 'In: $0.15\nOut: $0.60' },
-  { id: 'openai/gpt-4.1', info: 'gpt-4.1', provider: 'openai', endpoint: '/v1/chat/completions', cost: 'In: $2.00\nOut: $8.00' },
-  { id: 'anthropic/claude-3-5-sonnet', info: 'claude-3-5-sonnet-20241022', provider: 'anthropic', endpoint: '/v1/chat/completions', cost: 'In: $3.00\nOut: $15.00' },
-  { id: 'anthropic/claude-opus-4', info: 'claude-opus-4-5', provider: 'anthropic', endpoint: '/v1/chat/completions', cost: 'In: $15.00\nOut: $75.00' },
-  { id: 'anthropic/claude-fable', info: 'claude-fable', provider: 'anthropic', endpoint: '/v1/chat/completions', cost: 'In: $3.00\nOut: $15.00' },
-  { id: 'google/gemini-2.5-pro', info: 'gemini-2.5-pro', provider: 'google', endpoint: '/v1/chat/completions', cost: 'In: $1.25\nOut: $10.00' },
-  { id: 'google/gemini-2.5-flash', info: 'gemini-2.5-flash', provider: 'google', endpoint: '/v1/chat/completions', cost: 'In: $0.15\nOut: $0.60' },
-  { id: 'deepseek/deepseek-chat', info: 'deepseek-chat', provider: 'deepseek', endpoint: '/v1/chat/completions', cost: 'In: $0.07\nOut: $1.10' },
-  { id: 'deepseek/deepseek-reasoner', info: 'deepseek-reasoner', provider: 'deepseek', endpoint: '/v1/chat/completions', cost: 'In: $0.55\nOut: $2.19' },
-  { id: 'openai/gpt-5.6-sol', info: 'gpt-5.6-sol', provider: 'openai', endpoint: '/v1/chat/completions', cost: 'In: $10.00\nOut: $30.00' },
-  { id: 'openai/gpt-5.6-luna', info: 'gpt-5.6-luna', provider: 'openai', endpoint: '/v1/chat/completions', cost: 'In: $5.00\nOut: $20.00' },
-  { id: 'openai/gpt-5.6-terra', info: 'gpt-5.6-terra', provider: 'openai', endpoint: '/v1/chat/completions', cost: 'In: $8.00\nOut: $25.00' },
-  { id: 'openai/dall-e-3', info: 'dall-e-3', provider: 'openai', endpoint: '/v1/images/generations', cost: '$0.04 / image' }
+  { id: 'openai/gpt-4o', info: 'gpt-4o', provider: 'openai', endpoint: '/v1/chat/completions', cost: 'Sesuai token model' },
+  { id: 'openai/gpt-4o-mini', info: 'gpt-4o-mini', provider: 'openai', endpoint: '/v1/chat/completions', cost: 'Sesuai token model' },
+  { id: 'openai/gpt-4.1', info: 'gpt-4.1', provider: 'openai', endpoint: '/v1/chat/completions', cost: 'Sesuai token model' },
+  { id: 'anthropic/claude-3-5-sonnet', info: 'claude-3-5-sonnet-20241022', provider: 'anthropic', endpoint: '/v1/chat/completions', cost: 'Sesuai token model' },
+  { id: 'anthropic/claude-opus-4', info: 'claude-opus-4-5', provider: 'anthropic', endpoint: '/v1/chat/completions', cost: 'Sesuai token model' },
+  { id: 'anthropic/claude-fable', info: 'claude-fable', provider: 'anthropic', endpoint: '/v1/chat/completions', cost: 'Sesuai token model' },
+  { id: 'google/gemini-2.5-pro', info: 'gemini-2.5-pro', provider: 'google', endpoint: '/v1/chat/completions', cost: 'Sesuai token model' },
+  { id: 'google/gemini-2.5-flash', info: 'gemini-2.5-flash', provider: 'google', endpoint: '/v1/chat/completions', cost: 'Sesuai token model' },
+  { id: 'deepseek/deepseek-chat', info: 'deepseek-chat', provider: 'deepseek', endpoint: '/v1/chat/completions', cost: 'Sesuai token model' },
+  { id: 'deepseek/deepseek-reasoner', info: 'deepseek-reasoner', provider: 'deepseek', endpoint: '/v1/chat/completions', cost: 'Sesuai token model' },
+  { id: 'openai/gpt-5.6-sol', info: 'gpt-5.6-sol', provider: 'openai', endpoint: '/v1/chat/completions', cost: 'Sesuai token model' },
+  { id: 'openai/gpt-5.6-luna', info: 'gpt-5.6-luna', provider: 'openai', endpoint: '/v1/chat/completions', cost: 'Sesuai token model' },
+  { id: 'openai/gpt-5.6-terra', info: 'gpt-5.6-terra', provider: 'openai', endpoint: '/v1/chat/completions', cost: 'Sesuai token model' },
+  { id: 'openai/dall-e-3', info: 'dall-e-3', provider: 'openai', endpoint: '/v1/images/generations', cost: 'Sesuai penggunaan model' }
 ];
 
 function renderModels(list) {
@@ -969,11 +969,11 @@ async function authenticate(key) {
     if (!res.ok) throw new Error(data.error || 'API Key tidak valid');
 
     currentKey = key;
-    localStorage.setItem('dpe_dash_key', key);
+    localStorage.setItem('jagoprem_api_key', key);
 
     // Populate data
-    const bal = parseFloat(data.balance_usd || data.balance || 0);
-    const balStr = `$${bal.toFixed(4)}`;
+    const bal = Number(data.balance_tokens || 0);
+    const balStr = `${bal.toLocaleString('id-ID')} token`;
     document.getElementById('metBalance').textContent = balStr;
     document.getElementById('metRequests').textContent = Number(data.total_requests || 0).toLocaleString();
     document.getElementById('metFailed').textContent = Number(data.failed_requests || 0).toLocaleString();
@@ -1003,7 +1003,7 @@ async function authenticate(key) {
     const errEl = document.getElementById('loginError');
     errEl.style.display = 'block';
     errEl.textContent = err.message;
-    localStorage.removeItem('dpe_dash_key');
+    localStorage.removeItem('jagoprem_api_key');
     loginScreen.style.display = 'flex';
     appScreen.style.display = 'none';
   } finally {
@@ -1023,7 +1023,7 @@ document.getElementById('toggleKeyBtn').addEventListener('click', toggleKey);
 document.getElementById('copyKeyBtn').addEventListener('click', copyKey);
 
 document.getElementById('logoutBtn').addEventListener('click', () => {
-  localStorage.removeItem('dpe_dash_key');
+  localStorage.removeItem('jagoprem_api_key');
   currentKey = '';
   loginScreen.style.display = 'flex';
   appScreen.style.display = 'none';
@@ -1037,7 +1037,7 @@ document.getElementById('userMenu').addEventListener('click', () => {
 });
 
 // Auto-login
-const savedKey = localStorage.getItem('dpe_dash_key');
+const savedKey = localStorage.getItem('jagoprem_api_key');
 if (savedKey) {
   loginScreen.style.display = 'none';
   authenticate(savedKey);
