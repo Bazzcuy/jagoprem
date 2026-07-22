@@ -1,6 +1,14 @@
 DirectoryIndex index.html
 Options -Indexes
 
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+</IfModule>
+
 <Files ".env">
   Require all denied
 </Files>
@@ -9,9 +17,16 @@ Options -Indexes
   Require all denied
 </Files>
 
+<FilesMatch "(^\.|\.(?:log|sql|bak|ini|json)$)">
+  Require all denied
+</FilesMatch>
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteRule ^data(?:/.*)?$ - [F,L]
   RewriteRule ^api(?:/.*)?$ api.php [QSA,L]
+  RewriteRule ^product/([0-9]+)/?$ index.html [L]
+  RewriteRule ^account(?:/([a-z-]+))?/?$ index.html [L]
+  RewriteRule ^checkout/?$ index.html [L]
   RewriteRule ^bolehdong/?$ admin.html [L]
 </IfModule>

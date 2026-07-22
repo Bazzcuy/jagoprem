@@ -150,7 +150,7 @@ document.addEventListener('keydown', (event) => {
 });
 
 async function api(url, options = {}) {
-  const response = await fetch(url, { headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }, ...options });
+  const response = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', 'X-JagoPrem-Request': '1', ...(options.headers || {}) } });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) { if (response.status === 401 && url !== '/api/admin/login') showLogin(); throw new Error(data.error || 'Terjadi kesalahan'); }
   return data;
@@ -189,10 +189,13 @@ function productTable(list = adminState.products) {
   const rows = list.map((product) => {
     const sharing = isAdminSharingProduct(product);
     const badge = sharing ? '<small class="product-policy sharing">Sharing • stok dikunci 0</small>' : (isAdminAiProduct(product) ? '<small class="product-policy private">AI Private</small>' : '');
-    const variantRow = `<tr class="variant-row" id="variant-row-${product.id}" hidden><td colspan="7"><div class="variant-editor" id="variant-editor-${product.id}">${variantEditorHtml(product)}</div></td></tr>`;
-    return `<tr data-product-row="${product.id}"><td><img src="${escapeHtml(product.thumbnail)}" alt=""><span class="product-name">${escapeHtml(product.title)}${badge}</span></td><td><input class="table-input" data-price value="${Number(product.price || 0)}" type="number" min="0" aria-label="Harga ${escapeHtml(product.title)}"></td><td><input class="table-input stock-input" data-stock value="${Number(product.stock || 0)}" type="number" min="0" max="49" ${sharing ? 'disabled' : ''} aria-label="Stok ${escapeHtml(product.title)}"></td><td><input class="table-input" data-points-reward value="${Number(product.points_reward || 0)}" type="number" min="0" max="100000" aria-label="Poin ${escapeHtml(product.title)}"></td><td><input class="toggle" data-enabled type="checkbox" ${product.enabled ? 'checked' : ''} aria-label="Aktifkan ${escapeHtml(product.title)}"></td><td><input class="toggle" data-auto-restock type="checkbox" ${product.autoRestock ? 'checked' : ''} ${sharing ? 'disabled' : ''} aria-label="Auto-restock ${escapeHtml(product.title)}"></td><td class="product-actions"><button class="save-product" data-save-product="${product.id}">Simpan</button>${product.variants?.length ? `<button class="variant-btn" data-variant-product="${product.id}">Varian (${product.variants.length})</button>` : `<button class="variant-btn" data-variant-product="${product.id}">+ Varian</button>`}</td></tr>${variantRow}`;
+    const variantRow = `<tr class="variant-row" id="variant-row-${product.id}" hidden><td colspan="7"><div class="product-full-editor" id="variant-editor-${product.id}">${productDetailsHtml(product)}${variantEditorHtml(product)}</div></td></tr>`;
+    return `<tr data-product-row="${product.id}"><td><img src="${escapeHtml(product.thumbnail)}" alt=""><span class="product-name">${escapeHtml(product.title)}${badge}</span></td><td><input class="table-input" data-price value="${Number(product.price || 0)}" type="number" min="0" aria-label="Harga ${escapeHtml(product.title)}"></td><td><input class="table-input stock-input" data-stock value="${Number(product.stock || 0)}" type="number" min="0" max="9999" ${sharing ? 'disabled' : ''} aria-label="Stok ${escapeHtml(product.title)}"></td><td><input class="table-input" data-points-reward value="${Number(product.points_reward || 0)}" type="number" min="0" max="100000" aria-label="Poin ${escapeHtml(product.title)}"></td><td><input class="toggle" data-enabled type="checkbox" ${product.enabled ? 'checked' : ''} aria-label="Aktifkan ${escapeHtml(product.title)}"></td><td><input class="toggle" data-auto-restock type="checkbox" ${product.autoRestock ? 'checked' : ''} ${sharing ? 'disabled' : ''} aria-label="Auto-restock ${escapeHtml(product.title)}"></td><td class="product-actions"><button class="save-product" data-save-product="${product.id}">Simpan</button><button class="variant-btn" data-variant-product="${product.id}">Edit detail</button><button class="delete-product" data-delete-product="${product.id}">Hapus</button></td></tr>${variantRow}`;
   }).join('');
-  return `<div class="panel"><div class="panel-head"><div><h2>Kelola produk</h2><span class="panel-meta">Harga, stok, dan hadiah JagoPoin tersinkron langsung dengan katalog toko</span></div><input id="adminSearch" type="search" placeholder="Cari produk..." aria-label="Cari produk"></div><div class="table-wrap"><table><thead><tr><th>PRODUK</th><th>HARGA</th><th>STOK</th><th>POIN</th><th>AKTIF</th><th>AUTO +8</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  return `<div class="panel"><div class="panel-head"><div><h2>Kelola produk</h2><span class="panel-meta">Semua informasi tersinkron langsung dengan katalog toko</span></div><div class="panel-head-actions"><input id="adminSearch" type="search" placeholder="Cari produk..." aria-label="Cari produk"><button class="save-product" type="button" data-add-product>+ Tambah produk</button></div></div><div class="table-wrap"><table><thead><tr><th>PRODUK</th><th>HARGA</th><th>STOK</th><th>POIN</th><th>AKTIF</th><th>AUTO +8</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+}
+function productDetailsHtml(product) {
+  return `<form class="product-details-form" data-product-details="${product.id}"><h4>Informasi storefront</h4><div class="product-details-grid"><label>JUDUL<input name="title" required maxlength="120" value="${escapeHtml(product.title)}"></label><label>KATEGORI<input name="category" maxlength="60" value="${escapeHtml(product.category || '')}"></label><label class="wide">URL GAMBAR<input name="thumbnail" required maxlength="500" value="${escapeHtml(product.thumbnail)}"></label><label>AKSES<input name="access" maxlength="120" value="${escapeHtml(product.access || '')}"></label><label>DURASI<input name="duration" maxlength="60" value="${escapeHtml(product.duration || '')}"></label><label>GARANSI<input name="warranty" maxlength="60" value="${escapeHtml(product.warranty || '')}"></label><label>BADGE (pisahkan koma)<input name="badges" maxlength="180" value="${escapeHtml((product.badges || []).join(', '))}"></label><label>URUTAN HERO<input name="featuredRank" type="number" min="0" max="99" value="${Number(product.featuredRank || 0)}"></label><label class="check"><input name="is_best_seller" type="checkbox" ${product.is_best_seller ? 'checked' : ''}> Best seller</label><label class="wide">DESKRIPSI<textarea name="description" maxlength="2000">${escapeHtml(product.description || '')}</textarea></label></div><button class="save-product" type="submit">Simpan semua informasi</button></form>`;
 }
 function variantEditorHtml(product) {
   const variants = product.variants || [];
@@ -411,6 +414,20 @@ document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListe
 document.querySelector('#adminLogout').addEventListener('click', async () => { await api('/api/admin/logout', { method: 'POST' }); location.reload(); });
 
 content.addEventListener('click', async (event) => {
+  const addProduct = event.target.closest('[data-add-product]');
+  if (addProduct) {
+    addProduct.disabled = true;
+    try { const product = await api('/api/admin/products', { method: 'POST', body: JSON.stringify({ title: 'Produk baru', thumbnail: 'assets/jagoprem-mark.png', price: 0, stock: 0, points_reward: 0, enabled: false, category: 'Aplikasi premium', access: 'Akun private', duration: '1 bulan', warranty: 'Sesuai ketentuan', description: 'Lengkapi informasi produk sebelum mengaktifkannya.' }) }); adminState.products.unshift(product); render(); const row = content.querySelector(`#variant-row-${CSS.escape(String(product.id))}`); if (row) row.hidden = false; toast('Produk draft dibuat. Lengkapi detail lalu aktifkan.'); } catch (error) { toast(error.message); }
+    return;
+  }
+  const deleteProduct = event.target.closest('[data-delete-product]');
+  if (deleteProduct) {
+    const product = adminState.products.find((item) => item.id === Number(deleteProduct.dataset.deleteProduct));
+    const confirmed = await openAdminDialog({ kind: 'confirm', title: 'Hapus produk?', description: product?.title || 'Produk akan dihapus.', confirmLabel: 'Hapus produk', destructive: true, eyebrow: 'PRODUK' });
+    if (!confirmed) return;
+    try { await api(`/api/admin/products/${deleteProduct.dataset.deleteProduct}`, { method: 'DELETE' }); adminState.products = adminState.products.filter((item) => item.id !== Number(deleteProduct.dataset.deleteProduct)); render(); toast('Produk dihapus.'); } catch (error) { toast(error.message); }
+    return;
+  }
   const deleteReward = event.target.closest('[data-delete-reward]');
   if (deleteReward) {
     const reward = (adminState.redemptionRewards || []).find((item) => item.id === deleteReward.dataset.deleteReward);
@@ -732,6 +749,13 @@ content.addEventListener('keydown', (event) => {
 });
 
 content.addEventListener('submit', async (event) => {
+  if (event.target.matches('[data-product-details]')) {
+    event.preventDefault();
+    const productId = Number(event.target.dataset.productDetails); const product = adminState.products.find((item) => item.id === productId); if (!product) return;
+    const button = event.target.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Menyimpan...';
+    try { const form = Object.fromEntries(new FormData(event.target)); form.badges = String(form.badges || '').split(',').map((item) => item.trim()).filter(Boolean); form.featuredRank = Number(form.featuredRank || 0); form.is_best_seller = event.target.elements.is_best_seller.checked; Object.assign(form, { price: product.price, stock: product.stock, points_reward: product.points_reward, enabled: product.enabled, autoRestock: product.autoRestock, variants: product.variants || [] }); const updated = await api(`/api/admin/products/${productId}`, { method: 'PUT', body: JSON.stringify(form) }); Object.assign(product, updated); render(); toast('Semua informasi produk tersinkron ke toko.'); } catch (error) { button.disabled = false; button.textContent = 'Simpan semua informasi'; toast(error.message); }
+    return;
+  }
   if (event.target.id === 'rewardForm') {
     event.preventDefault();
     const button = event.target.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Menambahkan...';

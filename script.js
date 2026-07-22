@@ -11,6 +11,20 @@ const PRODUCT_OVERRIDES = {
   46473: { price: 83000, stock: 13, available_stock: 13, duration: '1 bulan', warranty: '30 hari', access: 'Akun resmi Claude Pro di claude.ai', description: CLAUDE_PRO_DESCRIPTION },
   23915: { stock: 3, available_stock: 3, warranty: '30 hari', access: 'Akun resmi privat', description: OFFICIAL_PRIVATE_DESCRIPTION }
 };
+
+const nativeFetch = window.fetch.bind(window);
+window.fetch = (input, options = {}) => {
+  const url = typeof input === 'string' ? input : input.url;
+  const method = String(options.method || (typeof input !== 'string' ? input.method : 'GET') || 'GET').toUpperCase();
+  const target = new URL(url, location.href);
+  if (target.origin === location.origin && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+    const headers = new Headers(options.headers || (typeof input !== 'string' ? input.headers : undefined));
+    headers.set('X-JagoPrem-Request', '1');
+    if (!(options.body instanceof FormData) && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+    options = { ...options, headers };
+  }
+  return nativeFetch(input, options);
+};
 function isAiProduct(item) { return /(^|\s)AI(?:\s|$)|GPT EDU|CHATGPT|CLAUDE|GROK|GEMINI|PERPLEXITY|KIRO|LEONARDO|KLING|DOLA AI/i.test(item.title || ''); }
 function isSharingProduct(item) {
   const explicit = [item.title, item.access, item.thumbnail].filter(Boolean).join(' ');
@@ -120,6 +134,7 @@ const chatAttachmentPreview = document.querySelector('#chatAttachmentPreview');
 function rupiah(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
 function isTokenApiProduct(item) { return /SALDO API|PAKET TOKEN/i.test(item?.title || ''); }
 function productCategory(item) {
+  if (item?.category) return item.category;
   if (isTokenApiProduct(item)) return 'Developer API';
   const ai = /AI |GPT EDU|CHATGPT|CLAUDE|GROK|GEMINI|PERPLEXITY|KIRO|LEONARDO|KLING|DOLA/.test(item?.title || '');
   const streaming = /IQIYI|HBO|SPOTIFY|YOUTUBE|APPLE MUSIC|PRIME VIDEO|WETV|VIU|VIDIO|BSTATION|LOKLOK|DRAMABOX|REELSHORT/.test(item?.title || '');
@@ -127,6 +142,7 @@ function productCategory(item) {
 }
 function icons() { if (window.lucide) window.lucide.createIcons(); }
 function notify(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(notify.timer); notify.timer = setTimeout(() => toast.classList.remove('show'), 2400); }
+async function showPaymentFailure() { let layer=document.querySelector('#paymentFailureLayer'); if(!layer){layer=document.createElement('div');layer.id='paymentFailureLayer';layer.className='payment-failure-layer';document.body.appendChild(layer);} layer.innerHTML='<div class="payment-failure-card loading"><span class="payment-loader"></span><h2>Menghubungkan pembayaran</h2><p>Mohon tunggu sebentar...</p></div>';layer.classList.add('show');await new Promise(resolve=>setTimeout(resolve,1300));layer.innerHTML='<div class="payment-failure-card"><span class="payment-failure-icon">!</span><h2>Pembayaran gagal diproses</h2><p>Metode pembayaran yang Anda pilih sedang mengalami gangguan.</p><button type="button">Tutup</button></div>';layer.querySelector('button').onclick=()=>layer.classList.remove('show'); }
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[character])); }
 function normalizeWhatsapp(value) { let digits = String(value || '').trim().replace(/[\s().-]/g, '').replace(/^\+/, ''); if (digits.startsWith('08')) digits = `62${digits.slice(1)}`; return /^628\d{7,12}$/.test(digits) ? digits : ''; }
 function renderAccountButton() {
@@ -187,7 +203,9 @@ function renderProducts() {
     const originalPrice = item.price > 0 ? Math.max(item.price + 10000, Math.round(item.price * 1.4)) : 0;
     const discount = originalPrice > item.price && item.price > 0 ? Math.round((1 - (item.price / originalPrice)) * 100) : 0;
     const readyTag = item.stock && item.enabled ? 'Ready' : 'Habis';
+    const configuredBadges = Array.isArray(item.badges) ? item.badges.filter(Boolean).slice(0, 3) : [];
     const extraTag = productCategory(item) === 'AI & produktivitas' ? 'Private' : (item.has_wholesale ? '+1' : 'Instan');
+    const visibleBadges = configuredBadges.length ? configuredBadges : [readyTag, 'Garansi', extraTag];
     return `
       <article class="product-card ${item.stock && item.enabled ? '' : 'unavailable'}" data-detail="${item.id}" tabindex="0" role="button" aria-disabled="${item.stock && item.enabled ? 'false' : 'true'}">
         <div class="product-card-media">
@@ -199,11 +217,7 @@ function renderProducts() {
             <h3>${item.title}</h3>
             <div class="product-rating"><i data-lucide="star"></i><strong>${rating.toFixed(1)}</strong><span>(${soldLabel})</span></div>
           </div>
-          <div class="product-tags">
-            <span class="product-tag ready">${readyTag}</span>
-            <span class="product-tag guarantee">Garansi</span>
-            <span class="product-tag extra">${extraTag}</span>
-          </div>
+          <div class="product-tags">${visibleBadges.map((badge, index) => `<span class="product-tag ${index === 0 ? 'ready' : index === 1 ? 'guarantee' : 'extra'}">${escapeHtml(badge)}</span>`).join('')}</div>
           <div class="product-pricing">
             <div>${originalPrice > 0 ? '<small>' + rupiah(originalPrice) + '</small>' : ''}<strong>${rupiah(item.price)}</strong></div>
             ${discount ? '<span class="product-discount">-' + discount + '%</span>' : ''}
@@ -250,8 +264,8 @@ function updateCart() {
 
 function openCart() { cartDrawer.classList.add('open'); cartDrawer.setAttribute('aria-hidden', 'false'); overlay.classList.add('show'); }
 function closeCart() { cartDrawer.classList.remove('open'); cartDrawer.setAttribute('aria-hidden', 'true'); overlay.classList.remove('show'); }
-function openModal(html) { closeChat(); modalLayer.classList.remove('product-page-layer', 'auth-modal-layer', 'payment-page-layer', 'account-page-layer'); modalContent.className = 'modal'; modalContent.innerHTML = html; modalLayer.classList.add('open'); modalLayer.setAttribute('aria-hidden', 'false'); icons(); }
-function closeModal() { modalLayer.classList.remove('open', 'product-page-layer', 'auth-modal-layer', 'payment-page-layer', 'account-page-layer'); modalContent.className = 'modal'; modalLayer.setAttribute('aria-hidden', 'true'); }
+function openModal(html) { closeChat(); modalLayer.classList.remove('product-page-layer', 'auth-modal-layer', 'payment-page-layer', 'account-page-layer', 'checkout-page-layer'); modalContent.className = 'modal'; modalContent.innerHTML = html; modalLayer.classList.add('open'); modalLayer.setAttribute('aria-hidden', 'false'); icons(); }
+function closeModal() { if(document.body.classList.contains('route-product')||document.body.classList.contains('route-account')||document.body.classList.contains('route-checkout')){location.href='/#products';return;} modalLayer.classList.remove('open', 'product-page-layer', 'auth-modal-layer', 'payment-page-layer', 'account-page-layer', 'checkout-page-layer'); modalContent.className = 'modal'; modalLayer.setAttribute('aria-hidden', 'true'); }
 function modalHead(title) { return `<div class="modal-head"><h2>${title}</h2><button class="icon-button" type="button" data-close-modal aria-label="Tutup"><i data-lucide="x"></i></button></div>`; }
 
 const PRODUCT_COPY = [
@@ -347,6 +361,8 @@ function detailModal(id) {
   openModal(`<div class="product-page-close"><button type="button" data-close-modal aria-label="Tutup"><i data-lucide="x"></i></button></div><main class="product-page"><nav class="product-breadcrumb">Beranda <b>/</b> Semua Produk <b>/</b> ${escapeHtml(item.title)}</nav><div class="product-checkout-grid"><aside class="product-sticky"><article class="detail-summary-card"><img class="detail-image" src="${item.thumbnail}" alt="${escapeHtml(item.title)}"><h2 class="detail-title">${escapeHtml(item.title)}</h2><div class="detail-rating"><i data-lucide="star"></i><strong>${rating.toFixed(1)}</strong><span>• Terjual ${sold}</span></div><div class="detail-tags"><span>${summaryLabel}</span><span>${readyLabel}</span><span>Garansi</span></div></article><article class="detail-tabs-card"><div class="detail-tabs"><button class="active" type="button" data-detail-tab="benefit">Benefit</button><button type="button" data-detail-tab="terms">Garansi</button><button type="button" data-detail-tab="description">Deskripsi</button></div><div class="detail-tab-panel" data-detail-panel="benefit"><ul class="product-benefits">${profile.benefits.map((benefit) => `<li><i data-lucide="check"></i><span><b>${benefit}</b><small>Didukung proses pemesanan JagoPrem yang praktis dan transparan.</small></span></li>`).join('')}</ul></div><div class="detail-tab-panel" data-detail-panel="terms" hidden><ol>${profile.terms.map((term) => `<li>${term}</li>`).join('')}</ol></div><div class="detail-tab-panel" data-detail-panel="description" hidden><p>${profile.description}</p></div></article><div class="checkout-safe"><i data-lucide="shield-check"></i> Checkout aman dengan jaminan bantuan tim operasional</div></aside><section class="checkout-steps"><article class="checkout-step">${step(1,'Pilih Nominal / Varian')}<div class="checkout-step-body"><div class="variant-caption">Paket</div><div class="package-pills">${variants.map((variant,index)=>`<label><input type="radio" name="detailVariant" value="${variant.id}" ${index===0?'checked':''}><span>${escapeHtml(variant.label)} <small>${rupiah(variant.price)}</small></span></label>`).join('')}</div><div class="detail-info"><div><span>Kategori</span><b>${profile.category}</b></div><div><span>Pengiriman</span><b>${profile.delivery}</b></div><div><span>Stok tersedia</span><b>${item.stock}</b></div><div><span>Terjual</span><b>${item.sold}</b></div></div>${supportsOwnGmail(item) ? '<label class="detail-variant"><input id="detailOwnGmail" type="checkbox"><span><b>Pakai Gmail sendiri</b><small>Tambahan Rp5.000 per akun</small></span></label>' : ''}<label class="detail-variant reseller-option ${resellerAvailable ? '' : 'disabled'}"><input id="detailReseller" type="checkbox" ${resellerAvailable ? '' : 'disabled'}><span><b>Harga reseller • diskon 8%</b><small>${resellerAvailable ? `Minimal ${resellerMin} item` : `Stok belum cukup untuk minimum ${resellerMin} item`}</small></span></label><div class="detail-quantity"><span>Jumlah pembelian<small id="quantityHint">${isSaldoApi ? 'Minimal 5 dollar' : `Maksimal ${item.stock} sesuai stok`}</small></span><div class="quantity-stepper"><button type="button" data-detail-minus disabled><i data-lucide="minus"></i></button><input id="detailQuantity" type="number" min="${minQty}" max="${item.stock}" value="${minQty}"><button type="button" data-detail-plus ${item.stock > minQty ? '' : 'disabled'}><i data-lucide="plus"></i></button></div></div></div></article><article class="checkout-step">${step(2,'Masukkan Data Pembeli')}<div class="checkout-step-body"><button class="buyer-account" type="button" data-auth-tab="login"><span><small>Akun Aktif</small><b>${escapeHtml(buyerName)}</b><em>${escapeHtml(buyerEmail)}</em></span><strong>${state.user ? 'Ganti' : 'Masuk'}</strong></button><p class="buyer-note"><i data-lucide="message-circle"></i> Pastikan nomor WhatsApp saat checkout aktif karena produk dikirim otomatis melalui WhatsApp.</p></div></article><article class="checkout-step">${step(3,'Pilih Metode Pembayaran')}<div class="checkout-step-body payment-preview"><button type="button" data-payment-unavailable><span>Virtual Account</span><b>Segera hadir</b></button><button type="button" data-payment-unavailable><span>E-Wallet</span><b>Gangguan</b></button><button class="active" type="button"><span>QRIS</span><b>Aktif</b></button></div></article><article class="checkout-step">${step(4,'Voucher & Ringkasan Pembayaran')}<div class="checkout-step-body"><div class="voucher-preview"><input type="text" placeholder="MASUKKAN KODE VOUCHER" readonly><button type="button" data-buy-now="${item.id}">Gunakan saat checkout</button></div><div class="payment-summary"><span>Harga produk <b id="detailPrice">${rupiah(defaultVariant?.price || item.price)}</b></span><span>Biaya admin <b>Rp99</b></span><strong>Total sementara <b>${rupiah((defaultVariant?.price || item.price) + 99)}</b></strong></div><div class="detail-actions"><button class="detail-buy secondary" type="button" data-add-detail="${item.id}">Masukkan keranjang</button><button class="detail-buy" type="button" data-buy-now="${item.id}">BAYAR SEKARANG</button></div></div></article></section></div><section class="product-reviews"><h2>Ulasan <span>${rating.toFixed(1)} ★★★★★</span></h2><div>${reviews.map(([name,stars,text])=>`<article><header><b>${name}</b><time>Pembelian terverifikasi</time></header><span>${'★'.repeat(stars)}${'☆'.repeat(5-stars)}</span><p>${text}</p></article>`).join('')}</div></section><section class="product-faq"><h2>Frequently Asked Questions (FAQ)</h2><details><summary>Apa yang didapat dari produk ini?<i data-lucide="chevron-down"></i></summary><p>${profile.description}</p></details><details><summary>Bagaimana produk dikirim?<i data-lucide="chevron-down"></i></summary><p>Detail akses dan panduan dikirim ke nomor WhatsApp aktif yang diisi saat checkout.</p></details><details><summary>Bagaimana ketentuan garansi?<i data-lucide="chevron-down"></i></summary><p>Garansi ${defaultVariant?.warranty || profile.warranty}. Simpan bukti pembayaran dan ikuti petunjuk penggunaan.</p></details></section></main>`);
   const oldReseller = document.querySelector('.reseller-option');
   if (oldReseller) oldReseller.outerHTML = '<button class="reseller-register" type="button" data-open-reseller><i data-lucide="badge-percent"></i><span><b>Daftar sebagai reseller</b><small>Dapatkan harga khusus setelah pendaftaran diverifikasi.</small></span><i data-lucide="arrow-right"></i></button>';
+  const voucherPreviewButton = document.querySelector('.voucher-preview button');
+  if (voucherPreviewButton) { voucherPreviewButton.removeAttribute('data-buy-now'); voucherPreviewButton.setAttribute('data-open-vouchers', ''); voucherPreviewButton.textContent = 'Lihat voucher tersedia'; }
   document.querySelector('.detail-variant:has(#detailOwnGmail)')?.remove();
   const detailSold = [...document.querySelectorAll('.detail-info>div')].find((row) => row.querySelector('span')?.textContent.trim() === 'Terjual'); if (detailSold) detailSold.querySelector('b').textContent = Number(item.sold || 0) > 0 ? sold : 'Baru';
   const detailRatingSold = document.querySelector('.detail-rating span'); if (detailRatingSold) detailRatingSold.textContent = `• ${soldLabel}`;
@@ -355,7 +371,7 @@ function detailModal(id) {
   const voucherPreview = document.querySelector('.voucher-preview');
   if (voucherPreview) voucherPreview.innerHTML = `<input id="detailVoucherCode" type="text" value="${escapeHtml(state.appliedVoucher?.code || '')}" placeholder="PILIH VOUCHER" readonly><button type="button" data-open-vouchers>Lihat voucher tersedia</button>`;
   const paymentPreview = document.querySelector('.payment-preview');
-  if (paymentPreview) paymentPreview.innerHTML = '<button type="button" data-payment-choice="retail"><span class="pay-brand indomaret">Indomaret</span><b>Retail Outlet</b></button><button type="button" data-payment-choice="va"><span class="pay-brand bank">BCA · BRI · BNI</span><b>Transfer VA Bank</b></button><button type="button" data-payment-choice="ewallet"><span class="pay-brand wallet">DANA · OVO · GoPay</span><b>E-Wallet</b></button><button class="active" type="button" data-payment-choice="qris"><span class="pay-brand qris">QRIS</span><b>QRIS</b></button>';
+  if (paymentPreview) paymentPreview.innerHTML = '<button type="button" data-payment-choice="retail"><span class="pay-brand"><img src="assets/payments/indomaret.svg" alt="Indomaret"></span><b>Retail Outlet</b></button><button type="button" data-payment-choice="va"><span class="pay-brand brand-row"><img src="assets/payments/bca.svg" alt="BCA"><img src="assets/payments/bri.svg" alt="BRI"></span><b>Transfer VA Bank</b></button><button type="button" data-payment-choice="ewallet"><span class="pay-brand brand-row"><img src="assets/payments/dana.png" alt="DANA"><img src="assets/payments/gopay.svg" alt="GoPay"></span><b>E-Wallet</b></button><button class="active" type="button" data-payment-choice="qris"><span class="pay-brand"><img src="assets/payments/qris.svg" alt="QRIS"></span><b>QRIS</b></button>';
   const quantityHint = document.querySelector('#quantityHint'); if (quantityHint && isSaldoApi) quantityHint.textContent = 'Satuan pembelian: juta token';
   state.paymentMethod = 'qris';
   modalLayer.classList.add('product-page-layer'); modalContent.classList.add('product-page-modal'); icons();
@@ -444,6 +460,7 @@ function checkoutModal() {
   ` : '';
   openModal(`${modalHead('Checkout')}<div class="modal-body"><div class="order-summary">${cartItemsHtml}<div><span>Biaya admin</span><b>${rupiah(99)}</b></div><div class="total" id="checkoutTotalRow"><span>Total sebelum voucher</span><b>${rupiah(cartTotal() + 99)}</b></div></div><form id="checkoutForm"><div class="form-group voucher-field"><label>KODE VOUCHER (OPSIONAL)</label><div class="voucher-input-row"><div class="voucher-input-wrap"><i data-lucide="ticket-percent"></i><input id="voucherInput" name="voucherCode" autocomplete="off" maxlength="32" placeholder="Contoh: SPESIALAI07"></div><button class="voucher-apply-btn" type="button" id="applyVoucher">Gunakan</button></div><div id="voucherFeedback" class="voucher-feedback"></div><p class="field-help" id="voucherHint">Coba: JAGOBARU10, HEMAT5000, atau AIHEMAT20</p></div><div class="form-group"><label>NAMA PENERIMA</label><input name="name" required value="${escapeHtml(state.user?.name || '')}" placeholder="Nama kamu"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" inputmode="tel" required pattern="\\+?[0-9]{9,15}" placeholder="Contoh: 081234567890 atau +6281234567890"><p class="field-help">Nomor ini dipakai admin untuk menghubungi dan mengirim detail produk.</p></div>${devApiField}<div class="form-group"><label>CATATAN (OPSIONAL)</label><textarea name="note" placeholder="Permintaan atau informasi tambahan"></textarea></div><button class="submit-button" type="submit">Lanjut ke pembayaran</button></form></div>`);
   const voucherInput = document.querySelector('#voucherInput');
+  if(document.body.classList.contains('route-checkout')){modalLayer.classList.add('checkout-page-layer');modalContent.classList.add('checkout-page-modal');}
   if (voucherInput) { voucherInput.placeholder = 'Contoh: JAGOBARU10'; voucherInput.value = state.appliedVoucher?.code || ''; }
   const voucherHint = document.querySelector('#voucherHint');
   if (voucherHint) voucherHint.innerHTML = '<button type="button" class="voucher-list-link" data-open-vouchers>Lihat semua voucher tersedia</button>';
@@ -451,7 +468,7 @@ function checkoutModal() {
   if (whatsappInput) { whatsappInput.removeAttribute('pattern'); whatsappInput.value = state.checkoutWhatsapp || state.user?.whatsapp || ''; whatsappInput.insertAdjacentHTML('afterend', '<small class="wa-validation" aria-live="polite"></small>'); }
   state.paymentMethod = 'qris';
   const checkoutSubmit = document.querySelector('#checkoutForm .submit-button');
-  checkoutSubmit?.insertAdjacentHTML('beforebegin', '<div class="form-group checkout-payment-choice"><label>METODE PEMBAYARAN</label><div class="payment-preview freemium-payments"><button type="button" data-checkout-payment="retail"><span class="pay-brand indomaret">Indomaret</span><b>Retail Outlet</b></button><button type="button" data-checkout-payment="va"><span class="pay-brand bank">BCA · BRI · BNI</span><b>Transfer VA Bank</b></button><button type="button" data-checkout-payment="ewallet"><span class="pay-brand wallet">DANA · OVO · GoPay</span><b>E-Wallet</b></button><button class="active" type="button" data-checkout-payment="qris"><span class="pay-brand qris">QRIS</span><b>QRIS</b></button></div></div>');
+  checkoutSubmit?.insertAdjacentHTML('beforebegin', '<div class="form-group checkout-payment-choice"><label>METODE PEMBAYARAN</label><div class="payment-preview freemium-payments"><button type="button" data-checkout-payment="retail"><span class="pay-brand"><img src="assets/payments/indomaret.svg" alt="Indomaret"></span><b>Retail Outlet</b></button><button type="button" data-checkout-payment="va"><span class="pay-brand brand-row"><img src="assets/payments/bca.svg" alt="BCA"><img src="assets/payments/bri.svg" alt="BRI"></span><b>Transfer VA Bank</b></button><button type="button" data-checkout-payment="ewallet"><span class="pay-brand brand-row"><img src="assets/payments/dana.png" alt="DANA"><img src="assets/payments/gopay.svg" alt="GoPay"></span><b>E-Wallet</b></button><button class="active" type="button" data-checkout-payment="qris"><span class="pay-brand"><img src="assets/payments/qris.svg" alt="QRIS"></span><b>QRIS</b></button></div></div>');
   // Voucher apply button handler
   document.querySelector('#applyVoucher')?.addEventListener('click', async () => {
     const code = document.querySelector('#voucherInput')?.value.trim();
@@ -480,6 +497,9 @@ function paymentModal(customer, order) {
     openModal(`${modalHead('Pesanan Dibatalkan')}<div class="modal-body"><div class="order-alert cancelled-alert"><div class="alert-icon"><i data-lucide="x-circle"></i></div><h3>Pesanan Kamu Gagal</h3><p>Pesanan <strong>${order.id}</strong> telah dibatalkan. Harap melakukan pemesanan ulang.</p><p class="alert-refund"><i data-lucide="wallet"></i> Pembayaran yang sudah masuk akan otomatis dikembalikan ke rekening kamu dalam <strong>1x24 jam</strong>.</p><button class="submit-button" type="button" data-close-modal>Tutup &amp; Pesan Ulang</button></div></div>`);
     icons(); return;
   }
+  sessionStorage.setItem('jagoprem_payment', JSON.stringify({ customer, order }));
+  location.href = `/payment.html?order=${encodeURIComponent(order.id)}`;
+  return;
   const total = order.total; const orderId = order.id;
   const payload = QrisTools.dynamic(STORE_CONFIG.staticQris, total);
   state.orders = [order, ...state.orders.filter((item) => item.id !== order.id)];
@@ -627,7 +647,7 @@ function openProductCard(card) {
   if (!card) return;
   const product = getProduct(card.dataset.detail);
   if (!product || !product.enabled || product.stock <= 0) { notify('Produk ini sedang habis dan belum bisa dipilih.'); return; }
-  detailModal(product.id);
+  location.href = `/product/${encodeURIComponent(product.id)}`;
 }
 document.addEventListener('click', (event) => {
   const card = event.target.closest('.product-card[data-detail]');
@@ -638,11 +658,11 @@ document.addEventListener('keydown', (event) => {
   if (card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openProductCard(card); }
 });
 document.querySelector('#cartItems').addEventListener('click', (event) => { const remove = event.target.closest('[data-remove]'); const plus = event.target.closest('[data-cart-plus]'); const minus = event.target.closest('[data-cart-minus]'); if (remove) state.cart.splice(Number(remove.dataset.remove), 1); if (plus) { const line = state.cart[Number(plus.dataset.cartPlus)]; if (cartQuantityFor(line.id) < getProduct(line.id).stock) line.quantity += 1; } if (minus) { const line = state.cart[Number(minus.dataset.cartMinus)]; const minimum = line.reseller ? resellerMinimum(getProduct(line.id)) : 1; if (line.quantity > minimum) line.quantity -= 1; } if (remove || plus || minus) persistCart(); });
-document.querySelector('#cartButton').addEventListener('click', openCart); document.querySelectorAll('[data-close-cart]').forEach((button) => button.addEventListener('click', closeCart)); overlay.addEventListener('click', closeCart); document.querySelector('#checkoutButton').addEventListener('click', checkoutModal); document.querySelector('#accountButton').addEventListener('click', () => accountModal('profile'));
-document.querySelector('#sideAccount').addEventListener('click', () => accountModal('profile'));
-document.querySelector('#menuButton').addEventListener('click', () => { document.querySelector('#sidebar').classList.toggle('open'); document.querySelector('#sidebarOverlay').classList.toggle('show'); });
-document.querySelector('#sidebarOverlay').addEventListener('click', () => { document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('show'); });
-document.querySelectorAll('.side-nav a').forEach((link) => link.addEventListener('click', () => { document.querySelectorAll('.side-nav a').forEach((item) => item.classList.remove('active')); link.classList.add('active'); document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('show'); }));
+document.querySelector('#cartButton').addEventListener('click', openCart); document.querySelectorAll('[data-close-cart]').forEach((button) => button.addEventListener('click', closeCart)); overlay.addEventListener('click', closeCart); document.querySelector('#checkoutButton').addEventListener('click', () => { location.href='/checkout'; }); document.querySelector('#accountButton').addEventListener('click', () => { location.href='/account/profile'; });
+document.querySelector('#sideAccount').addEventListener('click', () => { location.href='/account/profile'; });
+document.querySelector('#menuButton').addEventListener('click', () => { document.querySelector('#sidebar').classList.toggle('open'); document.querySelector('#sidebarOverlay').classList.toggle('open'); });
+document.querySelector('#sidebarOverlay').addEventListener('click', () => { document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('open'); });
+document.querySelectorAll('.side-nav a').forEach((link) => link.addEventListener('click', () => { document.querySelectorAll('.side-nav a').forEach((item) => item.classList.remove('active')); link.classList.add('active'); document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('open'); }));
 document.querySelector('#chatBubble').addEventListener('click', openChat); document.querySelector('#openChatSide').addEventListener('click', openChat); document.querySelector('#closeChat').addEventListener('click', closeChat);
 document.querySelectorAll('[data-open-admin-chat]').forEach((button) => button.addEventListener('click', () => { closeModal(); openChat(); }));
 document.querySelectorAll('[data-open-report]').forEach((button) => button.addEventListener('click', reportModal));
@@ -654,7 +674,7 @@ chatAttachmentInput?.addEventListener('change', () => {
   const file = chatAttachmentInput.files?.[0];
   state.chatAttachment = null;
   if (!file) { chatAttachmentPreview.hidden = true; chatAttachmentPreview.innerHTML = ''; return; }
-  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 5 * 1024 * 1024) { chatAttachmentInput.value = ''; notify('Lampiran harus JPG, PNG, atau WebP maksimal 5 MB.'); return; }
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 2 * 1024 * 1024 || !/\.(jpe?g|png|webp)$/i.test(file.name)) { chatAttachmentInput.value = ''; notify('Lampiran harus JPG, PNG, atau WebP maksimal 2 MB.'); return; }
   const previewUrl = URL.createObjectURL(file);
   state.chatAttachment = { name: file.name, type: file.type, size: file.size, previewUrl };
   chatAttachmentPreview.hidden = false;
@@ -708,19 +728,19 @@ modalLayer.addEventListener('click', async (event) => {
     notify(`Voucher ${state.appliedVoucher?.code || ''} dipilih.`);
     document.querySelector('#applyVoucher')?.click();
   }
-  const accountTab = event.target.closest('[data-account-tab]'); if (accountTab) renderAccountPage(accountTab.dataset.accountTab);
+  const accountTab = event.target.closest('[data-account-tab]'); if (accountTab) { if(document.body.classList.contains('route-account'))history.replaceState({},'',`/account/${accountTab.dataset.accountTab}`); renderAccountPage(accountTab.dataset.accountTab); }
   if (event.target.closest('[data-edit-profile]')) editProfileModal();
   if (event.target.closest('[data-open-report-from-account]')) reportModal();
   if (event.target.closest('[data-open-reseller]')) resellerModal();
   const paymentChoice = event.target.closest('[data-payment-choice], [data-checkout-payment]'); if (paymentChoice) { state.paymentMethod = paymentChoice.dataset.paymentChoice || paymentChoice.dataset.checkoutPayment; paymentChoice.parentElement.querySelectorAll('button').forEach((button) => button.classList.toggle('active', button === paymentChoice)); }
   const referralCopy = event.target.closest('[data-copy-referral]'); if (referralCopy) { navigator.clipboard?.writeText(referralCopy.dataset.copyReferral).catch(() => {}); notify('Link referral berhasil disalin.'); }
-  if (event.target.closest('[data-payment-unavailable]')) notify('Metode ini sedang mengalami gangguan. Gunakan QRIS untuk sementara.');
+  if (event.target.closest('[data-payment-unavailable]')) await showPaymentFailure();
   if (event.target.closest('[data-detail-minus]')) setDetailQuantity(Number(document.querySelector('#detailQuantity').value) - 1);
   if (event.target.closest('[data-detail-plus]')) setDetailQuantity(Number(document.querySelector('#detailQuantity').value) + 1);
   const detailTab = event.target.closest('[data-detail-tab]'); if (detailTab) { document.querySelectorAll('[data-detail-tab]').forEach((button) => button.classList.toggle('active', button === detailTab)); document.querySelectorAll('[data-detail-panel]').forEach((panel) => { panel.hidden = panel.dataset.detailPanel !== detailTab.dataset.detailTab; }); }
   const authTab = event.target.closest('[data-auth-tab]'); if (authTab) authModal(authTab.dataset.authTab);
   const addDetail = event.target.closest('[data-add-detail]'); if (addDetail) { const product = getProduct(addDetail.dataset.addDetail); const quantity = Number(document.querySelector('#detailQuantity').value); addToCart(Number(addDetail.dataset.addDetail), quantity, false, Boolean(document.querySelector('#detailReseller')?.checked), selectedDetailVariant(product)?.id || ''); closeModal(); openCart(); }
-  const buyNow = event.target.closest('[data-buy-now]'); if (buyNow) { if (state.paymentMethod !== 'qris') return notify('Metode pembayaran yang Anda pilih sedang mengalami gangguan. Silakan pilih QRIS.'); const detailWa = document.querySelector('#detailWhatsapp'); if (detailWa) { const normalized = normalizeWhatsapp(detailWa.value); if (!normalized) { detailWa.setCustomValidity('Masukkan nomor WhatsApp aktif, misalnya 081234567890.'); detailWa.reportValidity(); return; } detailWa.setCustomValidity(''); state.checkoutWhatsapp = normalized; } const id = Number(buyNow.dataset.buyNow); const product = getProduct(id); const quantity = Math.max(1, Math.min(Number(document.querySelector('#detailQuantity').value) || 1, product.stock)); state.cart = [{ id, quantity, ownGmail: false, reseller: false, variantId: selectedDetailVariant(product)?.id || '' }]; persistCart(); closeModal(); checkoutModal(); }
+  const buyNow = event.target.closest('[data-buy-now]'); if (buyNow) { if (state.paymentMethod !== 'qris') return await showPaymentFailure(); if(!state.user){authModal('login');notify('Masuk dulu sebelum membuat pesanan.');return;} const detailWa = document.querySelector('#detailWhatsapp'); const normalized = normalizeWhatsapp(detailWa?.value || state.user.whatsapp || ''); if (!normalized) { if(detailWa){detailWa.setCustomValidity('Masukkan nomor WhatsApp aktif, misalnya 081234567890.');detailWa.reportValidity();}else notify('Lengkapi nomor WhatsApp di profil.'); return; } if(detailWa)detailWa.setCustomValidity(''); state.checkoutWhatsapp=normalized; const id=Number(buyNow.dataset.buyNow); const product=getProduct(id); const quantity=Math.max(1,Math.min(Number(document.querySelector('#detailQuantity')?.value)||1,product.stock)); const items=[{id,quantity,ownGmail:false,reseller:false,variantId:selectedDetailVariant(product)?.id||''}]; buyNow.disabled=true;buyNow.textContent='Membuat pembayaran...'; try{const response=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({customer:{name:state.user.name,whatsapp:normalized,note:''},voucherCode:state.appliedVoucher?.code||'',items,chatId:state.chatId})});const order=await response.json();if(!response.ok)throw new Error(order.error||'Pesanan gagal dibuat.');state.orders=[order,...state.orders];paymentModal(order.customer,order);}catch(error){buyNow.disabled=false;buyNow.textContent='BAYAR SEKARANG';notify(error.message);} }
   if (event.target.closest('#logoutButton')) { await fetch('/api/auth/logout', { method: 'POST' }); state.user = null; state.account = null; renderAccountButton(); closeModal(); notify('Kamu sudah keluar'); }
   if (event.target.closest('#confirmPayment')) { const button = event.target.closest('#confirmPayment'); const order = state.orders.find((item) => item.id === button.dataset.orderId); if (!order) return notify('Detail pesanan tidak ditemukan.'); button.disabled = true; button.textContent = 'Memverifikasi pembayaran...'; let confirmation={}; try { const response=await fetch(`/api/orders/${encodeURIComponent(order.id)}/confirm`,{method:'POST'}); confirmation=await response.json(); if(!response.ok) throw new Error(confirmation.error||'Konfirmasi gagal.'); } catch(error){ button.disabled=false; button.textContent='Saya sudah membayar'; return notify(error.message); } await sendOperationalMessage(orderMessage(order)).catch(() => {}); closeModal(); openChat(); notify(confirmation.message || 'Pembayaran masuk antrean verifikasi.'); }
   const reopen = event.target.closest('[data-reopen-payment]'); if (reopen) { const order = state.orders.find((item) => item.id === reopen.dataset.reopenPayment); if (order) paymentModal(order.customer, order); }
@@ -784,11 +804,11 @@ modalLayer.addEventListener('submit', async (event) => {
   }
   if (event.target.id === 'authForm') {
     const button = event.target.querySelector('button[type="submit"]'); const mode = event.target.dataset.mode; button.disabled = true; button.textContent = mode === 'register' ? 'Membuat akun...' : 'Memeriksa akun...';
-    try { const credentials = Object.fromEntries(new FormData(event.target)); credentials.chatId = state.chatId; if (mode === 'register') credentials.deviceId = state.deviceId; const response = await fetch(`/api/auth/${mode}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(credentials) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Autentikasi gagal.'); state.user = result.user; if (result.chatId) setChatId(result.chatId); renderAccountButton(); closeModal(); if (state.chatEscalated) loadUnifiedChat(); notify(mode === 'register' ? 'Akun berhasil dibuat' : 'Berhasil masuk'); }
+    try { const credentials = Object.fromEntries(new FormData(event.target)); credentials.chatId = state.chatId; if (mode === 'register') credentials.deviceId = state.deviceId; const response = await fetch(`/api/auth/${mode}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(credentials) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Autentikasi gagal.'); state.user = result.user; if (result.chatId) setChatId(result.chatId); renderAccountButton(); if(location.pathname.startsWith('/account/')){document.body.classList.add('route-account');await accountModal(location.pathname.split('/').filter(Boolean)[1]||'profile');}else if(location.pathname.startsWith('/checkout')){document.body.classList.add('route-checkout');checkoutModal();}else closeModal(); if (state.chatEscalated) loadUnifiedChat(); notify(mode === 'register' ? 'Akun berhasil dibuat' : 'Berhasil masuk'); }
     catch (error) { notify(error.message); button.disabled = false; button.textContent = mode === 'register' ? 'Buat akun' : 'Masuk sekarang'; }
   }
   if (event.target.id === 'checkoutForm') {
-    if (state.paymentMethod !== 'qris') { notify('Metode pembayaran yang Anda pilih sedang mengalami gangguan. Silakan pilih QRIS.'); return; }
+    if (state.paymentMethod !== 'qris') { await showPaymentFailure(); return; }
     const button = event.target.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Memvalidasi stok...';
     try {
       const form = Object.fromEntries(new FormData(event.target));
@@ -864,12 +884,13 @@ async function loadStore() {
     notify('Katalog server sedang sinkronisasi. Menampilkan katalog cadangan.');
   }
   renderProducts(); updateCart();
+  const routeMatch=location.pathname.match(/^\/product\/(\d+)\/?$/); if(routeMatch){const product=getProduct(Number(routeMatch[1]));if(product){document.body.classList.add('route-product');detailModal(product.id);}}
 }
 
 async function loadUserSession() {
   localStorage.removeItem('jagoprem_user');
   Object.keys(localStorage).filter((key) => key.startsWith('jagoprem_account_')).forEach((key) => localStorage.removeItem(key));
-  try { const response = await fetch(`/api/auth/me?chatId=${encodeURIComponent(state.chatId)}`, { cache: 'no-store' }); if (!response.ok) { renderAccountButton(); return; } const result = await response.json(); state.user = result.user; if (result.chatId) setChatId(result.chatId); renderAccountButton(); } catch { renderAccountButton(); }
+  try { const response = await fetch(`/api/auth/me?chatId=${encodeURIComponent(state.chatId)}`, { cache: 'no-store' }); if (!response.ok) { renderAccountButton(); if(location.pathname.startsWith('/account/')||location.pathname==='/checkout')authModal('login'); return; } const result = await response.json(); state.user = result.user; if (result.chatId) setChatId(result.chatId); renderAccountButton(); const accountRoute=location.pathname.match(/^\/account\/([a-z-]+)\/?$/);const productRoute=location.pathname.match(/^\/product\/(\d+)\/?$/);if(accountRoute){document.body.classList.add('route-account');accountModal(accountRoute[1]);}else if(location.pathname==='/checkout'||location.pathname==='/checkout/'){document.body.classList.add('route-checkout');checkoutModal();}else if(productRoute){document.body.classList.add('route-product');detailModal(Number(productRoute[1]));} } catch { renderAccountButton(); }
 }
 
 document.querySelector('#historyButton').addEventListener('click', historyModal);
@@ -948,10 +969,10 @@ document.querySelector('#notifButton').addEventListener('click', () => {
 });
 
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') { closeCart(); closeModal(); closeChat(); } });
-loadStore(); loadUserSession(); icons();
+(async()=>{await loadStore();await loadUserSession();icons();})();
 
 function showPromoPopup() {
-  openModal(`${modalHead('Promo JagoPrem')}<div class="modal-body campaign-popup"><div class="campaign-hero"><span>JAGOPREM DEALS</span><h2>Lebih hemat untuk akun premium private.</h2><p>Pilih kode yang paling sesuai dengan pesananmu.</p></div><div class="campaign-vouchers"><button type="button" data-copy-voucher="JAGOBARU10"><span>PELANGGAN BARU</span><strong>JAGOBARU10</strong><small>Diskon 10% • minimal Rp25.000</small><i data-lucide="copy"></i></button><button type="button" data-copy-voucher="HEMAT5000"><span>HEMAT LANGSUNG</span><strong>HEMAT5000</strong><small>Potongan Rp5.000 • minimal Rp50.000</small><i data-lucide="copy"></i></button><button type="button" data-copy-voucher="AIHEMAT20"><span>AKUN AI PRIVATE</span><strong>AIHEMAT20</strong><small>Diskon 20% • minimal 2 akun AI yang sama</small><i data-lucide="copy"></i></button></div><div class="campaign-note"><i data-lucide="bot"></i><span>Bayar lewat QRIS dinamis, lalu detail produk dikirim oleh bot WhatsApp.</span></div><button class="confirm-button" type="button" data-close-modal>Mulai belanja</button></div>`);
+  openModal(`${modalHead('Promo JagoPrem')}<div class="modal-body campaign-popup"><div class="campaign-hero"><span>JAGOPREM DEALS</span><h2>Lebih hemat untuk akun premium private.</h2><p>Pilih kode yang paling sesuai dengan pesananmu.</p></div><div class="campaign-vouchers"><button type="button" data-copy-voucher="JAGOBARU10"><span>PELANGGAN BARU</span><strong>JAGOBARU10</strong><small>Diskon 10% • minimal Rp25.000</small><i data-lucide="copy"></i></button><button type="button" data-copy-voucher="HEMAT5000"><span>HEMAT LANGSUNG</span><strong>HEMAT5000</strong><small>Potongan Rp5.000 • minimal Rp50.000</small><i data-lucide="copy"></i></button><button type="button" data-copy-voucher="JAGOPREM7"><span>PAKET PREMIUM</span><strong>JAGOPREM7</strong><small>Diskon 7% • minimal Rp75.000</small><i data-lucide="copy"></i></button></div><div class="campaign-note"><i data-lucide="bot"></i><span>Bayar lewat QRIS dinamis, lalu detail produk dikirim oleh bot WhatsApp.</span></div><button class="confirm-button" type="button" data-close-modal>Mulai belanja</button></div>`);
   document.querySelectorAll('[data-copy-voucher]').forEach((button)=>button.addEventListener('click',()=>{navigator.clipboard?.writeText(button.dataset.copyVoucher).catch(()=>{});notify(`Kode ${button.dataset.copyVoucher} disalin.`);}));
   document.querySelector('[data-copy-voucher="AIHEMAT20"]')?.setAttribute('data-copy-voucher', 'JAGOPREM7');
   const weeklyVoucher = document.querySelector('[data-copy-voucher="JAGOPREM7"]');
@@ -978,7 +999,7 @@ setTimeout(() => {
       persistCart();
       checkoutModal();
     }
-  } else {
+  } else if (!location.pathname.startsWith('/product/') && !location.pathname.startsWith('/account/') && !location.pathname.startsWith('/checkout')) {
     if (!sessionStorage.getItem('jagoprem_campaign_seen')) showPromoPopup();
   }
 }, 1200);

@@ -16,10 +16,10 @@ Buat file `.env` pada direktori home Hostinger, sejajar dengan `public_html`:
 
 ```env
 ADMIN_PASSWORD=ganti-dengan-password-yang-kuat
-OPENAI_API_KEY=paste-key-di-sini
-OPENAI_BASE_URL=https://api.openai.com/v1
-OPENAI_MODEL=gpt-5.6-luna
-OPENAI_MAX_OUTPUT_TOKENS=320
+PREMZONE_API_KEY=paste-key-premzone-di-sini
+PREMZONE_BASE_URL=https://api.premzone.co/v1
+PREMZONE_MODEL=gpt-5.5
+OPENAI_MAX_OUTPUT_TOKENS=220
 AI_CHAT_RATE_LIMIT_PER_MINUTE=4
 AI_CHAT_DAILY_LIMIT_PER_USER=60
 ```
