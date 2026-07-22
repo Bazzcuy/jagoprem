@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 session_name('jagoprem_session');session_start();
-const STORE_FILE=__DIR__.'/data/store.json';const ENV_FILE=__DIR__.'/.env';const STORE_SCHEMA_VERSION=15;const ORDER_RESERVATION_MS=1800000;const DEFAULT_ADMIN_PASSWORD='64945bagas';
+const STORE_FILE=__DIR__.'/data/store.json';const SEED_FILE=__DIR__.'/seed-store.json';const ENV_FILE=__DIR__.'/.env';const STORE_SCHEMA_VERSION=16;const ORDER_RESERVATION_MS=1800000;const DEFAULT_ADMIN_PASSWORD='64945bagas';
 function read_env_file(string $path): void { if(!is_file($path)) return; foreach(file($path, FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES)?:[] as $line){ $line=trim($line); if($line===''||$line[0]==='#'||!str_contains($line,'=')) continue; [$k,$v]=explode('=',$line,2); $k=trim($k); if($k!=='' && getenv($k)===false) putenv($k.'='.trim($v)); }}
 read_env_file(ENV_FILE);
 function env_value(string $key,string $default=''): string { $v=getenv($key); return $v===false?$default:(string)$v; }
@@ -13,6 +13,10 @@ function load_store(): array { if(!is_file(STORE_FILE)) return default_store(); 
 function save_store(array $store): void { $store['schemaVersion']=STORE_SCHEMA_VERSION; file_put_contents(STORE_FILE, json_encode($store, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE).PHP_EOL, LOCK_EX); }
 function default_store(): array { $data=['schemaVersion'=>STORE_SCHEMA_VERSION,'products'=>[],'orders'=>[],'chats'=>[],'users'=>[],'reviews'=>[],'vouchers'=>[],'notifications'=>[],'llmUsers'=>[],'settings'=>['maintenance'=>false,'maintenanceMessage'=>'JagoPrem sedang melakukan pemeliharaan singkat. Silakan kembali beberapa saat lagi.','reviewsEnabled'=>true]]; ensure_store_defaults($data); return $data; }
 function ensure_store_defaults(array &$data): void {
+  if(empty($data['products'])){
+    $seed=is_file(SEED_FILE)?json_decode((string)file_get_contents(SEED_FILE),true):null;
+    $data['products']=is_array($seed['products']??null)?$seed['products']:[];
+  }
   $defaults=[
     ['code'=>'JAGOBARU10','description'=>'Diskon 10% untuk pelanggan baru','type'=>'percent','value'=>10,'minSubtotal'=>25000,'maxUses'=>0,'used'=>0,'enabled'=>true,'expiresAt'=>'','requiredCategory'=>'','minQuantity'=>1,'requireSameProduct'=>false],
     ['code'=>'HEMAT5000','description'=>'Potongan Rp5.000 minimal belanja Rp50.000','type'=>'amount','value'=>5000,'minSubtotal'=>50000,'maxUses'=>0,'used'=>0,'enabled'=>true,'expiresAt'=>'','requiredCategory'=>'','minQuantity'=>1,'requireSameProduct'=>false],

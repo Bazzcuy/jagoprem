@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LiteLLM Dashboard | JagoPrem</title>
+  <title>JagoPrem LLM Dashboard</title>
+  <link rel="icon" href="assets/jagoprem-mark.png?v=2" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -65,7 +66,7 @@
       align-items: center;
       justify-content: center;
     }
-    .login-logo-icon svg { width: 20px; height: 20px; color: white; }
+    .login-logo-icon svg, .login-logo-icon img { width: 28px; height: 28px; object-fit:contain; border-radius:7px; color: white; }
     .login-logo-text { font-size: 17px; font-weight: 700; color: var(--ink); }
     .login-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
     .login-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
@@ -139,7 +140,7 @@
       align-items: center;
       justify-content: center;
     }
-    .topbar-logo-icon svg { width: 17px; height: 17px; color: white; }
+    .topbar-logo-icon svg, .topbar-logo-icon img { width: 24px; height: 24px; object-fit:contain; border-radius:6px; color: white; }
     .topbar-version {
       font-size: 11px;
       color: var(--muted-light);
@@ -415,11 +416,11 @@
   <div class="login-card">
     <div class="login-logo">
       <div class="login-logo-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style="width:20px;height:20px"><rect x="5" y="5" width="54" height="54" rx="13" fill="#fff" transform="rotate(-4 32 32)"/><path d="M17 17h10c11 0 19 6 19 15s-8 15-19 15H17V17Zm10 9h-1v12h1c6 0 10-2 10-6s-4-6-10-6Z" fill="#17211f"/><path d="M31 24h5c8 0 13 3 13 8s-5 8-13 8h-5v-8h8c1 0 2 0 2-1s-1-1-2-1h-8v-6Z" fill="#f5755c"/></svg>
+        <img src="assets/jagoprem-mark.png" alt="">
       </div>
       <span class="login-logo-text">JagoPrem LLM</span>
     </div>
-    <h1 class="login-title">LiteLLM Dashboard</h1>
+    <h1 class="login-title">JagoPrem LLM Dashboard</h1>
     <p class="login-sub">Sign in with your JagoPrem API key to access your dashboard.</p>
     <div class="login-error" id="loginError"></div>
     <form id="loginForm">
@@ -439,7 +440,7 @@
     <div class="topbar-left">
       <div class="topbar-logo">
         <div class="topbar-logo-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style="width:17px;height:17px"><rect x="5" y="5" width="54" height="54" rx="13" fill="#fff" transform="rotate(-4 32 32)"/><path d="M17 17h10c11 0 19 6 19 15s-8 15-19 15H17V17Zm10 9h-1v12h1c6 0 10-2 10-6s-4-6-10-6Z" fill="#17211f"/><path d="M31 24h5c8 0 13 3 13 8s-5 8-13 8h-5v-8h8c1 0 2 0 2-1s-1-1-2-1h-8v-6Z" fill="#f5755c"/></svg>
+          <img src="assets/jagoprem-mark.png" alt="">
         </div>
         JagoPrem LLM
       </div>
@@ -574,7 +575,7 @@
 
         <div class="grid-2">
           <div class="card">
-            <div class="card-title">Project Spend <span style="font-weight:400;color:var(--muted);font-size:11px">(Mockup)</span></div>
+            <div class="card-title">Project Spend <span style="font-weight:400;color:var(--muted);font-size:11px">(Estimasi)</span></div>
             <div class="bar-chart-wrap" id="barChart"></div>
           </div>
           <div class="card">

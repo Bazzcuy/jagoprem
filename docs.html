@@ -4,20 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dokumentasi API | JagoPrem LLM</title>
-  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/jagoprem-mark.png?v=2" type="image/png">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #060e0d;
-      --surface: #0c1a18;
-      --surface2: #122320;
-      --border: rgba(16,185,129,.18);
+      --bg: #071124;
+      --surface: #0d1930;
+      --surface2: #13213b;
+      --border: rgba(29,124,255,.18);
       --border2: rgba(255,255,255,.07);
-      --green: #10b981;
-      --green-dim: #0a7a62;
-      --text: #e8f5f1;
-      --text-dim: #7fa89e;
-      --text-muted: #4d6b64;
+      --green: #1d7cff;
+      --green-dim: #145fc2;
+      --text: #edf4ff;
+      --text-dim: #96a7c7;
+      --text-muted: #64769a;
       --radius: 12px;
       --sidebar-width: 280px;
       --header-height: 64px;
@@ -49,10 +49,7 @@
       z-index: 10;
     }
     .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-    .brand-symbol{position:relative;width:34px;height:34px;background:#17211f;border-radius:7px;display:block;overflow:hidden;transform:rotate(-4deg)}
-    .brand-symbol i,.brand-symbol b{position:absolute;border:4px solid white;border-left:0}
-    .brand-symbol i{width:15px;height:21px;left:6px;top:6px;border-radius:0 12px 12px 0}
-    .brand-symbol b{width:10px;height:14px;left:17px;top:10px;border-color:#f5755c;border-radius:0 9px 9px 0}
+    .brand-symbol{width:34px;height:34px;border-radius:8px;display:block;object-fit:contain;background:#fff}
     .brand span { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
     .brand span b { color: var(--green); font-weight: 800; }
     .header-links a { color: var(--text-dim); font-size: 14px; font-weight: 600; text-decoration: none; transition: .2s; }
@@ -88,7 +85,7 @@
       cursor: pointer;
     }
     .nav-link:hover { background: var(--surface2); color: var(--text); text-decoration: none; }
-    .nav-link.active { background: rgba(16,185,129,.1); color: var(--green); font-weight: 600; }
+    .nav-link.active { background: rgba(29,124,255,.1); color: var(--green); font-weight: 600; }
     
     /* Main Content */
     .main-content {
@@ -126,7 +123,7 @@
       font-size: 13px;
       line-height: 1.6;
       margin-bottom: 24px;
-      color: #e8f5f1;
+      color: #edf4ff;
     }
     code {
       font-family: 'JetBrains Mono', monospace;
@@ -142,7 +139,7 @@
     .endpoint { display: inline-flex; align-items: center; gap: 12px; background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px; padding: 8px 16px; margin-bottom: 24px; width: 100%; }
     .method { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 800; padding: 4px 8px; border-radius: 4px; }
     .method.get { background: rgba(59,130,246,.15); color: #60a5fa; }
-    .method.post { background: rgba(16,185,129,.15); color: #34d399; }
+    .method.post { background: rgba(29,124,255,.15); color: #60a5fa; }
     .method.delete { background: rgba(248,113,113,.15); color: #f87171; }
     .path { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: var(--text); }
 
@@ -155,7 +152,7 @@
     /* Alerts */
     .alert { padding: 16px; border-radius: 8px; margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-start; }
     .alert-info { background: rgba(59,130,246,.1); border: 1px solid rgba(59,130,246,.2); color: #bfdbfe; }
-    .alert-warning { background: rgba(245,117,92,.1); border: 1px solid rgba(245,117,92,.2); color: #fecaca; }
+    .alert-warning { background: rgba(227,170,0,.1); border: 1px solid rgba(227,170,0,.2); color: #fecaca; }
     
     @media (max-width: 768px) {
       .layout { flex-direction: column; }
@@ -170,7 +167,7 @@
 
 <header>
   <a href="/api-llm.html" class="brand">
-    <span class="brand-symbol" style="transform:scale(0.8)"><i></i><b></b></span>
+    <img class="brand-symbol" src="assets/jagoprem-mark.png" alt="">
     <span>jagoprem<b>llm</b> Docs</span>
   </a>
   <div class="header-links">
