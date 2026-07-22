@@ -21,10 +21,10 @@ Di File Manager Hostinger, buka direktori home yang berisi folder `public_html`.
 2. Pastikan posisi berada satu tingkat di atas `public_html`.
 3. Klik **New file**, beri nama `.env`.
 4. Buka `.env.example` dari repository ini, salin seluruh isinya ke `.env`.
-5. Ganti `PASTE_OPENAI_API_KEY_DI_SINI` dengan key asli dan ganti password admin.
+5. Ganti `PASTE_PREMZONE_API_KEY_DI_SINI` dengan key Premzone yang baru dan ganti password admin.
 6. Simpan. Jika Hostinger menyediakan pengaturan permission, gunakan `600` atau `640`.
 7. Buka `https://jagoprem.shop/api/ai/health`. Nilai `configured` harus `true`; endpoint ini tidak pernah menampilkan key.
 
-`api.php` mencari `.env` di home Hostinger terlebih dahulu. File `.env` di root proyek hanya menjadi fallback untuk development lokal dan tetap diabaikan Git.
+`api.php` mencari `.env` di home Hostinger terlebih dahulu. File `.env` di root proyek hanya menjadi fallback untuk development lokal dan tetap diabaikan Git. Adapter memakai endpoint OpenAI-compatible Premzone `https://api.premzone.co/v1/chat/completions`.
 
-Jika key pernah tertempel di GitHub, HTML, atau JavaScript frontend, segera hapus dan rotasi key tersebut dari dashboard OpenAI.
+Jika key atau password pernah terlihat di screenshot, GitHub, HTML, atau JavaScript frontend, segera rotasi dari dashboard penyedia. Jangan gunakan kembali key yang sudah terekspos.

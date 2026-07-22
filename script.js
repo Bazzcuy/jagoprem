@@ -392,7 +392,9 @@ function authModal(mode = 'login') {
 }
 
 function reportModal() {
-  openModal(`${modalHead('Lapor Masalah')}<div class="modal-body support-form-shell"><div class="support-form-intro"><i data-lucide="triangle-alert"></i><span><b>Ceritakan kendala yang kamu alami</b><small>Tim operasional akan memeriksa laporan dan membalas melalui chat JagoPrem.</small></span></div><form id="reportForm"><div class="form-group"><label>NAMA</label><input name="name" required value="${escapeHtml(state.user?.name || '')}" placeholder="Nama lengkap"></div><div class="form-group"><label>EMAIL</label><input name="email" type="email" required value="${escapeHtml(state.user?.email || '')}" placeholder="email@domain.com"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" required inputmode="tel" pattern="\\+?[0-9]{9,15}" placeholder="Contoh: 6281234567890"></div><div class="form-group"><label>ID PESANAN (OPSIONAL)</label><input name="orderId" placeholder="JGP-..."></div><div class="form-group"><label>KATEGORI MASALAH</label><select name="category" required><option value="">Pilih kategori</option><option>Pembayaran</option><option>Produk belum diterima</option><option>Kendala login produk</option><option>Garansi</option><option>API LLM</option><option>Lainnya</option></select></div><div class="form-group"><label>DETAIL MASALAH</label><textarea name="detail" required minlength="10" maxlength="1000" placeholder="Jelaskan kronologi dan pesan error yang muncul"></textarea></div><button class="submit-button" type="submit">Kirim laporan</button></form></div>`);
+  const orders = state.account?.orders || [];
+  const orderOptions = orders.map((order) => `<option value="${escapeHtml(order.id)}">${escapeHtml(order.id)} · ${escapeHtml(order.items?.[0]?.title || 'Pesanan JagoPrem')}</option>`).join('');
+  openModal(`${modalHead('Pusat Bantuan')}<div class="modal-body report-center"><aside class="report-guide"><span class="report-guide-icon"><i data-lucide="life-buoy"></i></span><small>JAGOPREM CARE</small><h2>Kami bantu sampai tuntas.</h2><p>Kirim satu laporan lengkap supaya tim operasional bisa mengecek tanpa menanyakan data yang sama berulang kali.</p><ol><li><i data-lucide="check"></i> Pilih jenis kendala</li><li><i data-lucide="check"></i> Sertakan ID pesanan</li><li><i data-lucide="check"></i> Jelaskan kronologi dan pesan error</li></ol><div class="report-response"><i data-lucide="clock-3"></i><span><b>Balasan melalui chat</b><small>Setiap hari pukul 10.00–22.00 WIB</small></span></div></aside><form id="reportForm" class="report-form"><header><small>BUAT TIKET BARU</small><h2>Apa kendalanya?</h2><p>Data laporan otomatis masuk ke dashboard admin dan percakapanmu.</p></header><div class="report-category-grid"><label><input type="radio" name="category" value="Pembayaran" required><span><i data-lucide="wallet-cards"></i>Pembayaran</span></label><label><input type="radio" name="category" value="Produk belum diterima"><span><i data-lucide="package-x"></i>Belum diterima</span></label><label><input type="radio" name="category" value="Kendala login produk"><span><i data-lucide="key-round"></i>Login produk</span></label><label><input type="radio" name="category" value="Garansi"><span><i data-lucide="shield-check"></i>Garansi</span></label><label><input type="radio" name="category" value="API LLM"><span><i data-lucide="braces"></i>API LLM</span></label><label><input type="radio" name="category" value="Lainnya"><span><i data-lucide="circle-ellipsis"></i>Lainnya</span></label></div><div class="report-fields"><label>Nama lengkap<input name="name" required value="${escapeHtml(state.user?.name || '')}" placeholder="Nama sesuai akun"></label><label>Email akun<input name="email" type="email" required value="${escapeHtml(state.user?.email || '')}" placeholder="email@domain.com"></label><label>Nomor WhatsApp<input name="whatsapp" required inputmode="tel" pattern="\\+?[0-9]{9,15}" value="${escapeHtml(state.user?.whatsapp || '')}" placeholder="08..., 628..., atau +628..."></label><label>ID pesanan<select name="orderId"><option value="">Tidak terkait pesanan</option>${orderOptions}</select></label></div><label class="report-detail">Detail kendala<textarea name="detail" required minlength="15" maxlength="1000" placeholder="Contoh: pembayaran sudah berhasil pukul 14.20, tetapi produk belum diterima. Tuliskan juga pesan error yang muncul."></textarea><small>Minimal 15 karakter. Jangan kirim password, OTP, atau data rahasia.</small></label><button class="submit-button" type="submit"><i data-lucide="send"></i>Kirim ke tim operasional</button></form></div>`);
 }
 function resellerModal() {
   openModal(`${modalHead('Daftar sebagai Reseller')}<div class="modal-body support-form-shell"><div class="support-form-intro reseller"><i data-lucide="badge-percent"></i><span><b>Dapatkan harga khusus reseller</b><small>Isi profil penjualanmu. Tim JagoPrem akan menghubungi setelah data diverifikasi.</small></span></div><form id="resellerForm"><div class="form-group"><label>NAMA LENGKAP</label><input name="name" required value="${escapeHtml(state.user?.name || '')}"></div><div class="form-group"><label>EMAIL</label><input name="email" type="email" required value="${escapeHtml(state.user?.email || '')}"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" required inputmode="tel" pattern="\\+?[0-9]{9,15}" placeholder="6281234567890"></div><div class="form-group"><label>KANAL PENJUALAN</label><select name="channel" required><option value="">Pilih kanal</option><option>WhatsApp</option><option>Instagram</option><option>Telegram</option><option>Marketplace</option><option>Website sendiri</option></select></div><div class="form-group"><label>ESTIMASI PESANAN PER BULAN</label><select name="volume" required><option value="">Pilih estimasi</option><option>1–10 pesanan</option><option>11–50 pesanan</option><option>Lebih dari 50 pesanan</option></select></div><div class="form-group"><label>CATATAN</label><textarea name="note" maxlength="600" placeholder="Ceritakan target produk atau kebutuhanmu"></textarea></div><button class="submit-button" type="submit">Kirim pendaftaran</button></form></div>`);
@@ -749,11 +751,35 @@ modalLayer.addEventListener('input', (event) => {
 
 modalLayer.addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (event.target.id === 'profileForm') {
+    const button = event.target.querySelector('button[type="submit"]');
+    button.disabled = true;
+    button.textContent = 'Menyimpan...';
+    try {
+      const form = Object.fromEntries(new FormData(event.target));
+      const normalized = normalizeWhatsapp(form.whatsapp);
+      if (!normalized) throw new Error('Nomor WhatsApp belum valid.');
+      form.whatsapp = normalized;
+      const response = await fetch('/api/account', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Profil gagal disimpan.');
+      state.user = result.user;
+      if (state.account) state.account.user = result.user;
+      renderAccountButton();
+      await accountModal('profile');
+      notify('Profil berhasil diperbarui.');
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = 'Simpan profil';
+      notify(error.message);
+    }
+    return;
+  }
   if (event.target.id === 'reportForm' || event.target.id === 'resellerForm') {
     const form = Object.fromEntries(new FormData(event.target)); const isReport = event.target.id === 'reportForm';
     const message = isReport ? `LAPORAN MASALAH\nNama: ${form.name}\nEmail: ${form.email}\nWhatsApp: ${form.whatsapp}\nPesanan: ${form.orderId || '-'}\nKategori: ${form.category}\nDetail: ${form.detail}` : `PENDAFTARAN RESELLER\nNama: ${form.name}\nEmail: ${form.email}\nWhatsApp: ${form.whatsapp}\nKanal: ${form.channel}\nVolume: ${form.volume}\nCatatan: ${form.note || '-'}`;
     const button = event.target.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Mengirim...';
-    try { await sendOperationalMessage(message); closeModal(); openChat(); notify(isReport ? 'Laporan berhasil diteruskan.' : 'Pendaftaran reseller berhasil dikirim.'); } catch (error) { button.disabled = false; button.textContent = isReport ? 'Kirim laporan' : 'Kirim pendaftaran'; notify(error.message); }
+    try { await sendOperationalMessage(message, isReport ? { escalate: true, reason: `report:${form.category}` } : { escalate: true, reason: 'reseller_registration' }); closeModal(); openChat(); notify(isReport ? 'Laporan berhasil diteruskan.' : 'Pendaftaran reseller berhasil dikirim.'); } catch (error) { button.disabled = false; button.textContent = isReport ? 'Kirim laporan' : 'Kirim pendaftaran'; notify(error.message); }
     return;
   }
   if (event.target.id === 'authForm') {
@@ -807,23 +833,35 @@ function addToCart(id, quantity, ownGmail = false, reseller = false, variantId =
 
 async function loadStore() {
   try {
-    const response = await fetch('/api/store', { cache: 'no-store' });
-    if (!response.ok) throw new Error('Katalog server tidak tersedia');
-    const data = await response.json();
+    let data = null;
+    let lastError = null;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const response = await fetch(`/api/store?fresh=${Date.now()}`, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Katalog server tidak tersedia');
+        data = await response.json();
+        if (!Array.isArray(data.products) || data.products.length === 0) throw new Error('Katalog server kosong');
+        break;
+      } catch (error) {
+        lastError = error;
+        if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 450 * (attempt + 1)));
+      }
+    }
+    if (!data) throw lastError || new Error('Katalog gagal dimuat');
     if (!Array.isArray(data.products) || data.products.length === 0) throw new Error('Katalog server kosong');
     products = data.products.map((item) => {
       const base = supportsOwnGmail(item) ? { ...item, access: 'Akun privat + Codex', description: CHATGPT_PLUS_DESCRIPTION } : item;
       return applyCommercePolicy(applyCatalogDefaults(base, false), false);
     });
     validIds = new Set(products.map((item) => item.id));
+    localStorage.setItem('jagoprem_catalog_cache', JSON.stringify(data.products));
   } catch {
-    products = fallbackCatalog.map((item) => ({ enabled: true, ...item }));
+    let cached = [];
+    try { cached = JSON.parse(localStorage.getItem('jagoprem_catalog_cache') || '[]'); } catch { cached = []; }
+    const source = Array.isArray(cached) && cached.length ? cached : fallbackCatalog;
+    products = source.map((item) => applyCommercePolicy(applyCatalogDefaults({ enabled: true, ...item }, false), false));
     validIds = new Set(products.map((item) => item.id));
     notify('Katalog server sedang sinkronisasi. Menampilkan katalog cadangan.');
-  }
-  if (event.target.id === 'profileForm') {
-    const button = event.target.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Menyimpan...';
-    try { const form = Object.fromEntries(new FormData(event.target)); const normalized = normalizeWhatsapp(form.whatsapp); if (!normalized) throw new Error('Nomor WhatsApp belum valid.'); form.whatsapp = normalized; const response = await fetch('/api/account', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Profil gagal disimpan.'); state.user = result.user; if (state.account) state.account.user = result.user; renderAccountButton(); await accountModal('profile'); notify('Profil berhasil diperbarui.'); } catch (error) { button.disabled = false; button.textContent = 'Simpan profil'; notify(error.message); }
   }
   renderProducts(); updateCart();
 }

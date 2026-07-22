@@ -158,7 +158,7 @@ async function api(url, options = {}) {
 
 function showLogin() { loginView.hidden = false; adminApp.hidden = true; }
 async function load() {
-  try { adminState = await api('/api/admin/state'); loginView.hidden = true; adminApp.hidden = false; normalizeActiveSelections(); render(); }
+  try { const [state, aiHealth] = await Promise.all([api('/api/admin/state'), api('/api/ai/health').catch(() => ({ configured: false, provider: 'tidak tersedia' }))]); adminState = { ...state, aiHealth }; loginView.hidden = true; adminApp.hidden = false; normalizeActiveSelections(); render(); }
   catch { showLogin(); }
 }
 
@@ -322,7 +322,8 @@ function reviewPanel() {
 
 function settingsPanel() {
   const settings = adminState.settings || {};
-  return `<div class="settings-grid"><form class="panel maintenance-panel" id="maintenanceForm"><div class="settings-icon"><i data-lucide="construction"></i></div><div><small>STATUS TOKO</small><h2>Mode maintenance</h2><p>Saat aktif, pengunjung melihat halaman pemeliharaan. Dashboard admin tetap dapat dibuka.</p></div><label class="maintenance-switch"><input name="maintenance" type="checkbox" ${settings.maintenance ? 'checked' : ''}><span></span><b>${settings.maintenance ? 'Aktif' : 'Nonaktif'}</b></label><label class="maintenance-switch"><input name="reviewsEnabled" type="checkbox" ${settings.reviewsEnabled === false ? '' : 'checked'}><span></span><b>Terima ulasan baru</b></label><label class="settings-message">PESAN UNTUK PENGUNJUNG<textarea name="maintenanceMessage" maxlength="240">${escapeHtml(settings.maintenanceMessage || '')}</textarea></label><button type="submit">Simpan pengaturan</button></form><div class="panel operations-note"><i data-lucide="refresh-cw"></i><h2>Kontrol operasional</h2><p>Auto-restock dikelola per produk. Ulasan baru bisa dimatikan sementara dari pengaturan ini tanpa menghapus ulasan lama.</p></div></div>`;
+  const ai = adminState.aiHealth || {};
+  return `<div class="settings-grid"><form class="panel maintenance-panel" id="maintenanceForm"><div class="settings-icon"><i data-lucide="construction"></i></div><div><small>STATUS TOKO</small><h2>Mode maintenance</h2><p>Saat aktif, pengunjung melihat halaman pemeliharaan. Dashboard admin tetap dapat dibuka.</p></div><label class="maintenance-switch"><input name="maintenance" type="checkbox" ${settings.maintenance ? 'checked' : ''}><span></span><b>${settings.maintenance ? 'Aktif' : 'Nonaktif'}</b></label><label class="maintenance-switch"><input name="reviewsEnabled" type="checkbox" ${settings.reviewsEnabled === false ? '' : 'checked'}><span></span><b>Terima ulasan baru</b></label><label class="settings-message">PESAN UNTUK PENGUNJUNG<textarea name="maintenanceMessage" maxlength="240">${escapeHtml(settings.maintenanceMessage || '')}</textarea></label><button type="submit">Simpan pengaturan</button></form><div class="settings-side"><div class="panel operations-note ai-provider-card"><i data-lucide="bot"></i><small>ASISTEN OTOMATIS</small><h2>${ai.configured ? 'Premzone terhubung' : 'Premzone belum terhubung'}</h2><p>Provider: ${escapeHtml(ai.provider || '-')}<br>Model: ${escapeHtml(ai.model || '-')}<br>Transport: ${escapeHtml(ai.transport || '-')}</p><span class="provider-state ${ai.configured ? 'online' : 'offline'}">${ai.configured ? 'Konfigurasi terbaca' : 'Periksa file .env'}</span></div><div class="panel operations-note"><i data-lucide="refresh-cw"></i><h2>Kontrol operasional</h2><p>Auto-restock dikelola per produk. Ulasan baru bisa dimatikan sementara dari pengaturan ini tanpa menghapus ulasan lama.</p></div></div></div>`;
 }
 
 function chatWorkspace() {
@@ -371,6 +372,10 @@ function render(options = {}) {
   const titles = { overview: 'Ringkasan', products: 'Produk', orders: 'Pesanan', vouchers: 'Voucher', accounts: 'Akun Pembeli', 'llm-users': 'LLM Users', reviews: 'Ulasan', chats: 'Chat Pembeli', notifications: 'Notifikasi', settings: 'Pengaturan' };
   document.querySelector('#adminTitle').textContent = titles[activeTab] || 'Dashboard';
   content.innerHTML = activeTab === 'overview' ? statsPanel() + orderTable() : activeTab === 'products' ? productTable() : activeTab === 'orders' ? orderTable() : activeTab === 'vouchers' ? voucherPanel() : activeTab === 'accounts' ? accountTable() : activeTab === 'llm-users' ? llmUserTable() : activeTab === 'reviews' ? reviewPanel() : activeTab === 'settings' ? settingsPanel() : activeTab === 'notifications' ? notificationPanel() : chatWorkspace();
+  const voucherCodeInput = content.querySelector('#voucherForm input[name="code"]');
+  if (voucherCodeInput) voucherCodeInput.placeholder = 'JAGOPREM7';
+  const voucherDescriptionInput = content.querySelector('#voucherForm input[name="description"]');
+  if (voucherDescriptionInput) voucherDescriptionInput.placeholder = 'Diskon 7% untuk belanja minimal Rp75.000';
   icons();
   if (activeTab === 'chats' && activeChatId && !chatDetails[activeChatId] && !chatDetailLoadingId) void loadChatDetail(activeChatId);
   if (activeTab === 'chats') {

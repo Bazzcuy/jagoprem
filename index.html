@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=13">
+  <link rel="stylesheet" href="styles.css?v=14">
 </head>
 <body class="jagoprem-layout">
   <header class="reference-header">
@@ -50,7 +50,7 @@
   <main>
     <section class="reference-hero" id="home">
       <div class="hero-copy">
-        <h1>Marketplace Akun<br>Premium Murah,<br>Bergaransi <span>&amp; CS 24 Jam</span></h1>
+        <h1>Marketplace Akun<br>Premium Murah,<br>Bergaransi <span>&amp; Bantuan Setiap Hari</span></h1>
         <p>Nikmati berbagai akun premium favorit seperti ChatGPT Plus, Spotify, YouTube Premium, dan lainnya dalam satu tempat.</p>
         <div class="reference-cta">
           <a href="#products"><i data-lucide="shopping-bag"></i> Lihat Akun Premium</a>
@@ -69,7 +69,7 @@
           <article><i data-lucide="shield-check"></i><h3>Semua Produk Bergaransi</h3><p>Setiap pembelian dilengkapi garansi selama masa aktif produk. Jika ada kendala, tim kami akan membantu pengecekan dan solusi.</p></article>
           <article><i data-lucide="package-open"></i><h3>Banyak Pilihan Produk</h3><p>Tersedia berbagai akun premium seperti ChatGPT Plus, Spotify, YouTube Premium, aplikasi produktivitas, dan lainnya.</p></article>
           <article><i data-lucide="shopping-cart"></i><h3>Proses Pembelian Mudah</h3><p>Pilih produk, tentukan paket, lakukan pembayaran, lalu ikuti instruksi pengiriman akun dari tim JagoPrem.</p></article>
-          <article><i data-lucide="headphones"></i><h3>CS 24 Jam</h3><p>Jika ada pertanyaan atau kendala, customer service JagoPrem siap membantu melalui chat setiap hari.</p></article>
+          <article><i data-lucide="headphones"></i><h3>Chat Bantuan</h3><p>Pesan dapat dikirim kapan saja. Tim operasional membalas setiap hari pukul 10.00–22.00 WIB.</p></article>
           <article><i data-lucide="circle-check-big"></i><h3>Akun Dicek Sebelum Dikirim</h3><p>Setiap akun akan dicek terlebih dahulu sebelum dikirim agar pelanggan bisa menggunakan layanan dengan lebih tenang.</p></article>
         </div>
       </div>
@@ -84,7 +84,7 @@
       <div class="product-grid" id="productGrid"></div>
     </section>
 
-    <section class="reviews-section section-shell">
+    <section class="reviews-section section-shell" hidden aria-hidden="true">
       <div class="reviews-heading"><div><h2>Dipercaya Banyak Pelanggan,<br>Tetap Lebih Hemat</h2><p>Bergabung dengan pelanggan puas yang mendapatkan akun premium dengan harga lebih efisien.</p></div><div><span>10rb+ Pesanan</span><span class="success">99,8% Berhasil</span></div></div>
       <div class="review-cards">
         <article><div class="stars">★★★★★</div><p>“mantabbs”</p><footer><b>HC</b><span><strong>Heru Cp</strong><small>ChatGPT Plus</small></span></footer></article>
@@ -127,8 +127,8 @@
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <aside class="cart-drawer" id="cartDrawer" aria-hidden="true"><div class="drawer-head"><div><small>KERANJANG</small><h2>Pesanan kamu</h2></div><button class="icon-button" data-close-cart type="button" aria-label="Tutup keranjang"><i data-lucide="x"></i></button></div><div class="cart-items" id="cartItems"></div><div class="cart-footer"><div><span>Total</span><strong id="cartTotal">Rp0</strong></div><button class="checkout-button" id="checkoutButton" type="button">Lanjut checkout <i data-lucide="arrow-right"></i></button></div></aside><div class="overlay" id="overlay"></div>
   <section class="chat-panel" id="chatPanel" aria-hidden="true"><div class="chat-head"><div class="bot-avatar"><img src="assets/jagoprem-mark.png" alt=""></div><div><strong id="chatTitle">JagoPrem Care</strong><span><i></i> Asisten otomatis &amp; Tim Operasional</span></div><button id="closeChat" type="button" aria-label="Tutup chat"><i data-lucide="x"></i></button></div><div class="chat-messages" id="chatMessages" aria-live="polite"></div><div class="chat-attachment-preview" id="chatAttachmentPreview" hidden></div><form class="chat-form" id="chatForm"><label class="chat-attach" aria-label="Lampirkan gambar"><i data-lucide="paperclip"></i><input id="chatAttachment" type="file" accept="image/jpeg,image/png,image/webp" hidden></label><textarea id="chatInput" rows="1" maxlength="1200" placeholder="Ketik pesan Anda" autocomplete="off" aria-label="Tulis pesan"></textarea><button type="submit" aria-label="Kirim pesan"><i data-lucide="send"></i></button></form><div class="chat-powered"><i data-lucide="shield-check"></i> Asisten otomatis JagoPrem · jangan kirim password atau OTP</div></section>
-  <button class="chat-bubble" id="chatBubble" type="button" aria-label="Buka chat"><i data-lucide="message-circle"></i><span>CS 24/7</span><b id="chatBadge" class="red-badge" style="display:none">0</b></button>
+  <button class="chat-bubble" id="chatBubble" type="button" aria-label="Buka chat"><i data-lucide="message-circle"></i><span>Chat CS</span><b id="chatBadge" class="red-badge" style="display:none">0</b></button>
   <div class="modal-layer" id="modalLayer" aria-hidden="true"><section class="modal" id="modalContent" role="dialog" aria-modal="true"></section></div><div class="toast" id="toast" role="status"></div>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="catalog.js?v=13"></script><script src="qris.js?v=13"></script><script src="script.js?v=13"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="catalog.js?v=14"></script><script src="qris.js?v=14"></script><script src="script.js?v=14"></script>
 </body>
 </html>
