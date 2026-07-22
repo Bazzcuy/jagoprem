@@ -189,10 +189,10 @@ function productTable(list = adminState.products) {
   const rows = list.map((product) => {
     const sharing = isAdminSharingProduct(product);
     const badge = sharing ? '<small class="product-policy sharing">Sharing • stok dikunci 0</small>' : (isAdminAiProduct(product) ? '<small class="product-policy private">AI Private</small>' : '');
-    const variantRow = `<tr class="variant-row" id="variant-row-${product.id}" hidden><td colspan="6"><div class="variant-editor" id="variant-editor-${product.id}">${variantEditorHtml(product)}</div></td></tr>`;
-    return `<tr data-product-row="${product.id}"><td><img src="${escapeHtml(product.thumbnail)}" alt=""><span class="product-name">${escapeHtml(product.title)}${badge}</span></td><td><input class="table-input" data-price value="${Number(product.price || 0)}" type="number" min="0" aria-label="Harga ${escapeHtml(product.title)}"></td><td><input class="table-input stock-input" data-stock value="${Number(product.stock || 0)}" type="number" min="0" max="49" ${sharing ? 'disabled' : ''} aria-label="Stok ${escapeHtml(product.title)}"></td><td><input class="toggle" data-enabled type="checkbox" ${product.enabled ? 'checked' : ''} aria-label="Aktifkan ${escapeHtml(product.title)}"></td><td><input class="toggle" data-auto-restock type="checkbox" ${product.autoRestock ? 'checked' : ''} ${sharing ? 'disabled' : ''} aria-label="Auto-restock ${escapeHtml(product.title)}"></td><td class="product-actions"><button class="save-product" data-save-product="${product.id}">Simpan</button>${product.variants?.length ? `<button class="variant-btn" data-variant-product="${product.id}">Varian (${product.variants.length})</button>` : `<button class="variant-btn" data-variant-product="${product.id}">+ Varian</button>`}</td></tr>${variantRow}`;
+    const variantRow = `<tr class="variant-row" id="variant-row-${product.id}" hidden><td colspan="7"><div class="variant-editor" id="variant-editor-${product.id}">${variantEditorHtml(product)}</div></td></tr>`;
+    return `<tr data-product-row="${product.id}"><td><img src="${escapeHtml(product.thumbnail)}" alt=""><span class="product-name">${escapeHtml(product.title)}${badge}</span></td><td><input class="table-input" data-price value="${Number(product.price || 0)}" type="number" min="0" aria-label="Harga ${escapeHtml(product.title)}"></td><td><input class="table-input stock-input" data-stock value="${Number(product.stock || 0)}" type="number" min="0" max="49" ${sharing ? 'disabled' : ''} aria-label="Stok ${escapeHtml(product.title)}"></td><td><input class="table-input" data-points-reward value="${Number(product.points_reward || 0)}" type="number" min="0" max="100000" aria-label="Poin ${escapeHtml(product.title)}"></td><td><input class="toggle" data-enabled type="checkbox" ${product.enabled ? 'checked' : ''} aria-label="Aktifkan ${escapeHtml(product.title)}"></td><td><input class="toggle" data-auto-restock type="checkbox" ${product.autoRestock ? 'checked' : ''} ${sharing ? 'disabled' : ''} aria-label="Auto-restock ${escapeHtml(product.title)}"></td><td class="product-actions"><button class="save-product" data-save-product="${product.id}">Simpan</button>${product.variants?.length ? `<button class="variant-btn" data-variant-product="${product.id}">Varian (${product.variants.length})</button>` : `<button class="variant-btn" data-variant-product="${product.id}">+ Varian</button>`}</td></tr>${variantRow}`;
   }).join('');
-  return `<div class="panel"><div class="panel-head"><div><h2>Kelola produk</h2><span class="panel-meta">Tersinkron langsung dengan katalog toko • akun AI private • produk sharing dikunci stok 0</span></div><input id="adminSearch" type="search" placeholder="Cari produk..." aria-label="Cari produk"></div><div class="table-wrap"><table><thead><tr><th>PRODUK</th><th>HARGA</th><th>STOK</th><th>AKTIF</th><th>AUTO +8</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  return `<div class="panel"><div class="panel-head"><div><h2>Kelola produk</h2><span class="panel-meta">Harga, stok, dan hadiah JagoPoin tersinkron langsung dengan katalog toko</span></div><input id="adminSearch" type="search" placeholder="Cari produk..." aria-label="Cari produk"></div><div class="table-wrap"><table><thead><tr><th>PRODUK</th><th>HARGA</th><th>STOK</th><th>POIN</th><th>AKTIF</th><th>AUTO +8</th><th></th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 function variantEditorHtml(product) {
   const variants = product.variants || [];
@@ -215,7 +215,8 @@ function accountTable() {
   const users = adminState.users || [];
   if (!activeAccountId && users.length) activeAccountId = users[0].id;
   const selected = users.find((user) => user.id === activeAccountId);
-  return `<div class="account-workspace"><div class="panel account-list"><div class="panel-head"><div><h2>Akun pembeli</h2><span class="panel-meta">${users.length} akun terdaftar</span></div><input id="accountSearch" type="search" placeholder="Cari nama atau email..."></div><div class="table-wrap"><table><thead><tr><th>PEMBELI</th><th>BERGABUNG</th><th>PESANAN</th><th>TOTAL</th><th>STATUS</th><th></th></tr></thead><tbody>${users.map((user) => `<tr data-account-row="${escapeHtml(user.id)}"><td><b>${escapeHtml(user.name)}</b><br><small>${escapeHtml(user.email)}</small></td><td>${formatDateTime(user.createdAt)}</td><td>${Number(user.orderCount || 0)}</td><td>${money(user.totalSpent)}</td><td><span class="account-status ${user.blocked ? 'blocked' : 'active'}">${user.blocked ? 'Diblokir' : 'Aktif'}</span></td><td><button class="account-detail-button" data-account-detail="${escapeHtml(user.id)}">Detail</button></td></tr>`).join('')}</tbody></table></div></div>${selected ? accountDetail(selected) : ''}</div>`;
+  const pointControls = `<form class="panel point-adjust-form" id="pointAdjustForm"><div class="panel-head"><div><h2>Kelola JagoPoin</h2><span class="panel-meta">Poin otomatis masuk ketika pesanan selesai; gunakan ini hanya untuk koreksi manual</span></div></div><div class="customer-edit-fields"><label>AKUN<select name="userId" required>${users.map((user)=>`<option value="${escapeHtml(user.id)}">${escapeHtml(user.name)} · ${Number(user.points || 0)} poin</option>`).join('')}</select></label><label>JUMLAH (+/-)<input name="amount" type="number" required min="-100000" max="100000" placeholder="Contoh: 100 atau -50"></label><label class="wide">ALASAN<input name="description" required maxlength="120" placeholder="Contoh: Koreksi poin pesanan"></label></div><button class="save-product" type="submit">Simpan penyesuaian</button></form>`;
+  return `${pointControls}<div class="account-workspace"><div class="panel account-list"><div class="panel-head"><div><h2>Akun pembeli</h2><span class="panel-meta">${users.length} akun terdaftar</span></div><input id="accountSearch" type="search" placeholder="Cari nama atau email..."></div><div class="table-wrap"><table><thead><tr><th>PEMBELI</th><th>BERGABUNG</th><th>PESANAN</th><th>POIN</th><th>TOTAL</th><th>STATUS</th><th></th></tr></thead><tbody>${users.map((user) => `<tr data-account-row="${escapeHtml(user.id)}"><td><b>${escapeHtml(user.name)}</b><br><small>${escapeHtml(user.email)}</small></td><td>${formatDateTime(user.createdAt)}</td><td>${Number(user.orderCount || 0)}</td><td>${Number(user.points || 0)}</td><td>${money(user.totalSpent)}</td><td><span class="account-status ${user.blocked ? 'blocked' : 'active'}">${user.blocked ? 'Diblokir' : 'Aktif'}</span></td><td><button class="account-detail-button" data-account-detail="${escapeHtml(user.id)}">Detail</button></td></tr>`).join('')}</tbody></table></div></div>${selected ? accountDetail(selected) : ''}</div>`;
 }
 
 function llmUserDetail(user) {
@@ -436,7 +437,7 @@ content.addEventListener('click', async (event) => {
     if (!product) return;
     saveVariants.disabled = true; saveVariants.textContent = 'Menyimpan...';
     try {
-      const updated = await api(`/api/admin/products/${productId}`, { method: 'PUT', body: JSON.stringify({ price: product.price, stock: product.stock, enabled: product.enabled, autoRestock: product.autoRestock, variants: product.variants || [] }) });
+      const updated = await api(`/api/admin/products/${productId}`, { method: 'PUT', body: JSON.stringify({ price: product.price, stock: product.stock, points_reward: Number(product.points_reward || 0), enabled: product.enabled, autoRestock: product.autoRestock, variants: product.variants || [] }) });
       Object.assign(product, updated);
       toast('Varian berhasil disimpan');
     } catch (error) { toast(error.message); }
@@ -488,7 +489,7 @@ content.addEventListener('click', async (event) => {
     save.disabled = true;
     save.textContent = 'Menyimpan...';
     try {
-      const updated = await api(`/api/admin/products/${save.dataset.saveProduct}`, { method: 'PUT', body: JSON.stringify({ price: Number(row.querySelector('[data-price]').value), stock: Number(row.querySelector('[data-stock]').value), enabled: row.querySelector('[data-enabled]').checked, autoRestock: row.querySelector('[data-auto-restock]').checked }) });
+      const updated = await api(`/api/admin/products/${save.dataset.saveProduct}`, { method: 'PUT', body: JSON.stringify({ price: Number(row.querySelector('[data-price]').value), stock: Number(row.querySelector('[data-stock]').value), points_reward: Number(row.querySelector('[data-points-reward]').value), enabled: row.querySelector('[data-enabled]').checked, autoRestock: row.querySelector('[data-auto-restock]').checked }) });
       const product = adminState.products.find((item) => item.id === updated.id);
       if (product) Object.assign(product, updated);
       row.querySelector('[data-stock]').value = updated.stock;
@@ -711,6 +712,12 @@ content.addEventListener('keydown', (event) => {
 });
 
 content.addEventListener('submit', async (event) => {
+  if (event.target.id === 'pointAdjustForm') {
+    event.preventDefault();
+    const button = event.target.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Menyimpan...';
+    try { const form = Object.fromEntries(new FormData(event.target)); form.amount = Number(form.amount); const result = await api('/api/admin/points/adjust', { method: 'POST', body: JSON.stringify(form) }); const user = adminState.users.find((item) => item.id === result.user.id); if (user) Object.assign(user, result.user); adminState.pointLedger = [result.entry, ...(adminState.pointLedger || [])]; render(); toast('JagoPoin berhasil disesuaikan.'); } catch (error) { button.disabled = false; button.textContent = 'Simpan penyesuaian'; toast(error.message); }
+    return;
+  }
   // Add variant form
   if (event.target.matches('.add-variant-form')) {
     event.preventDefault();

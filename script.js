@@ -3,7 +3,7 @@ const STORE_CONFIG = {
   staticQris: '00020101021126570011ID.DANA.WWW011893600915303270621302090327062130303UMI51440014ID.CO.QRIS.WWW0215ID10265345984810303UMI5204481453033605802ID5914Webtokoku plus6014Kota Palembang61053026663040D38'
 };
 
-const CHATGPT_PLUS_DESCRIPTION = 'Akun ChatGPT Plus privat, bukan sharing, dengan dukungan Codex. Aktivasi menggunakan payment credit card pada akun privat agar akses lebih aman dan tidak bercampur dengan pengguna lain. Tersedia opsi aktivasi memakai Gmail sendiri dengan tambahan Rp5.000.';
+const CHATGPT_PLUS_DESCRIPTION = 'Akun ChatGPT Plus privat, bukan sharing, dengan dukungan Codex. Aktivasi menggunakan payment card pada akun privat agar akses lebih aman dan tidak bercampur dengan pengguna lain.';
 const OFFICIAL_PRIVATE_DESCRIPTION = 'Akun resmi dan bukan akun ilegal. Akses bersifat privat, bukan sharing, dengan garansi 30 hari sesuai ketentuan penggunaan JagoPrem.';
 const CLAUDE_PRO_DESCRIPTION = 'Akun resmi Claude Pro login di claude.ai. Akun Vietnam dengan pembayaran credit card Vietnam, garansi 30 hari, dan dijamin aman dari deactive selama tidak mengubah pembayaran, info login seperti email dan password, serta tidak terlalu sering ganti device.';
 const GPT_EDU_K12_DESCRIPTION = 'Akses GPT Edu K12 untuk kebutuhan belajar, membuat materi, merangkum, menulis, riset ringan, pendampingan tugas sekolah, dan penggunaan Codex untuk belajar coding. Produk tidak menyediakan opsi email sendiri; detail akses dan panduan penggunaan dikirim admin setelah pembayaran.';
@@ -75,7 +75,7 @@ let products = fallbackCatalog.map((item) => ({ enabled: true, ...item }));
 let validIds = new Set(products.map((item) => item.id));
 const savedCart = JSON.parse(localStorage.getItem('jagoprem_cart') || '[]');
 const state = {
-  cart: savedCart.map((line) => ({ ...(typeof line === 'number' ? { id: line, quantity: 1 } : line), reseller: false })).filter((line) => validIds.has(line.id)),
+  cart: savedCart.map((line) => ({ ...(typeof line === 'number' ? { id: line, quantity: 1 } : line), ownGmail: false, reseller: false })).filter((line) => validIds.has(line.id)),
   user: null,
   stock: 'all',
   best: false,
@@ -85,6 +85,12 @@ const state = {
   chatEscalated: localStorage.getItem('jagoprem_chat_escalated') === '1',
   orders: [],
   reviews: [],
+  vouchers: [],
+  account: null,
+  appliedVoucher: null,
+  chatHistory: JSON.parse(sessionStorage.getItem('jagoprem_ai_history') || '[]').slice(-6),
+  chatAttachment: null,
+  checkoutWhatsapp: '',
   reviewFilter: 'all',
   deviceId: localStorage.getItem('jagoprem_device_id') || (crypto.randomUUID ? crypto.randomUUID() : `device-${Date.now()}-${Math.random().toString(16).slice(2)}`),
   chatId: localStorage.getItem('jagoprem_chat_id') || `chat-${crypto.randomUUID ? crypto.randomUUID() : Date.now()}`
@@ -108,6 +114,8 @@ const toast = document.querySelector('#toast');
 const chatPanel = document.querySelector('#chatPanel');
 const chatMessages = document.querySelector('#chatMessages');
 const chatInput = document.querySelector('#chatInput');
+const chatAttachmentInput = document.querySelector('#chatAttachment');
+const chatAttachmentPreview = document.querySelector('#chatAttachmentPreview');
 
 function rupiah(value) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(value); }
 function isTokenApiProduct(item) { return /SALDO API|PAKET TOKEN/i.test(item?.title || ''); }
@@ -120,16 +128,33 @@ function productCategory(item) {
 function icons() { if (window.lucide) window.lucide.createIcons(); }
 function notify(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(notify.timer); notify.timer = setTimeout(() => toast.classList.remove('show'), 2400); }
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[character])); }
+function normalizeWhatsapp(value) { let digits = String(value || '').trim().replace(/[\s().-]/g, '').replace(/^\+/, ''); if (digits.startsWith('08')) digits = `62${digits.slice(1)}`; return /^628\d{7,12}$/.test(digits) ? digits : ''; }
+function renderAccountButton() {
+  const button = document.querySelector('#accountButton');
+  const side = document.querySelector('#sideAccount');
+  if (!button) return;
+  if (state.user) {
+    const name = String(state.user.name || 'Akun').trim();
+    button.classList.add('logged-in');
+    button.innerHTML = `<b class="account-avatar">${escapeHtml(name.charAt(0).toUpperCase())}</b><span>${escapeHtml(name.split(' ')[0])}</span><i data-lucide="chevron-down"></i>`;
+    if (side) side.innerHTML = `<i data-lucide="user-round"></i> ${escapeHtml(name.split(' ')[0])}`;
+  } else {
+    button.classList.remove('logged-in');
+    button.innerHTML = '<span>Masuk</span><i data-lucide="arrow-right"></i>';
+    if (side) side.innerHTML = '<i data-lucide="user-round"></i> Masuk';
+  }
+  icons();
+}
 function formatChatDateTime(value) { const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); }
 function messageBubble(text, role, createdAt = new Date().toISOString(), agentName = '') { return `<div class="message ${role}">${agentName ? `<b class="message-agent">${escapeHtml(agentName)} • Tim Operasional</b>` : ''}<span class="message-text">${escapeHtml(text)}</span><time class="message-meta">${formatChatDateTime(createdAt)}</time></div>`; }
 function resizeChatComposer() { const input = document.querySelector('#chatInput'); if (!input) return; input.style.height = 'auto'; input.style.height = `${Math.min(input.scrollHeight, 120)}px`; }
 function getProduct(id) { return products.find((item) => item.id === Number(id)); }
-function supportsOwnGmail(item) { return item?.title.includes('CHATGPT PLUS'); }
+function supportsOwnGmail() { return false; }
 function productVariant(item, variantId) { return (item?.variants || []).find((variant) => variant.id === String(variantId || '')) || item?.variants?.[0] || null; }
 function lineVariant(line) { return productVariant(getProduct(line.id), line.variantId); }
 function lineTitle(line) { const item = getProduct(line.id); const variant = productVariant(item, line.variantId); return `${item?.title || line.id}${variant ? ` - ${variant.label}` : ''}`; }
 function resellerMinimum(item) { return Number(item?.price || 0) > 20000 ? 3 : 5; }
-function regularUnitPrice(line) { const item = getProduct(line.id); const variant = productVariant(item, line.variantId); return (variant?.price || item?.price || 0) + (supportsOwnGmail(item) && line.ownGmail ? 5000 : 0); }
+function regularUnitPrice(line) { const item = getProduct(line.id); const variant = productVariant(item, line.variantId); return (variant?.price || item?.price || 0); }
 function lineUnitPrice(line) { const price = regularUnitPrice(line); return line.reseller ? Math.round(price * 0.92) : price; }
 function cartTotal() { return state.cart.reduce((total, line) => total + lineUnitPrice(line) * line.quantity, 0); }
 function cartQuantityFor(id) { return state.cart.filter((line) => line.id === id).reduce((total, line) => total + line.quantity, 0); }
@@ -157,6 +182,7 @@ function renderProducts() {
   document.querySelector('#resultCount').textContent = list.length + ' produk';
   productGrid.innerHTML = list.length ? list.map((item) => {
     const sold = soldFormatter.format(item.sold || 0);
+    const soldLabel = Number(item.sold || 0) > 0 ? `Terjual ${sold}` : 'Baru';
     const rating = item.is_best_seller ? 4.8 : item.featuredRank < 5 ? 4.7 : 4.5;
     const originalPrice = item.price > 0 ? Math.max(item.price + 10000, Math.round(item.price * 1.4)) : 0;
     const discount = originalPrice > item.price && item.price > 0 ? Math.round((1 - (item.price / originalPrice)) * 100) : 0;
@@ -171,7 +197,7 @@ function renderProducts() {
         <div class="product-card-body">
           <div class="product-card-title">
             <h3>${item.title}</h3>
-            <div class="product-rating"><i data-lucide="star"></i><strong>${rating.toFixed(1)}</strong><span>(Terjual ${sold})</span></div>
+            <div class="product-rating"><i data-lucide="star"></i><strong>${rating.toFixed(1)}</strong><span>(${soldLabel})</span></div>
           </div>
           <div class="product-tags">
             <span class="product-tag ready">${readyTag}</span>
@@ -215,7 +241,7 @@ function updateCart() {
   document.querySelector('#cartItems').innerHTML = items.length ? items.map((item) => {
     const minQty = 1;
     const minLimit = item.reseller ? resellerMinimum(item) : minQty;
-    return `<div class="cart-item"><img src="${item.thumbnail}" alt=""><div><h3>${lineTitle(item)}</h3>${item.ownGmail ? '<small class="cart-variant">Pakai Gmail sendiri (+Rp5.000)</small>' : ''}${item.reseller ? `<small class="cart-variant reseller">Harga reseller -8% ? min. ${resellerMinimum(item)}</small>` : ''}<p>${item.reseller ? `<s>${rupiah(regularUnitPrice(item) * item.quantity)}</s> ` : ''}${rupiah(lineUnitPrice(item) * item.quantity)}</p><div class="cart-quantity"><button type="button" data-cart-minus="${item.index}" ${item.quantity <= minLimit ? 'disabled' : ''}>?</button><span>${item.quantity}</span><button type="button" data-cart-plus="${item.index}" ${cartQuantityFor(item.id) >= item.stock ? 'disabled' : ''}>+</button></div></div><button class="remove-item" type="button" data-remove="${item.index}" aria-label="Hapus ${lineTitle(item)}"><i data-lucide="trash-2"></i></button></div>`;
+    return `<div class="cart-item"><img src="${item.thumbnail}" alt=""><div><h3>${lineTitle(item)}</h3>${item.reseller ? `<small class="cart-variant reseller">Harga reseller -8% · min. ${resellerMinimum(item)}</small>` : ''}<p>${item.reseller ? `<s>${rupiah(regularUnitPrice(item) * item.quantity)}</s> ` : ''}${rupiah(lineUnitPrice(item) * item.quantity)}</p><div class="cart-quantity"><button type="button" data-cart-minus="${item.index}" ${item.quantity <= minLimit ? 'disabled' : ''}>−</button><span>${item.quantity}</span><button type="button" data-cart-plus="${item.index}" ${cartQuantityFor(item.id) >= item.stock ? 'disabled' : ''}>+</button></div></div><button class="remove-item" type="button" data-remove="${item.index}" aria-label="Hapus ${lineTitle(item)}"><i data-lucide="trash-2"></i></button></div>`;
   }).join('') : '<div class="cart-empty"><i data-lucide="shopping-bag"></i><p>Keranjang masih kosong.</p></div>';
   document.querySelector('#cartTotal').textContent = rupiah(cartTotal());
   document.querySelector('#checkoutButton').disabled = !items.length;
@@ -224,8 +250,8 @@ function updateCart() {
 
 function openCart() { cartDrawer.classList.add('open'); cartDrawer.setAttribute('aria-hidden', 'false'); overlay.classList.add('show'); }
 function closeCart() { cartDrawer.classList.remove('open'); cartDrawer.setAttribute('aria-hidden', 'true'); overlay.classList.remove('show'); }
-function openModal(html) { closeChat(); modalLayer.classList.remove('product-page-layer', 'auth-modal-layer', 'payment-page-layer'); modalContent.className = 'modal'; modalContent.innerHTML = html; modalLayer.classList.add('open'); modalLayer.setAttribute('aria-hidden', 'false'); icons(); }
-function closeModal() { modalLayer.classList.remove('open', 'product-page-layer', 'auth-modal-layer', 'payment-page-layer'); modalContent.className = 'modal'; modalLayer.setAttribute('aria-hidden', 'true'); }
+function openModal(html) { closeChat(); modalLayer.classList.remove('product-page-layer', 'auth-modal-layer', 'payment-page-layer', 'account-page-layer'); modalContent.className = 'modal'; modalContent.innerHTML = html; modalLayer.classList.add('open'); modalLayer.setAttribute('aria-hidden', 'false'); icons(); }
+function closeModal() { modalLayer.classList.remove('open', 'product-page-layer', 'auth-modal-layer', 'payment-page-layer', 'account-page-layer'); modalContent.className = 'modal'; modalLayer.setAttribute('aria-hidden', 'true'); }
 function modalHead(title) { return `<div class="modal-head"><h2>${title}</h2><button class="icon-button" type="button" data-close-modal aria-label="Tutup"><i data-lucide="x"></i></button></div>`; }
 
 const PRODUCT_COPY = [
@@ -281,7 +307,7 @@ function productProfile(item) {
           'Saldo tidak ada expiry date selama akun JagoPrem LLM aktif.',
           'Admin JagoPrem LLM akan mengaktifkan akun dan memberikan API Key ke WhatsApp kamu setelah pembayaran dikonfirmasi.'
         ]
-      : [match?.[1] || description, `Jenis akses ${item.access || 'mengikuti varian produk'} dengan masa aktif ${item.duration || 'sesuai paket'}.`, `Detail login, aktivasi, dan petunjuk penggunaan dikirim admin ke WhatsApp setelah pesanan diproses.`, supportsOwnGmail(item) ? 'Opsi Gmail sendiri tersedia di halaman detail produk.' : 'Tidak tersedia opsi email sendiri untuk produk ini.', `Garansi ${item.warranty || 'mengikuti ketentuan produk'} untuk kendala akses yang memenuhi syarat.`],
+      : [match?.[1] || description, `Jenis akses ${item.access || 'mengikuti varian produk'} dengan masa aktif ${item.duration || 'sesuai paket'}.`, `Detail login, aktivasi, dan petunjuk penggunaan dikirim admin ke WhatsApp setelah pesanan diproses.`, `Akun disiapkan sesuai paket dan identitas akses yang tercantum pada detail produk.`, `Garansi ${item.warranty || 'mengikuti ketentuan produk'} untuk kendala akses yang memenuhi syarat.`],
     category: cat,
     delivery: isDevApi ? 'API Key via WhatsApp' : 'Dikirim melalui WhatsApp',
     access: cat === 'AI & produktivitas' ? 'Akun private (bukan sharing)' : (item.access || (isDevApi ? 'API Key JagoPrem LLM (api.jagoprem.shop)' : 'Sesuai varian yang tersedia')),
@@ -309,6 +335,7 @@ function detailModal(id) {
   const isSaldoApi = isTokenApiProduct(item);
   const minQty = 1;
   const sold = new Intl.NumberFormat('id-ID').format(item.sold || 0);
+  const soldLabel = Number(item.sold || 0) > 0 ? `Terjual ${sold}` : 'Baru';
   const rating = item.is_best_seller ? 4.8 : item.featuredRank < 5 ? 4.7 : 4.5;
   const readyLabel = item.stock && item.enabled ? 'Ready stock' : 'Stok habis';
   const summaryLabel = item.featuredRank < 5 ? 'Rekomendasi' : item.is_best_seller ? 'Terlaris' : 'Pilihan populer';
@@ -320,6 +347,13 @@ function detailModal(id) {
   openModal(`<div class="product-page-close"><button type="button" data-close-modal aria-label="Tutup"><i data-lucide="x"></i></button></div><main class="product-page"><nav class="product-breadcrumb">Beranda <b>/</b> Semua Produk <b>/</b> ${escapeHtml(item.title)}</nav><div class="product-checkout-grid"><aside class="product-sticky"><article class="detail-summary-card"><img class="detail-image" src="${item.thumbnail}" alt="${escapeHtml(item.title)}"><h2 class="detail-title">${escapeHtml(item.title)}</h2><div class="detail-rating"><i data-lucide="star"></i><strong>${rating.toFixed(1)}</strong><span>• Terjual ${sold}</span></div><div class="detail-tags"><span>${summaryLabel}</span><span>${readyLabel}</span><span>Garansi</span></div></article><article class="detail-tabs-card"><div class="detail-tabs"><button class="active" type="button" data-detail-tab="benefit">Benefit</button><button type="button" data-detail-tab="terms">Garansi</button><button type="button" data-detail-tab="description">Deskripsi</button></div><div class="detail-tab-panel" data-detail-panel="benefit"><ul class="product-benefits">${profile.benefits.map((benefit) => `<li><i data-lucide="check"></i><span><b>${benefit}</b><small>Didukung proses pemesanan JagoPrem yang praktis dan transparan.</small></span></li>`).join('')}</ul></div><div class="detail-tab-panel" data-detail-panel="terms" hidden><ol>${profile.terms.map((term) => `<li>${term}</li>`).join('')}</ol></div><div class="detail-tab-panel" data-detail-panel="description" hidden><p>${profile.description}</p></div></article><div class="checkout-safe"><i data-lucide="shield-check"></i> Checkout aman dengan jaminan bantuan tim operasional</div></aside><section class="checkout-steps"><article class="checkout-step">${step(1,'Pilih Nominal / Varian')}<div class="checkout-step-body"><div class="variant-caption">Paket</div><div class="package-pills">${variants.map((variant,index)=>`<label><input type="radio" name="detailVariant" value="${variant.id}" ${index===0?'checked':''}><span>${escapeHtml(variant.label)} <small>${rupiah(variant.price)}</small></span></label>`).join('')}</div><div class="detail-info"><div><span>Kategori</span><b>${profile.category}</b></div><div><span>Pengiriman</span><b>${profile.delivery}</b></div><div><span>Stok tersedia</span><b>${item.stock}</b></div><div><span>Terjual</span><b>${item.sold}</b></div></div>${supportsOwnGmail(item) ? '<label class="detail-variant"><input id="detailOwnGmail" type="checkbox"><span><b>Pakai Gmail sendiri</b><small>Tambahan Rp5.000 per akun</small></span></label>' : ''}<label class="detail-variant reseller-option ${resellerAvailable ? '' : 'disabled'}"><input id="detailReseller" type="checkbox" ${resellerAvailable ? '' : 'disabled'}><span><b>Harga reseller • diskon 8%</b><small>${resellerAvailable ? `Minimal ${resellerMin} item` : `Stok belum cukup untuk minimum ${resellerMin} item`}</small></span></label><div class="detail-quantity"><span>Jumlah pembelian<small id="quantityHint">${isSaldoApi ? 'Minimal 5 dollar' : `Maksimal ${item.stock} sesuai stok`}</small></span><div class="quantity-stepper"><button type="button" data-detail-minus disabled><i data-lucide="minus"></i></button><input id="detailQuantity" type="number" min="${minQty}" max="${item.stock}" value="${minQty}"><button type="button" data-detail-plus ${item.stock > minQty ? '' : 'disabled'}><i data-lucide="plus"></i></button></div></div></div></article><article class="checkout-step">${step(2,'Masukkan Data Pembeli')}<div class="checkout-step-body"><button class="buyer-account" type="button" data-auth-tab="login"><span><small>Akun Aktif</small><b>${escapeHtml(buyerName)}</b><em>${escapeHtml(buyerEmail)}</em></span><strong>${state.user ? 'Ganti' : 'Masuk'}</strong></button><p class="buyer-note"><i data-lucide="message-circle"></i> Pastikan nomor WhatsApp saat checkout aktif karena produk dikirim otomatis melalui WhatsApp.</p></div></article><article class="checkout-step">${step(3,'Pilih Metode Pembayaran')}<div class="checkout-step-body payment-preview"><button type="button" data-payment-unavailable><span>Virtual Account</span><b>Segera hadir</b></button><button type="button" data-payment-unavailable><span>E-Wallet</span><b>Gangguan</b></button><button class="active" type="button"><span>QRIS</span><b>Aktif</b></button></div></article><article class="checkout-step">${step(4,'Voucher & Ringkasan Pembayaran')}<div class="checkout-step-body"><div class="voucher-preview"><input type="text" placeholder="MASUKKAN KODE VOUCHER" readonly><button type="button" data-buy-now="${item.id}">Gunakan saat checkout</button></div><div class="payment-summary"><span>Harga produk <b id="detailPrice">${rupiah(defaultVariant?.price || item.price)}</b></span><span>Biaya admin <b>Rp99</b></span><strong>Total sementara <b>${rupiah((defaultVariant?.price || item.price) + 99)}</b></strong></div><div class="detail-actions"><button class="detail-buy secondary" type="button" data-add-detail="${item.id}">Masukkan keranjang</button><button class="detail-buy" type="button" data-buy-now="${item.id}">BAYAR SEKARANG</button></div></div></article></section></div><section class="product-reviews"><h2>Ulasan <span>${rating.toFixed(1)} ★★★★★</span></h2><div>${reviews.map(([name,stars,text])=>`<article><header><b>${name}</b><time>Pembelian terverifikasi</time></header><span>${'★'.repeat(stars)}${'☆'.repeat(5-stars)}</span><p>${text}</p></article>`).join('')}</div></section><section class="product-faq"><h2>Frequently Asked Questions (FAQ)</h2><details><summary>Apa yang didapat dari produk ini?<i data-lucide="chevron-down"></i></summary><p>${profile.description}</p></details><details><summary>Bagaimana produk dikirim?<i data-lucide="chevron-down"></i></summary><p>Detail akses dan panduan dikirim ke nomor WhatsApp aktif yang diisi saat checkout.</p></details><details><summary>Bagaimana ketentuan garansi?<i data-lucide="chevron-down"></i></summary><p>Garansi ${defaultVariant?.warranty || profile.warranty}. Simpan bukti pembayaran dan ikuti petunjuk penggunaan.</p></details></section></main>`);
   const oldReseller = document.querySelector('.reseller-option');
   if (oldReseller) oldReseller.outerHTML = '<button class="reseller-register" type="button" data-open-reseller><i data-lucide="badge-percent"></i><span><b>Daftar sebagai reseller</b><small>Dapatkan harga khusus setelah pendaftaran diverifikasi.</small></span><i data-lucide="arrow-right"></i></button>';
+  document.querySelector('.detail-variant:has(#detailOwnGmail)')?.remove();
+  const detailSold = [...document.querySelectorAll('.detail-info>div')].find((row) => row.querySelector('span')?.textContent.trim() === 'Terjual'); if (detailSold) detailSold.querySelector('b').textContent = Number(item.sold || 0) > 0 ? sold : 'Baru';
+  const detailRatingSold = document.querySelector('.detail-rating span'); if (detailRatingSold) detailRatingSold.textContent = `• ${soldLabel}`;
+  const buyerStep = document.querySelector('.buyer-account')?.closest('.checkout-step-body');
+  if (buyerStep) buyerStep.insertAdjacentHTML('beforeend', `<label class="buyer-whatsapp"><span>Nomor WhatsApp aktif</span><input id="detailWhatsapp" type="tel" inputmode="tel" autocomplete="tel" value="${escapeHtml(state.user?.whatsapp || state.checkoutWhatsapp)}" placeholder="08..., 628..., atau +628..." maxlength="18"><small id="detailWhatsappError">Detail produk akan dikirim ke nomor ini.</small></label>`);
+  const voucherPreview = document.querySelector('.voucher-preview');
+  if (voucherPreview) voucherPreview.innerHTML = `<input id="detailVoucherCode" type="text" value="${escapeHtml(state.appliedVoucher?.code || '')}" placeholder="PILIH VOUCHER" readonly><button type="button" data-open-vouchers>Lihat voucher tersedia</button>`;
   const paymentPreview = document.querySelector('.payment-preview');
   if (paymentPreview) paymentPreview.innerHTML = '<button type="button" data-payment-choice="retail"><span class="pay-brand indomaret">Indomaret</span><b>Retail Outlet</b></button><button type="button" data-payment-choice="va"><span class="pay-brand bank">BCA · BRI · BNI</span><b>Transfer VA Bank</b></button><button type="button" data-payment-choice="ewallet"><span class="pay-brand wallet">DANA · OVO · GoPay</span><b>E-Wallet</b></button><button class="active" type="button" data-payment-choice="qris"><span class="pay-brand qris">QRIS</span><b>QRIS</b></button>';
   const quantityHint = document.querySelector('#quantityHint'); if (quantityHint && isSaldoApi) quantityHint.textContent = 'Satuan pembelian: juta token';
@@ -363,16 +397,41 @@ function reportModal() {
 function resellerModal() {
   openModal(`${modalHead('Daftar sebagai Reseller')}<div class="modal-body support-form-shell"><div class="support-form-intro reseller"><i data-lucide="badge-percent"></i><span><b>Dapatkan harga khusus reseller</b><small>Isi profil penjualanmu. Tim JagoPrem akan menghubungi setelah data diverifikasi.</small></span></div><form id="resellerForm"><div class="form-group"><label>NAMA LENGKAP</label><input name="name" required value="${escapeHtml(state.user?.name || '')}"></div><div class="form-group"><label>EMAIL</label><input name="email" type="email" required value="${escapeHtml(state.user?.email || '')}"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" required inputmode="tel" pattern="\\+?[0-9]{9,15}" placeholder="6281234567890"></div><div class="form-group"><label>KANAL PENJUALAN</label><select name="channel" required><option value="">Pilih kanal</option><option>WhatsApp</option><option>Instagram</option><option>Telegram</option><option>Marketplace</option><option>Website sendiri</option></select></div><div class="form-group"><label>ESTIMASI PESANAN PER BULAN</label><select name="volume" required><option value="">Pilih estimasi</option><option>1–10 pesanan</option><option>11–50 pesanan</option><option>Lebih dari 50 pesanan</option></select></div><div class="form-group"><label>CATATAN</label><textarea name="note" maxlength="600" placeholder="Ceritakan target produk atau kebutuhanmu"></textarea></div><button class="submit-button" type="submit">Kirim pendaftaran</button></form></div>`);
 }
-function accountModal() {
-  if (!state.user) return authModal();
-  const referralUrl = `${location.origin}${location.pathname}?ref=${encodeURIComponent(state.user.referralCode || '')}`;
-  openModal(`${modalHead('Akun saya')}<div class="modal-body"><div class="account-card"><strong>${escapeHtml(state.user.name)}</strong><span>${escapeHtml(state.user.email)}</span></div><div class="rewards-card"><div><span>JagoPoin</span><strong>${new Intl.NumberFormat('id-ID').format(state.user.points || 0)}</strong><small>Bertambah dari referral dan pesanan yang selesai</small></div><i data-lucide="coins"></i></div><div class="referral-card"><span>KODE REFERRAL KAMU</span><div><strong>${escapeHtml(state.user.referralCode || '-')}</strong><button type="button" data-copy-referral="${escapeHtml(referralUrl)}"><i data-lucide="copy"></i> Salin link</button></div><p>Ajak teman: kamu mendapat 1.000 poin dan temanmu mendapat 500 poin setelah mendaftar.</p><small>${state.user.referralCount || 0} teman berhasil diajak</small></div><button class="logout-button" id="logoutButton" type="button">Keluar dari akun</button></div>`);
+function voucherValueLabel(voucher) { return voucher.type === 'percent' ? `${voucher.value}%` : rupiah(voucher.value); }
+async function openVoucherPicker() {
+  document.querySelector('.voucher-picker-layer')?.remove();
+  modalContent.insertAdjacentHTML('beforeend', '<div class="voucher-picker-layer"><section class="voucher-picker"><header><div><small>PROMO JAGOPREM</small><h2>Pilih voucher</h2></div><button type="button" data-close-vouchers aria-label="Tutup"><i data-lucide="x"></i></button></header><div class="voucher-picker-list"><div class="history-loading">Memuat voucher tersedia...</div></div></section></div>'); icons();
+  try {
+    const response = await fetch('/api/vouchers', { cache: 'no-store' }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Voucher gagal dimuat.'); state.vouchers = result.vouchers || [];
+    const list = document.querySelector('.voucher-picker-list');
+    list.innerHTML = state.vouchers.length ? state.vouchers.map((voucher) => { const quota = voucher.maxUses > 0 ? `${Math.max(0, voucher.maxUses - voucher.used)} kuota tersisa` : 'Tanpa batas kuota'; const expires = voucher.expiresAt ? `Berlaku sampai ${new Date(voucher.expiresAt).toLocaleDateString('id-ID')}` : 'Tanpa batas waktu'; return `<button type="button" class="voucher-choice ${state.appliedVoucher?.code === voucher.code ? 'selected' : ''}" data-select-voucher="${escapeHtml(voucher.code)}"><span><small>${voucher.type === 'percent' ? 'DISKON' : 'POTONGAN'}</small><strong>${voucherValueLabel(voucher)}</strong></span><div><b>${escapeHtml(voucher.code)}</b><p>${escapeHtml(voucher.description)}</p><small>Minimal ${rupiah(voucher.minSubtotal || 0)} · ${quota} · ${expires}</small></div><i data-lucide="chevron-right"></i></button>`; }).join('') : '<div class="voucher-empty"><i data-lucide="ticket-x"></i><b>Belum ada voucher aktif</b><span>Cek kembali pada promo berikutnya.</span></div>';
+    icons();
+  } catch (error) { document.querySelector('.voucher-picker-list').innerHTML = `<div class="voucher-empty"><b>Voucher gagal dimuat</b><span>${escapeHtml(error.message)}</span></div>`; }
 }
+function closeVoucherPicker() { document.querySelector('.voucher-picker-layer')?.remove(); }
+function accountTabButton(id, label, icon, active) { return `<button type="button" data-account-tab="${id}" class="${active === id ? 'active' : ''}"><i data-lucide="${icon}"></i>${label}</button>`; }
+function renderAccountPage(active = 'profile') {
+  const data = state.account || { user: state.user, orders: [], pointLedger: [], rewards: [] }; const user = data.user || state.user; const referralUrl = `${location.origin}${location.pathname}?ref=${encodeURIComponent(user.referralCode || '')}`;
+  const tabs = `<nav class="account-tabs">${accountTabButton('profile','Profil','user-round',active)}${accountTabButton('orders','Pesanan','package',active)}${accountTabButton('points','Poin','coins',active)}${accountTabButton('report','Lapor Masalah','triangle-alert',active)}</nav>`;
+  let content = '';
+  if (active === 'profile') content = `<section class="account-section"><header><div><small>INFORMASI PRIBADI</small><h2>${escapeHtml(user.name)}</h2><p>Bergabung sejak ${user.createdAt ? new Date(user.createdAt).toLocaleDateString('id-ID',{month:'long',year:'numeric'}) : '-'}</p></div><button type="button" data-edit-profile><i data-lucide="pencil"></i>Edit</button></header><div class="profile-info-grid"><div><i data-lucide="mail"></i><span><small>Email</small><b>${escapeHtml(user.email)}</b></span></div><div><i data-lucide="phone"></i><span><small>Nomor WhatsApp</small><b>${escapeHtml(user.whatsapp || 'Belum dilengkapi')}</b></span></div><div><i data-lucide="calendar-days"></i><span><small>Bergabung</small><b>${user.createdAt ? new Date(user.createdAt).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) : '-'}</b></span></div></div></section>`;
+  if (active === 'orders') content = `<section class="account-section"><header><div><small>AKTIVITAS TRANSAKSI</small><h2>Riwayat Pesanan</h2></div></header><div class="account-orders">${data.orders?.length ? data.orders.map((order)=>`<article><header><span><small>Nomor pesanan</small><b>${escapeHtml(order.id)}</b></span><em class="order-status ${escapeHtml(order.status)}">${escapeHtml(order.status)}</em></header><div><i data-lucide="package"></i><span><b>${escapeHtml(order.items?.map(item=>item.title).join(', ') || '-')}</b><small>${rupiah(order.total)} · ${new Date(order.createdAt).toLocaleDateString('id-ID')}</small></span></div></article>`).join('') : '<div class="account-empty"><i data-lucide="package-open"></i><b>Belum ada pesanan</b><span>Pesananmu akan tampil di sini.</span></div>'}</div></section>`;
+  if (active === 'points') content = `<div class="points-layout"><section class="points-hero"><span>Saldo JagoPoin</span><strong>${new Intl.NumberFormat('id-ID').format(user.points || 0)}</strong><small>${new Intl.NumberFormat('id-ID').format(user.pointsPending || 0)} poin pending</small><i data-lucide="coins"></i></section><section class="account-section referral-card-full"><small>KODE REFERRAL KAMU</small><div><strong>${escapeHtml(user.referralCode || '-')}</strong><button type="button" data-copy-referral="${escapeHtml(referralUrl)}"><i data-lucide="copy"></i>Salin link</button></div><p>Ajak teman dan dapatkan poin referral setelah pendaftaran berhasil.</p></section><section class="account-section"><header><div><small>RIWAYAT MUTASI</small><h2>Aktivitas poin</h2></div></header><div class="point-ledger">${data.pointLedger?.length ? data.pointLedger.map(entry=>`<article><span><b>${escapeHtml(entry.description)}</b><small>${new Date(entry.createdAt).toLocaleString('id-ID')} · ${escapeHtml(entry.status)}</small></span><strong class="${entry.amount >= 0 ? 'positive' : 'negative'}">${entry.amount >= 0 ? '+' : ''}${new Intl.NumberFormat('id-ID').format(entry.amount)}</strong></article>`).join('') : '<div class="account-empty"><i data-lucide="history"></i><b>Belum ada mutasi poin</b><span>Poin pembelian masuk setelah pesanan berstatus selesai.</span></div>'}</div></section><section class="account-section"><header><div><small>TUKAR POIN</small><h2>Katalog hadiah</h2></div></header><div class="account-empty reward-empty"><i data-lucide="gift"></i><b>Hadiah penukaran poin belum tersedia</b><span>Katalog hadiah sedang disiapkan oleh JagoPrem.</span></div></section></div>`;
+  if (active === 'report') content = `<section class="account-section"><header><div><small>BANTUAN</small><h2>Lapor Masalah</h2><p>Kirim detail kendala dan tim operasional akan membalas melalui chat.</p></div></header><button class="submit-button" type="button" data-open-report-from-account><i data-lucide="triangle-alert"></i>Buat laporan baru</button></section>`;
+  modalContent.innerHTML = `<div class="account-page-head"><div><small>JAGOPREM ACCOUNT</small><h1>Akun Saya</h1></div><button type="button" data-close-modal aria-label="Tutup"><i data-lucide="x"></i></button></div><main class="account-page">${tabs}${content}<button class="logout-button account-logout" id="logoutButton" type="button"><i data-lucide="log-out"></i>Keluar dari akun</button></main>`;
+  modalLayer.classList.add('account-page-layer'); modalContent.classList.add('account-page-modal'); icons();
+}
+async function accountModal(active = 'profile') {
+  if (!state.user) return authModal();
+  openModal('<div class="history-loading account-loading">Memuat akun...</div>'); modalLayer.classList.add('account-page-layer'); modalContent.classList.add('account-page-modal');
+  try { const response = await fetch('/api/account', { cache: 'no-store' }); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Akun gagal dimuat.'); state.account = data; state.user = data.user; renderAccountPage(active); renderAccountButton(); } catch (error) { notify(error.message); closeModal(); }
+}
+function editProfileModal() { const user = state.account?.user || state.user; openModal(`${modalHead('Edit Profil')}<div class="modal-body"><form id="profileForm"><div class="form-group"><label>NAMA LENGKAP</label><input name="name" minlength="2" maxlength="80" required value="${escapeHtml(user.name || '')}"></div><div class="form-group"><label>EMAIL</label><input value="${escapeHtml(user.email || '')}" disabled></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" type="tel" inputmode="tel" maxlength="18" required value="${escapeHtml(user.whatsapp || '')}" placeholder="08..., 628..., atau +628..."><p class="field-help">Nomor akan disimpan dalam format 628xxxxxxxxxx.</p></div><button class="submit-button" type="submit">Simpan profil</button></form></div>`); }
 
 function checkoutModal() {
   closeCart();
   if (!state.user) { authModal('login'); notify('Masuk dulu sebelum membuat pesanan.'); return; }
-  const cartItemsHtml = state.cart.map((line) => `<div><span>${lineTitle(line)}${line.ownGmail ? '<small>Pakai Gmail sendiri</small>' : ''} x ${line.quantity}</span><b>${rupiah(lineUnitPrice(line) * line.quantity)}</b></div>`).join('');
+  const cartItemsHtml = state.cart.map((line) => `<div><span>${lineTitle(line)} x ${line.quantity}</span><b>${rupiah(lineUnitPrice(line) * line.quantity)}</b></div>`).join('');
   const hasDevApi = state.cart.some((line) => productCategory(getProduct(line.id)) === 'Developer API');
   const devApiField = hasDevApi ? `
     <div class="form-group">
@@ -382,6 +441,12 @@ function checkoutModal() {
     </div>
   ` : '';
   openModal(`${modalHead('Checkout')}<div class="modal-body"><div class="order-summary">${cartItemsHtml}<div><span>Biaya admin</span><b>${rupiah(99)}</b></div><div class="total" id="checkoutTotalRow"><span>Total sebelum voucher</span><b>${rupiah(cartTotal() + 99)}</b></div></div><form id="checkoutForm"><div class="form-group voucher-field"><label>KODE VOUCHER (OPSIONAL)</label><div class="voucher-input-row"><div class="voucher-input-wrap"><i data-lucide="ticket-percent"></i><input id="voucherInput" name="voucherCode" autocomplete="off" maxlength="32" placeholder="Contoh: SPESIALAI07"></div><button class="voucher-apply-btn" type="button" id="applyVoucher">Gunakan</button></div><div id="voucherFeedback" class="voucher-feedback"></div><p class="field-help" id="voucherHint">Coba: JAGOBARU10, HEMAT5000, atau AIHEMAT20</p></div><div class="form-group"><label>NAMA PENERIMA</label><input name="name" required value="${escapeHtml(state.user?.name || '')}" placeholder="Nama kamu"></div><div class="form-group"><label>NOMOR WHATSAPP</label><input name="whatsapp" inputmode="tel" required pattern="\\+?[0-9]{9,15}" placeholder="Contoh: 081234567890 atau +6281234567890"><p class="field-help">Nomor ini dipakai admin untuk menghubungi dan mengirim detail produk.</p></div>${devApiField}<div class="form-group"><label>CATATAN (OPSIONAL)</label><textarea name="note" placeholder="Permintaan atau informasi tambahan"></textarea></div><button class="submit-button" type="submit">Lanjut ke pembayaran</button></form></div>`);
+  const voucherInput = document.querySelector('#voucherInput');
+  if (voucherInput) { voucherInput.placeholder = 'Contoh: JAGOBARU10'; voucherInput.value = state.appliedVoucher?.code || ''; }
+  const voucherHint = document.querySelector('#voucherHint');
+  if (voucherHint) voucherHint.innerHTML = '<button type="button" class="voucher-list-link" data-open-vouchers>Lihat semua voucher tersedia</button>';
+  const whatsappInput = document.querySelector('#checkoutForm input[name="whatsapp"]');
+  if (whatsappInput) { whatsappInput.removeAttribute('pattern'); whatsappInput.value = state.checkoutWhatsapp || state.user?.whatsapp || ''; whatsappInput.insertAdjacentHTML('afterend', '<small class="wa-validation" aria-live="polite"></small>'); }
   state.paymentMethod = 'qris';
   const checkoutSubmit = document.querySelector('#checkoutForm .submit-button');
   checkoutSubmit?.insertAdjacentHTML('beforebegin', '<div class="form-group checkout-payment-choice"><label>METODE PEMBAYARAN</label><div class="payment-preview freemium-payments"><button type="button" data-checkout-payment="retail"><span class="pay-brand indomaret">Indomaret</span><b>Retail Outlet</b></button><button type="button" data-checkout-payment="va"><span class="pay-brand bank">BCA · BRI · BNI</span><b>Transfer VA Bank</b></button><button type="button" data-checkout-payment="ewallet"><span class="pay-brand wallet">DANA · OVO · GoPay</span><b>E-Wallet</b></button><button class="active" type="button" data-checkout-payment="qris"><span class="pay-brand qris">QRIS</span><b>QRIS</b></button></div></div>');
@@ -429,7 +494,7 @@ function paymentModal(customer, order) {
 }
 
 function orderMessage(order) {
-  const lines = order.items.map((line) => `- ${line.title || getProduct(line.id)?.title || line.id} x${line.quantity}${line.reseller ? ' (Reseller -8%)' : ''}${line.ownGmail ? ' (Gmail sendiri)' : ''} = ${rupiah(line.lineTotal || lineUnitPrice(line) * line.quantity)}`);
+  const lines = order.items.map((line) => `- ${line.title || getProduct(line.id)?.title || line.id} x${line.quantity}${line.reseller ? ' (Reseller -8%)' : ''} = ${rupiah(line.lineTotal || lineUnitPrice(line) * line.quantity)}`);
   return `Konfirmasi pembayaran JagoPrem\nID: ${order.id}\nWaktu pesan: ${new Date(order.createdAt).toLocaleString('id-ID')}\n\nDetail pesanan:\n${lines.join('\n')}\n\nSubtotal: ${rupiah(order.subtotal)}${order.discount ? `\nVoucher ${order.voucher?.code || ''}: -${rupiah(order.discount)}` : ''}\nBiaya admin: ${rupiah(order.adminFee)}\nTotal: ${rupiah(order.total)}\n\nSaya sudah menyelesaikan pembayaran QRIS untuk pesanan ini.`;
 }
 
@@ -460,6 +525,9 @@ function handoffNotice() { return '<div class="chat-handoff"><i data-lucide="hea
 function openChat() { chatPanel.classList.add('open'); chatPanel.style.opacity = '1'; chatPanel.style.transform = 'none'; chatPanel.style.pointerEvents = 'auto'; chatPanel.setAttribute('aria-hidden', 'false'); if (state.chatEscalated) loadUnifiedChat(); requestAnimationFrame(() => { chatInput?.focus(); resizeChatComposer(); }); chatMessages.scrollTop = chatMessages.scrollHeight; }
 function closeChat() { chatPanel.classList.remove('open'); chatPanel.style.removeProperty('opacity'); chatPanel.style.removeProperty('transform'); chatPanel.style.removeProperty('pointer-events'); chatPanel.setAttribute('aria-hidden', 'true'); }
 function addMessage(text, role) { chatMessages.insertAdjacentHTML('beforeend', messageBubble(text, role)); chatMessages.scrollTop = chatMessages.scrollHeight; }
+function showTyping() { document.querySelector('#chatTyping')?.remove(); chatMessages.insertAdjacentHTML('beforeend', '<div class="message bot typing-message" id="chatTyping"><span><i></i><i></i><i></i></span><small>JagoPrem sedang mengetik...</small></div>'); chatMessages.scrollTop = chatMessages.scrollHeight; }
+function hideTyping() { document.querySelector('#chatTyping')?.remove(); }
+function assistantDelay(min = 650, max = 1450) { return new Promise((resolve) => setTimeout(resolve, Math.round(min + Math.random() * (max - min)))); }
 function contactAdmin() { if (!state.chatEscalated) return escalateConversation('Saya membutuhkan bantuan tim operasional.'); return loadUnifiedChat(); }
 function customerIdentity() { const last = JSON.parse(localStorage.getItem('jagoprem_last_order') || 'null'); return last?.customer || state.user || {}; }
 function renderUnifiedChat(chat) {
@@ -478,8 +546,8 @@ async function loadUnifiedChat() {
     updateChatBadge(0);
   } catch {}
 }
-async function sendOperationalMessage(message) { const response = await fetch(`/api/chat/${state.chatId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, customer: customerIdentity() }) }); const chat = await response.json().catch(() => null); if (!response.ok) throw new Error(chat?.error || 'Pesan gagal dikirim.'); if (chat?.id) setChatId(chat.id); state.chatEscalated = true; localStorage.setItem('jagoprem_chat_escalated', '1'); renderUnifiedChat(chat); return chat; }
-async function escalateConversation(message) { state.chatEscalated = true; localStorage.setItem('jagoprem_chat_escalated', '1'); chatMessages.insertAdjacentHTML('beforeend', handoffNotice()); icons(); try { await sendOperationalMessage(message); } catch (error) { notify(error.message); } }
+async function sendOperationalMessage(message, options = {}) { const response = await fetch(`/api/chat/${state.chatId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message, customer: customerIdentity(), escalate: Boolean(options.escalate), escalationReason: options.reason || '', attachment: options.attachment || null }) }); const chat = await response.json().catch(() => null); if (!response.ok) throw new Error(chat?.error || 'Pesan gagal dikirim.'); if (chat?.id) setChatId(chat.id); state.chatEscalated = true; localStorage.setItem('jagoprem_chat_escalated', '1'); renderUnifiedChat(chat); return chat; }
+async function escalateConversation(message, reason = 'Asisten membutuhkan pemeriksaan tim operasional', attachment = null) { state.chatEscalated = true; localStorage.setItem('jagoprem_chat_escalated', '1'); hideTyping(); addMessage('Baik kak, informasinya sudah saya catat dan percakapan ini saya teruskan ke tim operasional JagoPrem agar bisa diperiksa lebih lanjut. Mohon tunggu sebentar ya. 🙏', 'bot'); chatMessages.insertAdjacentHTML('beforeend', handoffNotice()); icons(); try { await sendOperationalMessage(message, { escalate: true, reason, attachment }); } catch (error) { notify(error.message); } }
 async function sendAdminMessage(message) { return sendOperationalMessage(message); }
 function localBotAnswer(question) {
   const text = question.toLowerCase();
@@ -489,24 +557,27 @@ ${ready.map((item) => `? ${item.title} ? ${rupiah(item.price)} (sisa ${item.stoc
 ${matches.map((item) => `? ${item.title} ? ${rupiah(item.price)} (sisa ${item.stock})`).join('\n')}
 
 ChatGPT Plus berupa akun privat, bukan sharing, dan mendukung Codex.`; }
-  if (text.includes('gmail')) return 'Opsi ?Pakai Gmail sendiri? tersedia untuk ChatGPT Plus dengan tambahan Rp5.000 per akun. Aktifkan opsi tersebut di halaman detail produk sebelum memasukkannya ke keranjang.';
+  if (text.includes('gmail') || text.includes('email sendiri')) return 'Saat ini JagoPrem hanya menyediakan akun privat siap pakai. Opsi aktivasi menggunakan Gmail pembeli tidak tersedia.';
   if (text.includes('garansi')) return 'Masa garansi berbeda pada setiap produk. Buka detail produk untuk melihat durasi dan syaratnya. Simpan bukti pembayaran serta rekam kendala saat pertama kali login.';
-  if (text.includes('kirim') || text.includes('pengiriman')) return 'Setelah pembayaran selesai, admin akan menghubungi nomor WhatsApp yang kamu isi saat checkout dan mengirimkan detail akses produk.';
+  if (text.includes('kirim') || text.includes('pengiriman')) return 'Setelah pembayaran terverifikasi, detail akses dan panduan dikirim otomatis ke nomor WhatsApp yang kamu isi saat checkout. Pastikan nomornya aktif dan benar.';
   if (text.includes('bayar') || text.includes('qris')) return 'Pembayaran menggunakan QRIS. Setelah checkout, sistem membuat QR sesuai nominal total belanja termasuk biaya admin Rp99. Scan QR tersebut lalu tekan ?Pembayaran sudah selesai?.';
   if (text.includes('pesan') || text.includes('telegram') || text.includes('whatsapp')) return 'Cara pesan: cari produk, buka detail, pilih varian dan jumlah, masukkan ke keranjang, isi data checkout, lalu bayar melalui QRIS. Stok web, Telegram, dan WhatsApp memakai sumber data yang sama.';
   if (text.includes('privat') || text.includes('sharing') || text.includes('codex')) return 'Paket ChatGPT Plus JagoPrem berupa akun privat, bukan akun sharing, mendukung Codex, dan diaktivasi menggunakan payment credit card.';
+  if (text.includes('jam operasional') || text.includes('buka jam')) return 'Tim operasional JagoPrem melayani setiap hari pukul 10.00–22.00 WIB. Pembelian dan pembayaran tetap bisa dilakukan kapan saja.';
+  if (text.includes('poin') || text.includes('jagopoin')) return 'JagoPoin didapat setelah pesanan berstatus selesai. Jumlah poin berbeda pada tiap produk dan dapat dilihat di akun. Katalog penukaran sedang disiapkan.';
+  if (text.includes('voucher') || text.includes('promo')) return 'Tekan “Lihat voucher tersedia” pada ringkasan pembayaran untuk melihat promo aktif dan ketentuannya.';
   if (text.includes('admin') || text.includes('manusia')) return 'Baik, percakapan ini saya teruskan ke tim operasional JagoPrem.\n[ARAHKAN_KE_ADMIN]';
   const ignored = new Set(['berapa', 'harga', 'produk', 'paket', 'akun', 'yang', 'untuk', 'ada', 'apa']);
   const terms = text.replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter((term) => term.length > 2 && !ignored.has(term));
   const match = products.map((item) => ({ item, score: terms.filter((term) => item.title.toLowerCase().includes(term)).length })).sort((a, b) => b.score - a.score)[0];
-  if (match?.score) return `${match.item.title}: ${rupiah(match.item.price)}, stok ${match.item.stock}, terjual ${match.item.sold}. ${match.item.stock && match.item.enabled ? 'Saat ini tersedia.' : 'Saat ini stok habis.'}`;
+  if (match?.score) return `${match.item.title}: ${rupiah(match.item.price)}, stok ${match.item.stock}. ${match.item.stock && match.item.enabled ? 'Saat ini tersedia.' : 'Saat ini stok habis.'}`;
   return 'Informasi yang saya miliki belum cukup untuk menjawab pertanyaan itu dengan tepat.\n[ARAHKAN_KE_ADMIN]';
 }
 async function askBot(question) {
-  if (/stok|ready|chatgpt|gmail|garansi|kirim|pengiriman|bayar|qris|cara pesan|privat|sharing|codex|admin|manusia/i.test(question)) return localBotAnswer(question);
+  if (/stok|ready|chatgpt|gmail|email sendiri|garansi|kirim|pengiriman|bayar|qris|cara pesan|privat|sharing|codex|admin|manusia|jam operasional|buka jam|poin|jagopoin|voucher|promo/i.test(question)) return localBotAnswer(question);
   if (!STORE_CONFIG.grokProxyUrl) return localBotAnswer(question);
   try {
-    const response = await fetch(STORE_CONFIG.grokProxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: question }) });
+    const response = await fetch(STORE_CONFIG.grokProxyUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: question, history: state.chatHistory.slice(-6) }) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok && !data.answer) throw new Error('Chat service error');
     const answer = data.answer || localBotAnswer(question);
@@ -565,8 +636,8 @@ document.addEventListener('keydown', (event) => {
   if (card && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openProductCard(card); }
 });
 document.querySelector('#cartItems').addEventListener('click', (event) => { const remove = event.target.closest('[data-remove]'); const plus = event.target.closest('[data-cart-plus]'); const minus = event.target.closest('[data-cart-minus]'); if (remove) state.cart.splice(Number(remove.dataset.remove), 1); if (plus) { const line = state.cart[Number(plus.dataset.cartPlus)]; if (cartQuantityFor(line.id) < getProduct(line.id).stock) line.quantity += 1; } if (minus) { const line = state.cart[Number(minus.dataset.cartMinus)]; const minimum = line.reseller ? resellerMinimum(getProduct(line.id)) : 1; if (line.quantity > minimum) line.quantity -= 1; } if (remove || plus || minus) persistCart(); });
-document.querySelector('#cartButton').addEventListener('click', openCart); document.querySelectorAll('[data-close-cart]').forEach((button) => button.addEventListener('click', closeCart)); overlay.addEventListener('click', closeCart); document.querySelector('#checkoutButton').addEventListener('click', checkoutModal); document.querySelector('#accountButton').addEventListener('click', accountModal);
-document.querySelector('#sideAccount').addEventListener('click', accountModal);
+document.querySelector('#cartButton').addEventListener('click', openCart); document.querySelectorAll('[data-close-cart]').forEach((button) => button.addEventListener('click', closeCart)); overlay.addEventListener('click', closeCart); document.querySelector('#checkoutButton').addEventListener('click', checkoutModal); document.querySelector('#accountButton').addEventListener('click', () => accountModal('profile'));
+document.querySelector('#sideAccount').addEventListener('click', () => accountModal('profile'));
 document.querySelector('#menuButton').addEventListener('click', () => { document.querySelector('#sidebar').classList.toggle('open'); document.querySelector('#sidebarOverlay').classList.toggle('show'); });
 document.querySelector('#sidebarOverlay').addEventListener('click', () => { document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('show'); });
 document.querySelectorAll('.side-nav a').forEach((link) => link.addEventListener('click', () => { document.querySelectorAll('.side-nav a').forEach((item) => item.classList.remove('active')); link.classList.add('active'); document.querySelector('#sidebar').classList.remove('open'); document.querySelector('#sidebarOverlay').classList.remove('show'); }));
@@ -577,7 +648,32 @@ document.querySelector('#infoButtonFooter')?.addEventListener('click', () => doc
 document.querySelectorAll('[data-social-pending]').forEach((button) => button.addEventListener('click', () => notify('Akun media sosial sedang mengalami gangguan. Hubungi Telegram @jagopremofficial.')));
 chatInput?.addEventListener('input', resizeChatComposer);
 chatInput?.addEventListener('keydown', (event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); document.querySelector('#chatForm').requestSubmit(); } });
-document.querySelector('#chatForm').addEventListener('submit', async (event) => { event.preventDefault(); const input = chatInput; const question = input.value.trim(); if (!question) return; input.value = ''; resizeChatComposer(); if (state.chatEscalated) { try { await sendOperationalMessage(question); } catch (error) { notify(error.message); } return; } addMessage(question, 'user'); const answer = await askBot(question); const escalate = answer.includes('[ARAHKAN_KE_ADMIN]'); const cleanAnswer = answer.replace('[ARAHKAN_KE_ADMIN]', '').trim(); if (cleanAnswer) addMessage(cleanAnswer, 'bot'); if (escalate) await escalateConversation(question); });
+chatAttachmentInput?.addEventListener('change', () => {
+  const file = chatAttachmentInput.files?.[0];
+  state.chatAttachment = null;
+  if (!file) { chatAttachmentPreview.hidden = true; chatAttachmentPreview.innerHTML = ''; return; }
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 5 * 1024 * 1024) { chatAttachmentInput.value = ''; notify('Lampiran harus JPG, PNG, atau WebP maksimal 5 MB.'); return; }
+  const previewUrl = URL.createObjectURL(file);
+  state.chatAttachment = { name: file.name, type: file.type, size: file.size, previewUrl };
+  chatAttachmentPreview.hidden = false;
+  chatAttachmentPreview.innerHTML = `<img src="${previewUrl}" alt="Pratinjau lampiran"><span><b>${escapeHtml(file.name)}</b><small>${Math.ceil(file.size / 1024)} KB</small></span><button type="button" data-remove-chat-attachment aria-label="Hapus lampiran"><i data-lucide="x"></i></button>`;
+  icons();
+});
+chatAttachmentPreview?.addEventListener('click', (event) => { if (!event.target.closest('[data-remove-chat-attachment]')) return; if (state.chatAttachment?.previewUrl) URL.revokeObjectURL(state.chatAttachment.previewUrl); state.chatAttachment = null; chatAttachmentInput.value = ''; chatAttachmentPreview.hidden = true; chatAttachmentPreview.innerHTML = ''; });
+document.querySelector('#chatForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const question = chatInput.value.trim(); const attachment = state.chatAttachment;
+  if (!question && !attachment) return;
+  chatInput.value = ''; resizeChatComposer();
+  if (attachment) { chatMessages.insertAdjacentHTML('beforeend', `<div class="message user attachment-message"><img src="${attachment.previewUrl}" alt="Lampiran"><span>${escapeHtml(question || 'Mohon periksa gambar ini.')}</span></div>`); chatAttachmentInput.value = ''; chatAttachmentPreview.hidden = true; chatAttachmentPreview.innerHTML = ''; state.chatAttachment = null; chatMessages.scrollTop = chatMessages.scrollHeight; showTyping(); await assistantDelay(); await escalateConversation(question || 'Mohon periksa gambar yang saya lampirkan.', 'Pengguna mengirim lampiran gambar', { name: attachment.name, type: attachment.type, size: attachment.size }); return; }
+  if (state.chatEscalated) { try { await sendOperationalMessage(question); } catch (error) { notify(error.message); } return; }
+  addMessage(question, 'user'); showTyping();
+  const answer = await askBot(question); await assistantDelay(); hideTyping();
+  const escalate = answer.includes('[ARAHKAN_KE_ADMIN]'); const cleanAnswer = answer.replace('[ARAHKAN_KE_ADMIN]', '').trim();
+  state.chatHistory.push({ role: 'user', content: question }, { role: 'assistant', content: cleanAnswer }); state.chatHistory = state.chatHistory.slice(-6); sessionStorage.setItem('jagoprem_ai_history', JSON.stringify(state.chatHistory));
+  if (cleanAnswer) addMessage(cleanAnswer, 'bot');
+  if (escalate) await escalateConversation(question, 'Informasi di knowledge base belum cukup');
+});
 
 function setDetailQuantity(value) {
   const input = document.querySelector('#detailQuantity'); if (!input) return;
@@ -591,7 +687,7 @@ function selectedDetailVariant(item) { return productVariant(item, document.quer
 function updateDetailPricing() {
   const item = getProduct(document.querySelector('[data-add-detail]')?.dataset.addDetail); if (!item) return;
   const variant = selectedDetailVariant(item);
-  const ownGmail = Boolean(document.querySelector('#detailOwnGmail')?.checked); const reseller = Boolean(document.querySelector('#detailReseller')?.checked); const regular = (variant?.price || item.price) + (ownGmail ? 5000 : 0);
+  const reseller = Boolean(document.querySelector('#detailReseller')?.checked); const regular = (variant?.price || item.price);
   document.querySelector('#detailPrice').textContent = rupiah(reseller ? Math.round(regular * 0.92) : regular);
   const crossed = document.querySelector('#detailRegularPrice'); if (crossed) { crossed.hidden = !reseller; crossed.textContent = rupiah(regular); }
   const duration = document.querySelector('#detailDuration'); if (duration && variant) duration.textContent = variant.duration;
@@ -600,6 +696,19 @@ function updateDetailPricing() {
 
 modalLayer.addEventListener('click', async (event) => {
   if (event.target === modalLayer || event.target.closest('[data-close-modal]')) closeModal();
+  if (event.target.closest('[data-open-vouchers]')) openVoucherPicker();
+  if (event.target.closest('[data-close-vouchers]')) closeVoucherPicker();
+  const voucherChoice = event.target.closest('[data-select-voucher]');
+  if (voucherChoice) {
+    state.appliedVoucher = state.vouchers.find((voucher) => voucher.code === voucherChoice.dataset.selectVoucher) || null;
+    document.querySelectorAll('#detailVoucherCode, #voucherInput').forEach((input) => { input.value = state.appliedVoucher?.code || ''; });
+    closeVoucherPicker();
+    notify(`Voucher ${state.appliedVoucher?.code || ''} dipilih.`);
+    document.querySelector('#applyVoucher')?.click();
+  }
+  const accountTab = event.target.closest('[data-account-tab]'); if (accountTab) renderAccountPage(accountTab.dataset.accountTab);
+  if (event.target.closest('[data-edit-profile]')) editProfileModal();
+  if (event.target.closest('[data-open-report-from-account]')) reportModal();
   if (event.target.closest('[data-open-reseller]')) resellerModal();
   const paymentChoice = event.target.closest('[data-payment-choice], [data-checkout-payment]'); if (paymentChoice) { state.paymentMethod = paymentChoice.dataset.paymentChoice || paymentChoice.dataset.checkoutPayment; paymentChoice.parentElement.querySelectorAll('button').forEach((button) => button.classList.toggle('active', button === paymentChoice)); }
   const referralCopy = event.target.closest('[data-copy-referral]'); if (referralCopy) { navigator.clipboard?.writeText(referralCopy.dataset.copyReferral).catch(() => {}); notify('Link referral berhasil disalin.'); }
@@ -608,9 +717,9 @@ modalLayer.addEventListener('click', async (event) => {
   if (event.target.closest('[data-detail-plus]')) setDetailQuantity(Number(document.querySelector('#detailQuantity').value) + 1);
   const detailTab = event.target.closest('[data-detail-tab]'); if (detailTab) { document.querySelectorAll('[data-detail-tab]').forEach((button) => button.classList.toggle('active', button === detailTab)); document.querySelectorAll('[data-detail-panel]').forEach((panel) => { panel.hidden = panel.dataset.detailPanel !== detailTab.dataset.detailTab; }); }
   const authTab = event.target.closest('[data-auth-tab]'); if (authTab) authModal(authTab.dataset.authTab);
-  const addDetail = event.target.closest('[data-add-detail]'); if (addDetail) { const product = getProduct(addDetail.dataset.addDetail); const quantity = Number(document.querySelector('#detailQuantity').value); addToCart(Number(addDetail.dataset.addDetail), quantity, Boolean(document.querySelector('#detailOwnGmail')?.checked), Boolean(document.querySelector('#detailReseller')?.checked), selectedDetailVariant(product)?.id || ''); closeModal(); openCart(); }
-  const buyNow = event.target.closest('[data-buy-now]'); if (buyNow) { if (state.paymentMethod !== 'qris') return notify('Metode pembayaran yang Anda pilih sedang mengalami gangguan. Silakan pilih QRIS.'); const id = Number(buyNow.dataset.buyNow); const product = getProduct(id); const quantity = Math.max(1, Math.min(Number(document.querySelector('#detailQuantity').value) || 1, product.stock)); state.cart = [{ id, quantity, ownGmail: Boolean(document.querySelector('#detailOwnGmail')?.checked), reseller: false, variantId: selectedDetailVariant(product)?.id || '' }]; persistCart(); closeModal(); checkoutModal(); }
-  if (event.target.closest('#logoutButton')) { await fetch('/api/auth/logout', { method: 'POST' }); state.user = null; document.querySelector('#accountButton span').textContent = 'Masuk'; closeModal(); notify('Kamu sudah keluar'); }
+  const addDetail = event.target.closest('[data-add-detail]'); if (addDetail) { const product = getProduct(addDetail.dataset.addDetail); const quantity = Number(document.querySelector('#detailQuantity').value); addToCart(Number(addDetail.dataset.addDetail), quantity, false, Boolean(document.querySelector('#detailReseller')?.checked), selectedDetailVariant(product)?.id || ''); closeModal(); openCart(); }
+  const buyNow = event.target.closest('[data-buy-now]'); if (buyNow) { if (state.paymentMethod !== 'qris') return notify('Metode pembayaran yang Anda pilih sedang mengalami gangguan. Silakan pilih QRIS.'); const detailWa = document.querySelector('#detailWhatsapp'); if (detailWa) { const normalized = normalizeWhatsapp(detailWa.value); if (!normalized) { detailWa.setCustomValidity('Masukkan nomor WhatsApp aktif, misalnya 081234567890.'); detailWa.reportValidity(); return; } detailWa.setCustomValidity(''); state.checkoutWhatsapp = normalized; } const id = Number(buyNow.dataset.buyNow); const product = getProduct(id); const quantity = Math.max(1, Math.min(Number(document.querySelector('#detailQuantity').value) || 1, product.stock)); state.cart = [{ id, quantity, ownGmail: false, reseller: false, variantId: selectedDetailVariant(product)?.id || '' }]; persistCart(); closeModal(); checkoutModal(); }
+  if (event.target.closest('#logoutButton')) { await fetch('/api/auth/logout', { method: 'POST' }); state.user = null; state.account = null; renderAccountButton(); closeModal(); notify('Kamu sudah keluar'); }
   if (event.target.closest('#confirmPayment')) { const button = event.target.closest('#confirmPayment'); const order = state.orders.find((item) => item.id === button.dataset.orderId); if (!order) return notify('Detail pesanan tidak ditemukan.'); button.disabled = true; button.textContent = 'Memverifikasi pembayaran...'; let confirmation={}; try { const response=await fetch(`/api/orders/${encodeURIComponent(order.id)}/confirm`,{method:'POST'}); confirmation=await response.json(); if(!response.ok) throw new Error(confirmation.error||'Konfirmasi gagal.'); } catch(error){ button.disabled=false; button.textContent='Saya sudah membayar'; return notify(error.message); } await sendOperationalMessage(orderMessage(order)).catch(() => {}); closeModal(); openChat(); notify(confirmation.message || 'Pembayaran masuk antrean verifikasi.'); }
   const reopen = event.target.closest('[data-reopen-payment]'); if (reopen) { const order = state.orders.find((item) => item.id === reopen.dataset.reopenPayment); if (order) paymentModal(order.customer, order); }
   const chatOrder = event.target.closest('[data-chat-order]'); if (chatOrder) { const order = state.orders.find((item) => item.id === chatOrder.dataset.chatOrder); closeModal(); openChat(); if (order) sendOperationalMessage(`Saya ingin menanyakan pesanan ${order.id}, dibuat ${new Date(order.createdAt).toLocaleString('id-ID')}.`).catch(() => {}); }
@@ -628,7 +737,15 @@ modalLayer.addEventListener('change', (event) => {
     const input = document.querySelector('#detailQuantity'); input.min = defaultMin; document.querySelector('#quantityHint').textContent = isSaldoApi ? 'Satuan pembelian: juta token' : `Maksimal ${item.stock} sesuai stok`; setDetailQuantity(input.value);
   }
 });
-modalLayer.addEventListener('input', (event) => { if (event.target.id === 'detailQuantity') setDetailQuantity(event.target.value); });
+modalLayer.addEventListener('input', (event) => {
+  if (event.target.id === 'detailQuantity') setDetailQuantity(event.target.value);
+  if (event.target.id === 'detailWhatsapp' || (event.target.form?.id === 'checkoutForm' && event.target.name === 'whatsapp')) {
+    const valid = normalizeWhatsapp(event.target.value);
+    event.target.setCustomValidity(event.target.value && !valid ? 'Gunakan nomor WhatsApp Indonesia aktif: 08..., 628..., atau +628...' : '');
+    const feedback = event.target.parentElement.querySelector('.wa-validation');
+    if (feedback) { feedback.className = `wa-validation ${valid ? 'valid' : event.target.value ? 'invalid' : ''}`; feedback.textContent = valid ? `Nomor tersimpan sebagai +${valid}` : event.target.value ? 'Format nomor belum valid.' : ''; }
+  }
+});
 
 modalLayer.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -641,7 +758,7 @@ modalLayer.addEventListener('submit', async (event) => {
   }
   if (event.target.id === 'authForm') {
     const button = event.target.querySelector('button[type="submit"]'); const mode = event.target.dataset.mode; button.disabled = true; button.textContent = mode === 'register' ? 'Membuat akun...' : 'Memeriksa akun...';
-    try { const credentials = Object.fromEntries(new FormData(event.target)); credentials.chatId = state.chatId; if (mode === 'register') credentials.deviceId = state.deviceId; const response = await fetch(`/api/auth/${mode}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(credentials) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Autentikasi gagal.'); state.user = result.user; if (result.chatId) setChatId(result.chatId); document.querySelector('#accountButton span').textContent = state.user.name.split(' ')[0]; closeModal(); if (state.chatEscalated) loadUnifiedChat(); notify(mode === 'register' ? 'Akun berhasil dibuat' : 'Berhasil masuk'); }
+    try { const credentials = Object.fromEntries(new FormData(event.target)); credentials.chatId = state.chatId; if (mode === 'register') credentials.deviceId = state.deviceId; const response = await fetch(`/api/auth/${mode}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(credentials) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Autentikasi gagal.'); state.user = result.user; if (result.chatId) setChatId(result.chatId); renderAccountButton(); closeModal(); if (state.chatEscalated) loadUnifiedChat(); notify(mode === 'register' ? 'Akun berhasil dibuat' : 'Berhasil masuk'); }
     catch (error) { notify(error.message); button.disabled = false; button.textContent = mode === 'register' ? 'Buat akun' : 'Masuk sekarang'; }
   }
   if (event.target.id === 'checkoutForm') {
@@ -650,6 +767,10 @@ modalLayer.addEventListener('submit', async (event) => {
     try {
       const form = Object.fromEntries(new FormData(event.target));
       const { voucherCode, ...customer } = form;
+      const normalizedWhatsapp = normalizeWhatsapp(customer.whatsapp);
+      if (!normalizedWhatsapp) throw new Error('Nomor WhatsApp belum valid. Gunakan format 08..., 628..., atau +628...');
+      customer.whatsapp = normalizedWhatsapp;
+      state.checkoutWhatsapp = normalizedWhatsapp;
       if (form.llm_email) {
         customer.note = `[Email LLM: ${form.llm_email.trim()}] ${customer.note || ''}`.trim();
         delete form.llm_email;
@@ -700,13 +821,17 @@ async function loadStore() {
     validIds = new Set(products.map((item) => item.id));
     notify('Katalog server sedang sinkronisasi. Menampilkan katalog cadangan.');
   }
+  if (event.target.id === 'profileForm') {
+    const button = event.target.querySelector('button[type="submit"]'); button.disabled = true; button.textContent = 'Menyimpan...';
+    try { const form = Object.fromEntries(new FormData(event.target)); const normalized = normalizeWhatsapp(form.whatsapp); if (!normalized) throw new Error('Nomor WhatsApp belum valid.'); form.whatsapp = normalized; const response = await fetch('/api/account', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) }); const result = await response.json(); if (!response.ok) throw new Error(result.error || 'Profil gagal disimpan.'); state.user = result.user; if (state.account) state.account.user = result.user; renderAccountButton(); await accountModal('profile'); notify('Profil berhasil diperbarui.'); } catch (error) { button.disabled = false; button.textContent = 'Simpan profil'; notify(error.message); }
+  }
   renderProducts(); updateCart();
 }
 
 async function loadUserSession() {
   localStorage.removeItem('jagoprem_user');
   Object.keys(localStorage).filter((key) => key.startsWith('jagoprem_account_')).forEach((key) => localStorage.removeItem(key));
-  try { const response = await fetch(`/api/auth/me?chatId=${encodeURIComponent(state.chatId)}`, { cache: 'no-store' }); if (!response.ok) return; const result = await response.json(); state.user = result.user; if (result.chatId) setChatId(result.chatId); document.querySelector('#accountButton span').textContent = state.user.name.split(' ')[0]; } catch {}
+  try { const response = await fetch(`/api/auth/me?chatId=${encodeURIComponent(state.chatId)}`, { cache: 'no-store' }); if (!response.ok) { renderAccountButton(); return; } const result = await response.json(); state.user = result.user; if (result.chatId) setChatId(result.chatId); renderAccountButton(); } catch { renderAccountButton(); }
 }
 
 document.querySelector('#historyButton').addEventListener('click', historyModal);
@@ -790,6 +915,9 @@ loadStore(); loadUserSession(); icons();
 function showPromoPopup() {
   openModal(`${modalHead('Promo JagoPrem')}<div class="modal-body campaign-popup"><div class="campaign-hero"><span>JAGOPREM DEALS</span><h2>Lebih hemat untuk akun premium private.</h2><p>Pilih kode yang paling sesuai dengan pesananmu.</p></div><div class="campaign-vouchers"><button type="button" data-copy-voucher="JAGOBARU10"><span>PELANGGAN BARU</span><strong>JAGOBARU10</strong><small>Diskon 10% • minimal Rp25.000</small><i data-lucide="copy"></i></button><button type="button" data-copy-voucher="HEMAT5000"><span>HEMAT LANGSUNG</span><strong>HEMAT5000</strong><small>Potongan Rp5.000 • minimal Rp50.000</small><i data-lucide="copy"></i></button><button type="button" data-copy-voucher="AIHEMAT20"><span>AKUN AI PRIVATE</span><strong>AIHEMAT20</strong><small>Diskon 20% • minimal 2 akun AI yang sama</small><i data-lucide="copy"></i></button></div><div class="campaign-note"><i data-lucide="bot"></i><span>Bayar lewat QRIS dinamis, lalu detail produk dikirim oleh bot WhatsApp.</span></div><button class="confirm-button" type="button" data-close-modal>Mulai belanja</button></div>`);
   document.querySelectorAll('[data-copy-voucher]').forEach((button)=>button.addEventListener('click',()=>{navigator.clipboard?.writeText(button.dataset.copyVoucher).catch(()=>{});notify(`Kode ${button.dataset.copyVoucher} disalin.`);}));
+  document.querySelector('[data-copy-voucher="AIHEMAT20"]')?.setAttribute('data-copy-voucher', 'JAGOPREM7');
+  const weeklyVoucher = document.querySelector('[data-copy-voucher="JAGOPREM7"]');
+  if (weeklyVoucher) weeklyVoucher.innerHTML = '<span>PROMO MINGGUAN</span><strong>JAGOPREM7</strong><small>Diskon 7% · minimal Rp75.000</small><i data-lucide="copy"></i>';
   sessionStorage.setItem('jagoprem_campaign_seen','1'); icons();
 }
 // Show the promo popup on page load

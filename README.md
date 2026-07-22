@@ -12,17 +12,19 @@ Tidak ada proses Node.js, build step, atau package manager yang diperlukan saat 
 
 ## Konfigurasi
 
-Buat file `.env` di root hosting:
+Buat file `.env` pada direktori home Hostinger, sejajar dengan `public_html`:
 
 ```env
 ADMIN_PASSWORD=ganti-dengan-password-yang-kuat
-AI_API_KEY=isi-api-key-premzone-di-hostinger
-AI_BASE_URL=https://api.premzone.co/v1
-AI_MODEL=gpt-5.4-mini
-WA_BOT_WEBHOOK=https://alamat-webhook-bot-whatsapp-kamu
+OPENAI_API_KEY=paste-key-di-sini
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-5.6-luna
+OPENAI_MAX_OUTPUT_TOKENS=320
+AI_CHAT_RATE_LIMIT_PER_MINUTE=4
+AI_CHAT_DAILY_LIMIT_PER_USER=60
 ```
 
-File `.env` diabaikan oleh Git dan diblokir oleh `.htaccess`, sehingga kredensial tidak ikut masuk repository.
+Ikuti panduan lengkap pada `ENV_SETUP.md`. File `.env` diabaikan Git dan tidak boleh ditempatkan di `public_html`.
 
 AI chat dipanggil hanya dari backend PHP. Frontend tidak pernah menerima API key. Endpoint membatasi panjang pesan, jumlah permintaan per sesi, waktu respons, dan output model untuk mencegah penyalahgunaan saldo.
 

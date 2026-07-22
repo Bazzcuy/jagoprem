@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=12">
+  <link rel="stylesheet" href="styles.css?v=13">
 </head>
 <body class="jagoprem-layout">
   <header class="reference-header">
@@ -24,8 +24,8 @@
         <button type="button" data-open-admin-chat>Hubungi CS</button>
       </nav>
       <div class="reference-actions">
-        <button id="notifButton" class="theme-button" type="button" aria-label="Notifikasi"><i data-lucide="sun"></i><b id="notifBadge" class="red-badge" style="display:none">0</b></button>
-        <button id="accountButton" class="login-button" type="button">Masuk <i data-lucide="arrow-right"></i></button>
+        <button id="notifButton" class="theme-button" type="button" aria-label="Notifikasi"><i data-lucide="bell"></i><b id="notifBadge" class="red-badge" style="display:none">0</b></button>
+        <button id="accountButton" class="login-button" type="button"><span>Masuk</span><i data-lucide="arrow-right"></i></button>
         <button id="cartButton" class="compact-cart" type="button" aria-label="Keranjang"><i data-lucide="shopping-bag"></i><b id="cartCount">0</b></button>
       </div>
       <button class="mobile-menu" id="menuButton" type="button" aria-label="Buka menu"><i data-lucide="menu"></i></button>
@@ -126,9 +126,9 @@
 
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <aside class="cart-drawer" id="cartDrawer" aria-hidden="true"><div class="drawer-head"><div><small>KERANJANG</small><h2>Pesanan kamu</h2></div><button class="icon-button" data-close-cart type="button" aria-label="Tutup keranjang"><i data-lucide="x"></i></button></div><div class="cart-items" id="cartItems"></div><div class="cart-footer"><div><span>Total</span><strong id="cartTotal">Rp0</strong></div><button class="checkout-button" id="checkoutButton" type="button">Lanjut checkout <i data-lucide="arrow-right"></i></button></div></aside><div class="overlay" id="overlay"></div>
-  <section class="chat-panel" id="chatPanel" aria-hidden="true"><div class="chat-head"><div class="bot-avatar"><img src="assets/jagoprem-mark.png" alt=""></div><div><strong id="chatTitle">JagoPrem Care</strong><span><i></i> AI &amp; Tim Operasional</span></div><button id="closeChat" type="button" aria-label="Tutup chat"><i data-lucide="x"></i></button></div><div class="chat-messages" id="chatMessages" aria-live="polite"></div><form class="chat-form" id="chatForm"><textarea id="chatInput" rows="1" placeholder="Tulis pesan kamu..." autocomplete="off" aria-label="Tulis pesan"></textarea><button type="submit" aria-label="Kirim pesan"><i data-lucide="send"></i></button></form><div class="chat-powered"><i data-lucide="shield-check"></i> Satu percakapan bersama AI &amp; tim JagoPrem</div></section>
+  <section class="chat-panel" id="chatPanel" aria-hidden="true"><div class="chat-head"><div class="bot-avatar"><img src="assets/jagoprem-mark.png" alt=""></div><div><strong id="chatTitle">JagoPrem Care</strong><span><i></i> Asisten otomatis &amp; Tim Operasional</span></div><button id="closeChat" type="button" aria-label="Tutup chat"><i data-lucide="x"></i></button></div><div class="chat-messages" id="chatMessages" aria-live="polite"></div><div class="chat-attachment-preview" id="chatAttachmentPreview" hidden></div><form class="chat-form" id="chatForm"><label class="chat-attach" aria-label="Lampirkan gambar"><i data-lucide="paperclip"></i><input id="chatAttachment" type="file" accept="image/jpeg,image/png,image/webp" hidden></label><textarea id="chatInput" rows="1" maxlength="1200" placeholder="Ketik pesan Anda" autocomplete="off" aria-label="Tulis pesan"></textarea><button type="submit" aria-label="Kirim pesan"><i data-lucide="send"></i></button></form><div class="chat-powered"><i data-lucide="shield-check"></i> Asisten otomatis JagoPrem · jangan kirim password atau OTP</div></section>
   <button class="chat-bubble" id="chatBubble" type="button" aria-label="Buka chat"><i data-lucide="message-circle"></i><span>CS 24/7</span><b id="chatBadge" class="red-badge" style="display:none">0</b></button>
   <div class="modal-layer" id="modalLayer" aria-hidden="true"><section class="modal" id="modalContent" role="dialog" aria-modal="true"></section></div><div class="toast" id="toast" role="status"></div>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="catalog.js?v=12"></script><script src="qris.js?v=12"></script><script src="script.js?v=12"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="catalog.js?v=13"></script><script src="qris.js?v=13"></script><script src="script.js?v=13"></script>
 </body>
 </html>
