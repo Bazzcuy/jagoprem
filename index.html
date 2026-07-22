@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body class="jagoprem-layout">
   <header class="reference-header">
@@ -49,8 +49,6 @@
 
   <main>
     <section class="reference-hero" id="home">
-      <div class="hero-decoration hero-chatgpt">◎</div>
-      <div class="hero-decoration hero-music">♪</div>
       <div class="hero-copy">
         <h1>Marketplace Akun<br>Premium Murah,<br>Bergaransi <span>&amp; CS 24 Jam</span></h1>
         <p>Nikmati berbagai akun premium favorit seperti ChatGPT Plus, Spotify, YouTube Premium, dan lainnya dalam satu tempat.</p>
@@ -142,9 +140,9 @@
 
   <div class="sidebar-overlay" id="sidebarOverlay"></div>
   <aside class="cart-drawer" id="cartDrawer" aria-hidden="true"><div class="drawer-head"><div><small>KERANJANG</small><h2>Pesanan kamu</h2></div><button class="icon-button" data-close-cart type="button" aria-label="Tutup keranjang"><i data-lucide="x"></i></button></div><div class="cart-items" id="cartItems"></div><div class="cart-footer"><div><span>Total</span><strong id="cartTotal">Rp0</strong></div><button class="checkout-button" id="checkoutButton" type="button">Lanjut checkout <i data-lucide="arrow-right"></i></button></div></aside><div class="overlay" id="overlay"></div>
-  <section class="chat-panel" id="chatPanel" aria-hidden="true"><div class="chat-head"><div class="bot-avatar"><img src="assets/jagoprem-mark.png" alt=""></div><div><strong id="chatTitle">JagoPrem Assistant</strong><span><i></i> Online • CS 24/7</span></div><button id="closeChat" type="button" aria-label="Tutup chat"><i data-lucide="x"></i></button></div><div class="chat-modes"><button class="active" data-chat-mode="bot" type="button"><i data-lucide="sparkles"></i> Asisten AI</button><button data-chat-mode="admin" type="button"><i data-lucide="headphones"></i> Tim Operasional</button></div><div class="chat-messages" id="chatMessages"><div class="chat-welcome"><span>JAGOPREM ASSISTANT</span><strong>Ada yang bisa dibantu?</strong><small>Tanyakan stok, harga, garansi, pembayaran, atau cara pemesanan.</small></div><div class="message bot">Hai! Saya siap bantu kebutuhan akun premium kamu.</div><div class="quick-chat"><button data-question="Produk apa yang ready?" type="button">Cek stok</button><button data-question="Tampilkan paket ChatGPT" type="button">Paket ChatGPT</button><button data-question="Bagaimana cara pesan?" type="button">Cara pesan</button><button data-question="Bagaimana pembayaran QRIS?" type="button">Pembayaran QRIS</button><button data-question="Bagaimana garansi produk?" type="button">Info garansi</button><button data-admin type="button">Hubungi tim operasional</button></div></div><form class="chat-form" id="chatForm"><textarea id="chatInput" rows="1" placeholder="Tulis pesan kamu..." autocomplete="off" aria-label="Tulis pesan"></textarea><button type="submit" aria-label="Kirim pesan"><i data-lucide="send"></i></button></form><div class="chat-powered"><i data-lucide="shield-check"></i> Percakapan aman bersama JagoPrem</div></section>
+  <section class="chat-panel" id="chatPanel" aria-hidden="true"><div class="chat-head"><div class="bot-avatar"><img src="assets/jagoprem-mark.png" alt=""></div><div><strong id="chatTitle">JagoPrem Care</strong><span><i></i> AI &amp; Tim Operasional</span></div><button id="closeChat" type="button" aria-label="Tutup chat"><i data-lucide="x"></i></button></div><div class="chat-messages" id="chatMessages" aria-live="polite"></div><form class="chat-form" id="chatForm"><textarea id="chatInput" rows="1" placeholder="Tulis pesan kamu..." autocomplete="off" aria-label="Tulis pesan"></textarea><button type="submit" aria-label="Kirim pesan"><i data-lucide="send"></i></button></form><div class="chat-powered"><i data-lucide="shield-check"></i> Satu percakapan bersama AI &amp; tim JagoPrem</div></section>
   <button class="chat-bubble" id="chatBubble" type="button" aria-label="Buka chat"><i data-lucide="message-circle"></i><span>CS 24/7</span><b id="chatBadge" class="red-badge" style="display:none">0</b></button>
   <div class="modal-layer" id="modalLayer" aria-hidden="true"><section class="modal" id="modalContent" role="dialog" aria-modal="true"></section></div><div class="toast" id="toast" role="status"></div>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="catalog.js?v=10"></script><script src="qris.js?v=10"></script><script src="script.js?v=10"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="catalog.js?v=11"></script><script src="qris.js?v=11"></script><script src="script.js?v=11"></script>
 </body>
 </html>

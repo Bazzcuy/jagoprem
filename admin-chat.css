@@ -76,4 +76,5 @@
 
 @media(max-width:720px){.chat-list-head{padding:10px 12px;flex-direction:column;align-items:stretch}.chat-sort-controls{justify-content:flex-start}.chat-sort-btn{flex:1;justify-content:center}.chat-list button{padding-inline:12px}#adminReply{grid-template-columns:minmax(0,1fr) 72px}#adminReply textarea{min-height:44px}.conversation-head{gap:10px}}
 @media(max-width:420px){.chat-sort-btn{font-size:8px}}
+.admin-agent-name{font-size:8px;color:#0a806d}.admin-identity{display:grid;gap:3px}.admin-identity span{font-size:7px;color:var(--muted);font-weight:800}.admin-identity select{height:40px;border:1px solid var(--line);border-radius:6px;padding:0 8px;background:#fff;font-size:9px}#adminReply{grid-template-columns:105px minmax(0,1fr) 76px}@media(max-width:720px){#adminReply{grid-template-columns:88px minmax(0,1fr) 60px}.admin-identity select{padding:0 4px}}
 
