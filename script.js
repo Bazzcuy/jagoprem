@@ -1650,23 +1650,25 @@ ChatGPT Plus berupa akun privat, bukan sharing, dan mendukung Codex.`;
   if (text.includes("gmail") || text.includes("email sendiri"))
     return "Saat ini JagoPrem hanya menyediakan akun privat siap pakai. Opsi aktivasi menggunakan Gmail pembeli tidak tersedia.";
   if (text.includes("garansi"))
-    return "Masa garansi berbeda pada setiap produk. Buka detail produk untuk melihat durasi dan syaratnya. Simpan bukti pembayaran serta rekam kendala saat pertama kali login.";
+    return "Garansi mengikuti keterangan produk. Jika durasi khusus tidak tertulis, garansi berlaku selama masa aktif. Kendala akun yang memenuhi syarat ditangani dengan penggantian akun selama masa garansi. Untuk klaim, siapkan screenshot kendalanya.";
   if (text.includes("kirim") || text.includes("pengiriman"))
-    return "Setelah pembayaran terverifikasi, detail akses dan panduan dikirim otomatis ke nomor WhatsApp yang kamu isi saat checkout. Pastikan nomornya aktif dan benar.";
+    return "Setelah pembayaran terverifikasi, sistem memproses akun otomatis. Detail login, kontak owner, dan dokumentasi dikirim oleh bot ke nomor WhatsApp akunmu setelah selesai. Estimasinya mengikuti kecepatan server dan proses pembuatan akun.";
   if (text.includes("bayar") || text.includes("qris"))
-    return "Pembayaran menggunakan QRIS. Setelah checkout, sistem membuat QR sesuai nominal total belanja. Scan QR tersebut lalu tekan tombol konfirmasi pembayaran.";
+    return "QRIS selalu aktif dan harus dibayar sesuai nominal tagihan. Verifikasi berjalan otomatis mengikuti kecepatan server. Kanal pembayaran lain bergantung pada kondisi server.";
   if (
     text.includes("pesan") ||
     text.includes("telegram") ||
     text.includes("whatsapp")
   )
-    return "Cara pesan: cari produk, buka detail, pilih varian dan jumlah, masukkan ke keranjang, isi data checkout, lalu bayar melalui QRIS. Stok web, Telegram, dan WhatsApp memakai sumber data yang sama.";
+    return "Cara pesan: pilih produk, tentukan varian dan jumlah, checkout, lalu bayar. Akun diproses otomatis dan detailnya hanya dikirim melalui WhatsApp yang terhubung ke akunmu. Stok yang tampil di website adalah stok aktual.";
   if (
     text.includes("privat") ||
     text.includes("sharing") ||
     text.includes("codex")
   )
-    return "Paket ChatGPT Plus JagoPrem berupa akun privat, bukan akun sharing, mendukung Codex, dan diaktivasi menggunakan payment credit card.";
+    return "Private berarti akun sepenuhnya milik satu pembeli, sharing berarti satu akun dipakai bersama pengguna lain, sedangkan invitation diberikan lewat undangan. Tipe akses setiap produk mengikuti pilihan yang tersedia di halaman detail.";
+  if (text.includes("jam operasional") || text.includes("buka jam"))
+    return "Sistem pembelian, pembayaran, dan pengiriman otomatis berjalan 24 jam. Tim operasional melayani setiap hari pukul 06.00–22.00 WIB.";
   if (text.includes("jam operasional") || text.includes("buka jam"))
     return "Tim operasional JagoPrem melayani setiap hari pukul 10.00–22.00 WIB. Pembelian dan pembayaran tetap bisa dilakukan kapan saja.";
   if (text.includes("poin") || text.includes("jagopoin"))
@@ -1699,15 +1701,9 @@ ChatGPT Plus berupa akun privat, bukan sharing, dan mendukung Codex.`;
     .sort((a, b) => b.score - a.score)[0];
   if (match?.score)
     return `${match.item.title}: ${rupiah(match.item.price)}, stok ${match.item.stock}. ${match.item.stock && match.item.enabled ? "Saat ini tersedia." : "Saat ini stok habis."}`;
-  return "Informasi yang saya miliki belum cukup untuk menjawab pertanyaan itu dengan tepat.\n[ARAHKAN_KE_ADMIN]";
+  return "Boleh dijelasin sedikit lebih spesifik, kak? Sebutkan nama produk atau bagian yang ingin ditanyakan supaya saya bisa cek informasinya dengan tepat.";
 }
 async function askBot(question) {
-  if (
-    /stok|ready|chatgpt|gmail|email sendiri|garansi|kirim|pengiriman|bayar|qris|cara pesan|privat|sharing|codex|admin|manusia|jam operasional|buka jam|poin|jagopoin|voucher|promo/i.test(
-      question,
-    )
-  )
-    return localBotAnswer(question);
   if (!STORE_CONFIG.grokProxyUrl) return localBotAnswer(question);
   try {
     const response = await fetch(STORE_CONFIG.grokProxyUrl, {
@@ -1723,7 +1719,7 @@ async function askBot(question) {
     const answer = data.answer || localBotAnswer(question);
     return data.escalate ? `${answer}\n[ARAHKAN_KE_ADMIN]` : answer;
   } catch {
-    return "Asisten AI sedang mengalami gangguan. Percakapan akan diteruskan ke tim operasional.\n[ARAHKAN_KE_ADMIN]";
+    return localBotAnswer(question);
   }
 }
 
