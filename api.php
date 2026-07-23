@@ -11,7 +11,7 @@ header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()');
 header("Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
 if(!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off') header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
-const LEGACY_STORE_FILE=__DIR__.'/data/store.json';const SEED_FILE=__DIR__.'/seed-store.json';const ENV_FILE=__DIR__.'/.env';const STORE_SCHEMA_VERSION=20;const ORDER_RESERVATION_MS=1800000;
+const LEGACY_STORE_FILE=__DIR__.'/data/store.json';const SEED_FILE=__DIR__.'/seed-store.json';const ENV_FILE=__DIR__.'/.env';const STORE_SCHEMA_VERSION=21;const ORDER_RESERVATION_MS=1800000;
 define('RUNTIME_DATA_DIR',dirname(__DIR__).'/.jagoprem-data');
 define('STORE_FILE',RUNTIME_DATA_DIR.'/store.json');
 define('RATE_FILE',RUNTIME_DATA_DIR.'/rate-limits.json');
@@ -62,6 +62,7 @@ function ensure_store_defaults(array &$data): void {
       $order['adminFee']=0;
     }
   }
+  if($schema<21) $data['products']=array_values(array_filter($data['products'],fn($product)=>(int)($product['id']??0)!==31661));
   foreach($data['products'] as &$product){
     $price=(int)($product['price']??0);
     if(!array_key_exists('points_reward',$product)) $product['points_reward']=max(10,min(500,(int)floor($price/1000)*5));

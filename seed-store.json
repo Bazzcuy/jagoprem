@@ -110,23 +110,6 @@
       "autoRestock": false
     },
     {
-      "id": 31661,
-      "is_best_seller": false,
-      "title": "AKUN KOPI",
-      "cashback_amount": 0,
-      "cashback_type": "amount",
-      "thumbnail": "https://s3.xoftware.id/f/31661_akunkopi_997_1780652602845.png",
-      "price": 7600,
-      "available_stock": 0,
-      "sold": 1,
-      "total_stock": 1,
-      "has_wholesale": false,
-      "stock": 12,
-      "enabled": true,
-      "featuredRank": 99,
-      "autoRestock": false
-    },
-    {
       "id": 31181,
       "is_best_seller": true,
       "title": "CANVA PRO",
