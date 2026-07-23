@@ -253,6 +253,14 @@ const fallbackCatalog = [
 let products = fallbackCatalog.map((item) => ({ enabled: true, ...item }));
 let validIds = new Set(products.map((item) => item.id));
 const savedCart = JSON.parse(localStorage.getItem("jagoprem_cart") || "[]");
+const createGuestChatId = () =>
+  `chat-${crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`}`;
+const savedCurrentChatId = localStorage.getItem("jagoprem_chat_id") || "";
+const savedGuestChatId =
+  localStorage.getItem("jagoprem_guest_chat_id") ||
+  (savedCurrentChatId.startsWith("chat-")
+    ? savedCurrentChatId
+    : createGuestChatId());
 const state = {
   cart: savedCart
     .map((line) => ({
@@ -274,7 +282,7 @@ const state = {
   account: null,
   appliedVoucher: null,
   chatHistory: JSON.parse(
-    sessionStorage.getItem("jagoprem_ai_history") || "[]",
+    localStorage.getItem("jagoprem_ai_history") || "[]",
   ).slice(-6),
   chatAttachment: null,
   checkoutWhatsapp: "",
@@ -284,16 +292,20 @@ const state = {
     (crypto.randomUUID
       ? crypto.randomUUID()
       : `device-${Date.now()}-${Math.random().toString(16).slice(2)}`),
-  chatId:
-    localStorage.getItem("jagoprem_chat_id") ||
-    `chat-${crypto.randomUUID ? crypto.randomUUID() : Date.now()}`,
+  guestChatId: savedGuestChatId,
+  chatId: savedCurrentChatId || savedGuestChatId,
 };
 localStorage.setItem("jagoprem_device_id", state.deviceId);
+localStorage.setItem("jagoprem_guest_chat_id", state.guestChatId);
 
 function setChatId(chatId) {
   const next = String(chatId || "").trim();
   if (!next || next === state.chatId) return;
   state.chatId = next;
+  if (next.startsWith("chat-")) {
+    state.guestChatId = next;
+    localStorage.setItem("jagoprem_guest_chat_id", next);
+  }
   localStorage.setItem("jagoprem_chat_id", state.chatId);
 }
 localStorage.setItem("jagoprem_chat_id", state.chatId);
@@ -992,8 +1004,10 @@ function detailModal(id) {
     ?.querySelectorAll("span")
     .forEach((row) => row.textContent.includes("Biaya admin") && row.remove());
   const detailTotal = detailSummary?.querySelector("strong b");
-  if (detailTotal)
+  if (detailTotal) {
+    detailTotal.id = "detailTotal";
     detailTotal.textContent = rupiah(defaultVariant?.price || item.price);
+  }
   const quantityHint = document.querySelector("#quantityHint");
   if (quantityHint && isSaldoApi)
     quantityHint.textContent = "Satuan pembelian: juta token";
@@ -1474,7 +1488,7 @@ function openChat() {
   chatPanel.style.transform = "none";
   chatPanel.style.pointerEvents = "auto";
   chatPanel.setAttribute("aria-hidden", "false");
-  if (state.chatEscalated) loadUnifiedChat();
+  loadUnifiedChat();
   requestAnimationFrame(() => {
     chatInput?.focus();
     resizeChatComposer();
@@ -2045,7 +2059,7 @@ document
       { role: "assistant", content: cleanAnswer },
     );
     state.chatHistory = state.chatHistory.slice(-6);
-    sessionStorage.setItem(
+    localStorage.setItem(
       "jagoprem_ai_history",
       JSON.stringify(state.chatHistory),
     );
@@ -2074,6 +2088,7 @@ function setDetailQuantity(value) {
   const plus = document.querySelector("[data-detail-plus]");
   if (minus) minus.disabled = quantity <= min;
   if (plus) plus.disabled = quantity >= max;
+  updateDetailPricing();
 }
 
 function selectedDetailVariant(item) {
@@ -2090,13 +2105,20 @@ function updateDetailPricing() {
   const variant = selectedDetailVariant(item);
   const reseller = Boolean(document.querySelector("#detailReseller")?.checked);
   const regular = variant?.price || item.price;
-  document.querySelector("#detailPrice").textContent = rupiah(
-    reseller ? Math.round(regular * 0.92) : regular,
+  const quantity = Math.max(
+    1,
+    Number(document.querySelector("#detailQuantity")?.value) || 1,
   );
+  const unitPrice = reseller ? Math.round(regular * 0.92) : regular;
+  document.querySelector("#detailPrice").textContent = rupiah(
+    unitPrice * quantity,
+  );
+  const total = document.querySelector("#detailTotal");
+  if (total) total.textContent = rupiah(unitPrice * quantity);
   const crossed = document.querySelector("#detailRegularPrice");
   if (crossed) {
     crossed.hidden = !reseller;
-    crossed.textContent = rupiah(regular);
+    crossed.textContent = rupiah(regular * quantity);
   }
   const duration = document.querySelector("#detailDuration");
   if (duration && variant) duration.textContent = variant.duration;
@@ -2259,6 +2281,12 @@ modalLayer.addEventListener("click", async (event) => {
     await fetch("/api/auth/logout", { method: "POST" });
     state.user = null;
     state.account = null;
+    state.guestChatId = createGuestChatId();
+    localStorage.setItem("jagoprem_guest_chat_id", state.guestChatId);
+    setChatId(state.guestChatId);
+    state.chatEscalated = false;
+    localStorage.setItem("jagoprem_chat_escalated", "0");
+    localStorage.removeItem("jagoprem_ai_history");
     renderAccountButton();
     closeModal();
     notify("Kamu sudah keluar");
@@ -2457,6 +2485,7 @@ modalLayer.addEventListener("submit", async (event) => {
       if (!response.ok) throw new Error(result.error || "Autentikasi gagal.");
       state.user = result.user;
       if (result.chatId) setChatId(result.chatId);
+      loadUnifiedChat();
       renderAccountButton();
       if (location.pathname.startsWith("/account/")) {
         document.body.classList.add("route-account");

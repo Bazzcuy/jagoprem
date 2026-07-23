@@ -6,7 +6,9 @@ Toko akun digital berbasis PHP, HTML, CSS, dan JavaScript untuk shared hosting H
 
 - PHP 8.1 atau lebih baru dengan ekstensi `mbstring`
 - Apache dengan `mod_rewrite`
-- Izin tulis PHP pada `data/store.json`
+- Izin tulis PHP pada direktori home hosting. Data aktif disimpan di
+  `.jagoprem-data/store.json`, sejajar dengan `public_html`, bukan di dalam
+  folder deployment.
 
 Tidak ada proses Node.js, build step, atau package manager yang diperlukan saat runtime.
 
@@ -32,4 +34,9 @@ AI chat dipanggil hanya dari backend PHP. Frontend tidak pernah menerima API key
 
 Hubungkan repository ke Git deployment Hostinger, gunakan branch `main`, dan arahkan deployment ke root website (`public_html`). File entrypoint utama adalah `index.html`; request `/api/*` diteruskan oleh Apache ke `api.php`.
 
-Setelah deployment, pastikan `data/store.json` tetap dapat ditulis oleh PHP. Dashboard admin tersedia di `/bolehdong`.
+Saat pertama dijalankan, aplikasi memindahkan data awal ke
+`~/.jagoprem-data/store.json` dan membuat
+`~/.jagoprem-data/store.backup.json` pada perubahan berikutnya. Karena kedua
+file berada di luar `public_html`, commit atau redeploy Git tidak menimpa data
+produk, akun, pesanan, maupun chat yang sudah ada. Dashboard admin tersedia di
+`/bolehdong`.
