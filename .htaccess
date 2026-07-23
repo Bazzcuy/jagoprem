@@ -25,8 +25,11 @@ Options -Indexes
   RewriteEngine On
   RewriteRule ^data(?:/.*)?$ - [F,L]
   RewriteRule ^api(?:/.*)?$ api.php [QSA,L]
+  RewriteRule ^products/?$ index.html [L]
   RewriteRule ^product/([0-9]+)/?$ index.html [L]
   RewriteRule ^account(?:/([a-z-]+))?/?$ index.html [L]
   RewriteRule ^checkout/?$ index.html [L]
+  RewriteRule ^report/?$ index.html [L]
+  RewriteRule ^reseller/?$ index.html [L]
   RewriteRule ^bolehdong/?$ admin.html [L]
 </IfModule>
