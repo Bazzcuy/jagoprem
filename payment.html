@@ -10,7 +10,7 @@
   </style>
 </head>
 <body><div id="app"></div>
-<script src="assets/vendor/qrcode.min.js?v=1"></script><script src="qris.js?v=16"></script>
+<script src="assets/vendor/qrcode.min.js?v=2"></script><script src="qris.js?v=16"></script>
 <script>
 const STATIC_QRIS='00020101021126570011ID.DANA.WWW011893600915303270621302090327062130303UMI51440014ID.CO.QRIS.WWW0215ID10265345984810303UMI5204481453033605802ID5914Webtokoku plus6014Kota Palembang61053026663040D38';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); const money=v=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(Number(v||0));
