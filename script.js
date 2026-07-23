@@ -1611,8 +1611,10 @@ async function escalateConversation(
   state.chatEscalated = true;
   localStorage.setItem("jagoprem_chat_escalated", "1");
   hideTyping();
-  const handoffMessage =
+  let handoffMessage =
     "Baik kak, informasinya sudah saya catat dan percakapan ini saya teruskan ke tim operasional JagoPrem agar bisa diperiksa lebih lanjut. Mohon tunggu sebentar ya. 🙏";
+  handoffMessage =
+    "Baik kak, informasinya sudah Fenita catat. Masalah ini belum bisa Fenita periksa langsung, jadi Fenita teruskan ke tim operasional JagoPrem ya. Mohon tunggu sebentar.";
   addMessage(handoffMessage, "bot", "CS - Fenita");
   chatMessages.insertAdjacentHTML("beforeend", handoffNotice());
   icons();
@@ -1676,7 +1678,7 @@ ChatGPT Plus berupa akun privat, bukan sharing, dan mendukung Codex.`;
   if (text.includes("voucher") || text.includes("promo"))
     return "Tekan “Lihat voucher tersedia” pada ringkasan pembayaran untuk melihat promo aktif dan ketentuannya.";
   if (text.includes("admin") || text.includes("manusia"))
-    return "Baik, percakapan ini saya teruskan ke tim operasional JagoPrem.\n[ARAHKAN_KE_ADMIN]";
+    return "Baik kak, Fenita teruskan percakapan ini ke tim operasional JagoPrem ya.\n[ARAHKAN_KE_ADMIN]";
   const ignored = new Set([
     "berapa",
     "harga",
@@ -1846,7 +1848,7 @@ if (carousel) {
     openChat();
     if (!state.chatEscalated && !chatMessages.children.length)
       addMessage(
-        "Silakan tulis produk yang kamu cari. Saya akan bantu mengecek katalog JagoPrem.",
+        "Silakan tulis produk yang kamu cari. Fenita bantu cek katalog JagoPrem ya.",
         "bot",
       );
   });
