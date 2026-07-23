@@ -11,7 +11,7 @@ header('Referrer-Policy: strict-origin-when-cross-origin');
 header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()');
 header("Content-Security-Policy: default-src 'none'; frame-ancestors 'none'; base-uri 'none'");
 if(!empty($_SERVER['HTTPS'])&&$_SERVER['HTTPS']!=='off') header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
-const LEGACY_STORE_FILE=__DIR__.'/data/store.json';const SEED_FILE=__DIR__.'/seed-store.json';const ENV_FILE=__DIR__.'/.env';const STORE_SCHEMA_VERSION=22;const ORDER_RESERVATION_MS=1800000;
+const LEGACY_STORE_FILE=__DIR__.'/data/store.json';const SEED_FILE=__DIR__.'/seed-store.json';const ENV_FILE=__DIR__.'/.env';const STORE_SCHEMA_VERSION=23;const ORDER_RESERVATION_MS=1800000;
 define('RUNTIME_DATA_DIR',dirname(__DIR__).'/.jagoprem-data');
 define('STORE_FILE',RUNTIME_DATA_DIR.'/store.json');
 define('STORE_BACKUP_FILE',RUNTIME_DATA_DIR.'/store.backup.json');
@@ -105,11 +105,12 @@ function refresh_sales_counts(array &$store): void {
       if($titleKey!=='')$titleCounts[$titleKey]=($titleCounts[$titleKey]??0)+$quantity;
     }
   }
-  foreach($store['products']??[] as &$product){
+  foreach($store['products'] as &$product){
     $titleKey=strtolower((string)preg_replace('/[^a-z0-9]+/i','',(string)($product['title']??'')));
     $completed=max((int)($counts[(int)($product['id']??0)]??0),(int)($titleCounts[$titleKey]??0));
     $product['sold']=max(0,(int)($product['sold']??0),$completed);
   }
+  unset($product);
 }
 function referral_code(array $u): string { return (string)($u['referralCode']??('JAGO'.strtoupper(substr(preg_replace('/[^a-zA-Z0-9]/','',(string)($u['id']??'')),-6)))); }
 function public_user(array $u): array { return ['id'=>$u['id'],'name'=>$u['name'],'email'=>$u['email'],'whatsapp'=>$u['whatsapp']??'','createdAt'=>$u['createdAt']??'','points'=>(int)($u['points']??0),'pointsPending'=>(int)($u['pointsPending']??0),'referralCode'=>referral_code($u),'referralCount'=>(int)($u['referralCount']??0)]; }
