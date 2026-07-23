@@ -240,7 +240,7 @@ const fallbackCatalog = [
           applyCatalogDefaults(
             {
               ...item,
-              stock: Math.min(item.available_stock || 0, 49),
+              stock: Math.max(0, Number(item.available_stock || item.stock || 0)),
               enabled: true,
               featuredRank: item.id === 46473 ? 4 : 99,
             },
@@ -410,9 +410,9 @@ function messageBubble(
   text,
   role,
   createdAt = new Date().toISOString(),
-  agentName = "",
+  identity = "",
 ) {
-  return `<div class="message ${role}">${agentName ? `<b class="message-agent">${escapeHtml(agentName)} • Tim Operasional</b>` : ""}<span class="message-text">${escapeHtml(text)}</span><time class="message-meta">${formatChatDateTime(createdAt)}</time></div>`;
+  return `<div class="message ${role}">${identity ? `<b class="message-agent">${escapeHtml(identity)}</b>` : ""}<span class="message-text">${escapeHtml(text)}</span><time class="message-meta">${formatChatDateTime(createdAt)}</time></div>`;
 }
 function resizeChatComposer() {
   const input = document.querySelector("#chatInput");
@@ -1488,22 +1488,25 @@ function closeChat() {
   chatPanel.style.removeProperty("pointer-events");
   chatPanel.setAttribute("aria-hidden", "true");
 }
-function addMessage(text, role) {
-  chatMessages.insertAdjacentHTML("beforeend", messageBubble(text, role));
+function addMessage(text, role, identity = "") {
+  chatMessages.insertAdjacentHTML(
+    "beforeend",
+    messageBubble(text, role, new Date().toISOString(), identity),
+  );
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 function showTyping() {
   document.querySelector("#chatTyping")?.remove();
   chatMessages.insertAdjacentHTML(
     "beforeend",
-    '<div class="message bot typing-message" id="chatTyping"><span><i></i><i></i><i></i></span><small>JagoPrem sedang mengetik...</small></div>',
+    '<div class="message bot typing-message" id="chatTyping"><span><i></i><i></i><i></i></span><small>Fenita sedang mengetik...</small></div>',
   );
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 function hideTyping() {
   document.querySelector("#chatTyping")?.remove();
 }
-function assistantDelay(min = 650, max = 1450) {
+function assistantDelay(min = 900, max = 2200) {
   return new Promise((resolve) =>
     setTimeout(resolve, Math.round(min + Math.random() * (max - min))),
   );
@@ -1521,7 +1524,26 @@ function customerIdentity() {
 }
 function renderUnifiedChat(chat) {
   const messages = chat?.messages || [];
-  chatMessages.innerHTML = `${handoffNotice()}${messages.map((item) => messageBubble(item.text, item.sender === "admin" ? "bot" : "user", item.createdAt, item.sender === "admin" ? item.agentName || "Tim Operasional" : "")).join("")}`;
+  const handedOff =
+    Boolean(chat?.humanTakeover) ||
+    ["waiting_human", "pending"].includes(chat?.status);
+  chatMessages.innerHTML = `${handedOff ? handoffNotice() : ""}${messages
+    .map((item) => {
+      const isReply = item.sender === "admin" || item.sender === "ai";
+      const identity =
+        item.sender === "admin"
+          ? `Tim Operasional - ${item.agentName || "Fardan"}`
+          : item.sender === "ai"
+            ? `CS - ${item.agentName || "Fenita"}`
+            : "";
+      return messageBubble(
+        item.text,
+        isReply ? "bot" : "user",
+        item.createdAt,
+        identity,
+      );
+    })
+    .join("")}`;
   chatMessages.scrollTop = chatMessages.scrollHeight;
   icons();
 }
@@ -1532,9 +1554,12 @@ async function loadUnifiedChat() {
     });
     const chat = await response.json();
     if (chat?.id) setChatId(chat.id);
-    if (!state.chatEscalated && !chat?.messages?.length) return;
-    state.chatEscalated = true;
-    localStorage.setItem("jagoprem_chat_escalated", "1");
+    const handedOff =
+      Boolean(chat?.humanTakeover) ||
+      ["waiting_human", "pending"].includes(chat?.status);
+    if (!handedOff && !chat?.messages?.length) return;
+    state.chatEscalated = handedOff;
+    localStorage.setItem("jagoprem_chat_escalated", handedOff ? "1" : "0");
     renderUnifiedChat(chat);
     fetch(`/api/chat/${state.chatId}/read`, { method: "POST" }).catch(() => {});
     updateChatBadge(0);
@@ -1550,13 +1575,17 @@ async function sendOperationalMessage(message, options = {}) {
       escalate: Boolean(options.escalate),
       escalationReason: options.reason || "",
       attachment: options.attachment || null,
+      assistantText: options.assistantText || "",
     }),
   });
   const chat = await response.json().catch(() => null);
   if (!response.ok) throw new Error(chat?.error || "Pesan gagal dikirim.");
   if (chat?.id) setChatId(chat.id);
-  state.chatEscalated = true;
-  localStorage.setItem("jagoprem_chat_escalated", "1");
+  state.chatEscalated = Boolean(chat?.humanTakeover);
+  localStorage.setItem(
+    "jagoprem_chat_escalated",
+    state.chatEscalated ? "1" : "0",
+  );
   renderUnifiedChat(chat);
   return chat;
 }
@@ -1568,10 +1597,9 @@ async function escalateConversation(
   state.chatEscalated = true;
   localStorage.setItem("jagoprem_chat_escalated", "1");
   hideTyping();
-  addMessage(
-    "Baik kak, informasinya sudah saya catat dan percakapan ini saya teruskan ke tim operasional JagoPrem agar bisa diperiksa lebih lanjut. Mohon tunggu sebentar ya. 🙏",
-    "bot",
-  );
+  const handoffMessage =
+    "Baik kak, informasinya sudah saya catat dan percakapan ini saya teruskan ke tim operasional JagoPrem agar bisa diperiksa lebih lanjut. Mohon tunggu sebentar ya. 🙏";
+  addMessage(handoffMessage, "bot", "CS - Fenita");
   chatMessages.insertAdjacentHTML("beforeend", handoffNotice());
   icons();
   try {
@@ -1579,6 +1607,7 @@ async function escalateConversation(
       escalate: true,
       reason,
       attachment,
+      assistantText: handoffMessage,
     });
   } catch (error) {
     notify(error.message);
@@ -2020,12 +2049,18 @@ document
       "jagoprem_ai_history",
       JSON.stringify(state.chatHistory),
     );
-    if (cleanAnswer) addMessage(cleanAnswer, "bot");
+    if (cleanAnswer) addMessage(cleanAnswer, "bot", "CS - Fenita");
     if (escalate)
       await escalateConversation(
         question,
         "Informasi di knowledge base belum cukup",
       );
+    else if (cleanAnswer)
+      try {
+        await sendOperationalMessage(question, {
+          assistantText: cleanAnswer,
+        });
+      } catch {}
   });
 
 function setDetailQuantity(value) {
