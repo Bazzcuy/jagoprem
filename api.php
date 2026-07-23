@@ -287,9 +287,11 @@ if ($path === '/api/ai/chat' && $method === 'POST') {
   if(!ai_daily_usage_allowed($user)) json_response(['answer'=>'Batas chat Fenita untuk hari ini sudah tercapai, kak. Kalau ada kendala penting, gunakan menu Lapor Masalah ya.','escalate'=>false,'reason'=>'daily_limit'],429);
   $key=ai_provider_key(); if($key==='') json_response(['answer'=>'Fenita sedang belum tersambung ke layanan jawaban. Coba kirim lagi beberapa saat ya, kak.','escalate'=>false,'reason'=>'ai_not_configured'],503);
   $catalog=[]; $queryText=mb_strtolower($message);
+  $needsFullCatalog=(bool)preg_match('/semua produk|daftar produk|produk apa|apa saja|yang tersedia|rekomendasi|termurah|termahal|bandingkan|perbandingan/iu',$queryText);
   foreach(array_values(array_filter($store['products'],fn($p)=>!empty($p['enabled']))) as $product){
     $title=mb_strtolower((string)($product['title']??'')); $needsDetail=false;
-    foreach(preg_split('/[^\pL\pN]+/u',$title)?:[] as $word) if(mb_strlen($word)>=4&&str_contains($queryText,$word)){$needsDetail=true;break;}
+    foreach(preg_split('/[^\pL\pN]+/u',$title)?:[] as $word) if(mb_strlen($word)>=4&&!in_array($word,['bulan','tahun','premium','private','garansi','akun'],true)&&str_contains($queryText,$word)){$needsDetail=true;break;}
+    if(!$needsFullCatalog&&!$needsDetail) continue;
     $entry=['id'=>(int)($product['id']??0),'name'=>$product['title']??'','price'=>(int)($product['price']??0),'stock'=>product_stock($product),'category'=>product_category($product),'badges'=>$product['badges']??[],'access'=>$product['access']??'','duration'=>$product['duration']??'','warranty'=>$product['warranty']??'','points'=>(int)($product['points_reward']??0)];
     if($needsDetail){
       $entry['description']=mb_substr(trim((string)($product['description']??'')),0,180);
